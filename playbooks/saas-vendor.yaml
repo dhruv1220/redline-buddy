@@ -1,0 +1,88 @@
+name: saas-vendor
+version: 1
+description: Red-flag rules for reviewing SaaS / vendor MSAs from the customer side.
+rules:
+  - id: liability-cap
+    title: No limitation of liability
+    severity: high
+    description: The agreement has no clause capping either party's liability.
+    why: Without a cap, a single incident (outage, data loss, breach) can expose you to uncapped damages far beyond what you paid.
+    suggestion: Add mutual limitation of liability capped at 12 months of fees paid, excluding breaches of confidentiality and IP infringement.
+    check:
+      kind: requires_any
+      patterns:
+        - limitation of liability
+        - liability.{0,40}shall not exceed
+        - cap.{0,30}liabilit
+        - liabilit.{0,30}cap
+
+  - id: auto-renewal
+    title: Auto-renewal without a clear opt-out
+    severity: medium
+    description: The term renews automatically with no stated way to decline renewal.
+    why: Auto-renewals lock you into another term at the vendor's then-current pricing unless you catch the window.
+    suggestion: Require 30 days' written notice of non-renewal, or remove auto-renewal entirely.
+    check:
+      kind: forbids_unless
+      patterns:
+        - automatically renew
+        - auto-renew
+        - renew.{0,25}automatically
+      unless_any:
+        - non-renewal
+        - not renew
+        - opt.out
+        - decline.{0,25}renew
+
+  - id: termination-convenience
+    title: No termination for convenience
+    severity: medium
+    description: You cannot exit the agreement except for the vendor's breach.
+    why: If the product stops fitting, you're stuck paying for the full term.
+    suggestion: Add termination for convenience with 30 days' notice and pro-rata refund of prepaid fees.
+    check:
+      kind: requires_any
+      patterns:
+        - terminat.{0,50}convenience
+        - terminate.{0,50}without cause
+
+  - id: termination-notice
+    title: Termination notice period is longer than 30 days
+    severity: low
+    description: Ending the agreement requires more than 30 days' notice.
+    why: Long notice periods delay your exit and can push you into another billing cycle.
+    suggestion: Reduce termination notice to 30 days.
+    check:
+      kind: max_value
+      group: value
+      max: 30
+      patterns:
+        - (?P<value>\d{1,3})\D{0,8}days.{0,30}notice
+
+  - id: mutual-indemnification
+    title: One-sided indemnification
+    severity: high
+    description: You indemnify the vendor, but the vendor does not indemnify you.
+    why: If the vendor's software infringes a third party's IP, you want them defending you — not the other way around only.
+    suggestion: Make indemnification mutual, covering IP infringement claims at minimum.
+    check:
+      kind: forbids_unless
+      patterns:
+        - customer.{0,80}indemnif
+        - client.{0,80}indemnif
+      unless_any:
+        - vendor.{0,80}indemnif
+        - provider.{0,80}indemnif
+        - mutual indemnification
+
+  - id: confidentiality
+    title: No confidentiality clause
+    severity: medium
+    description: The agreement has no confidentiality protections.
+    why: You'll share business data with the vendor; without this, there's no contractual duty to protect it.
+    suggestion: Add a mutual confidentiality clause with a 3-year survival period.
+    check:
+      kind: requires_any
+      patterns:
+        - confidential information
+        - confidentiality
