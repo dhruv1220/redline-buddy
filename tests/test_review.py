@@ -54,6 +54,54 @@ def test_memo_renders_findings_and_disclaimer():
     assert "Suggested fallback" in memo
 
 
+def test_nda_playbook_flags_sample():
+    from redline.playbook import load_playbook
+
+    pb = load_playbook(ROOT / "playbooks" / "nda-recipient.yaml")
+    findings = review_contract((ROOT / "examples" / "sample-nda.md").read_text(), pb)
+    ids = {f.rule_id for f in findings}
+    assert {
+        "hidden-non-compete",
+        "survival-too-long",
+        "no-standard-exclusions",
+        "injunctive-relief",
+        "return-or-destroy",
+    } <= ids
+    assert findings[0].severity == "high"
+
+
 def test_memo_clean_contract():
     memo = render_memo("clean.md", "saas-vendor", [])
     assert "No red flags" in memo
+
+
+def test_nda_playbook_loads():
+    from redline.playbook import load_playbook
+
+    pb = load_playbook(ROOT / "playbooks" / "nda-recipient.yaml")
+    assert pb.name == "nda-recipient"
+    assert len(pb.rules) == 5
+
+
+def test_max_value_captures_full_number():
+    # regression: greedy wildcards must not eat digits ("(10)" -> "0")
+    from redline.playbook import Check, Rule
+    from redline.review import _check_rule
+
+    rule = Rule(
+        id="x",
+        title="x",
+        severity="low",
+        description="",
+        why="",
+        suggestion="",
+        check=Check(
+            kind="max_value",
+            patterns=[r"surviv[^\d]{0,40}(?P<value>\d{1,2})\D{0,6}years"],
+            group="value",
+            max=5,
+        ),
+    )
+    f = _check_rule("obligations shall survive for ten (10)\nyears", rule)
+    assert f is not None
+    assert "10" in f.why

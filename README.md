@@ -21,20 +21,18 @@ redline review contract.md --playbook playbooks/saas-vendor.yaml
 2. The **review engine** runs every rule against the contract text and collects findings with excerpts.
 3. Findings render as a **markdown memo**: severity-ranked, each with why-it-matters and suggested fallback language.
 
-## The bundled playbook
+## Playbooks
 
-`saas-vendor` (customer-side SaaS MSA review) checks for:
-
-| Rule | Severity |
-|---|---|
-| No limitation of liability | high |
-| One-sided indemnification | high |
-| Auto-renewal without a clear opt-out | medium |
-| No termination for convenience | medium |
-| No confidentiality clause | medium |
-| Termination notice longer than 30 days | low |
+| Playbook | Reviews from | Checks |
+|---|---|---|
+| `saas-vendor` | customer side | liability cap, mutual indemnification, auto-renewal, termination for convenience, confidentiality, notice period |
+| `nda-recipient` | recipient side | hidden non-compete, survival > 5 years, missing standard exclusions, injunctive relief, return-or-destroy |
 
 Write your own playbook in YAML — see `playbooks/saas-vendor.yaml` for the schema.
+
+## Input formats
+
+Markdown, plain text, and `.docx` (Word) files are accepted — `.docx` text is extracted locally with no network calls.
 
 ## Development
 

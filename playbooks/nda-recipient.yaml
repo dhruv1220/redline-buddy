@@ -1,0 +1,69 @@
+name: nda-recipient
+version: 1
+description: Red-flag rules for reviewing NDAs from the recipient side (you're receiving confidential info).
+rules:
+  - id: hidden-non-compete
+    title: Non-compete hidden in the NDA
+    severity: high
+    description: The NDA restricts you from competing, not just from disclosing.
+    why: Non-competes limit where you can work next. They don't belong in a confidentiality agreement — negotiate them separately or not at all.
+    suggestion: Strike the non-compete, or narrow it to named competitors with a 6-month limit.
+    check:
+      kind: forbids_any
+      patterns:
+        - non-?compet\w*
+        - non\s+compet\w*
+        - shall\s+not\s+compet\w*
+        - not\s+engage\s+in.{0,40}compet
+
+  - id: survival-too-long
+    title: Confidentiality obligations survive too long
+    severity: medium
+    description: The duty of confidentiality lasts longer than 5 years.
+    why: A decade-long tail means a casual mention years later can still be a breach claim.
+    suggestion: Cap survival at 3–5 years (trade secrets can be carved out separately).
+    check:
+      kind: max_value
+      group: value
+      max: 5
+      patterns:
+        - surviv[^\d]{0,40}(?P<value>\d{1,2})\D{0,6}years
+        - (?P<value>\d{1,2})\D{0,6}years.{0,40}confiden
+
+  - id: no-standard-exclusions
+    title: Missing standard exclusions
+    severity: medium
+    description: No carve-outs for information that's public, independently developed, or rightfully received from others.
+    why: Without exclusions, you can breach by sharing things you already knew or learned elsewhere.
+    suggestion: Add exclusions for (a) publicly available, (b) independently developed, (c) rightfully received from a third party.
+    check:
+      kind: requires_any
+      patterns:
+        - publicly available
+        - independently developed
+        - rightfully received
+
+  - id: injunctive-relief
+    title: Vendor can seek injunctive relief without proving harm
+    severity: low
+    description: The discloser may get a court order against you without showing actual damages.
+    why: Worth knowing — it lowers their bar for emergency legal action — but it's market standard.
+    suggestion: Usually acceptable; just be aware of it.
+    check:
+      kind: forbids_any
+      patterns:
+        - injunctive relief
+        - irreparable harm
+
+  - id: return-or-destroy
+    title: No return-or-destroy obligation
+    severity: low
+    description: Nothing says what happens to confidential materials when the relationship ends.
+    why: You want a clean ending — materials returned or certified destroyed, not lingering on laptops.
+    suggestion: Add return-or-destroy (with certification) within 30 days of termination.
+    check:
+      kind: requires_any
+      patterns:
+        - return or destroy
+        - return all
+        - destroy all

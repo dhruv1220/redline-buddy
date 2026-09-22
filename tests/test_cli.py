@@ -40,3 +40,15 @@ def test_review_bad_playbook(tmp_path):
         "review", str(ROOT / "examples" / "sample-msa.md"), "--playbook", str(bad)
     )
     assert proc.returncode == 2
+
+
+def test_review_docx(tmp_path):
+    from docx import Document
+
+    doc = Document()
+    doc.add_paragraph("This Agreement shall automatically renew for successive terms.")
+    p = tmp_path / "contract.docx"
+    doc.save(str(p))
+    proc = run_cli("review", str(p))
+    assert proc.returncode == 0, proc.stderr
+    assert "Auto-renewal without a clear opt-out" in proc.stdout

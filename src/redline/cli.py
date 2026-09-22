@@ -19,6 +19,16 @@ def _default_playbook() -> Path:
     return Path(__file__).resolve().parent.parent.parent / "playbooks" / "saas-vendor.yaml"
 
 
+def read_contract_text(path: Path) -> str:
+    """Read contract text from .md/.txt or .docx (extracted locally)."""
+    if path.suffix.lower() == ".docx":
+        from docx import Document
+
+        doc = Document(str(path))
+        return "\n".join(p.text for p in doc.paragraphs)
+    return path.read_text(encoding="utf-8")
+
+
 def cmd_review(args: argparse.Namespace) -> int:
     contract_path = Path(args.contract)
     if not contract_path.is_file():
@@ -29,7 +39,11 @@ def cmd_review(args: argparse.Namespace) -> int:
     except PlaybookError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    text = contract_path.read_text(encoding="utf-8")
+    try:
+        text = read_contract_text(contract_path)
+    except Exception as exc:
+        print(f"error: could not read {contract_path}: {exc}", file=sys.stderr)
+        return 2
     findings = review_contract(text, playbook)
     print(render_memo(contract_path.name, playbook.name, findings))
     return 0
