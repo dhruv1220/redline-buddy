@@ -12,7 +12,9 @@ Existing contract AI tools send your documents to someone else's LLM. redline-bu
 pip install -e .
 redline review examples/sample-msa.md
 # or with your own playbook:
-redline review contract.md --playbook playbooks/saas-vendor.yaml
+redline review contract.pdf --playbook playbooks/saas-vendor.yaml
+# machine-readable output for CI gates:
+redline review contract.pdf --format json | jq '.finding_count'
 ```
 
 ## How it works
