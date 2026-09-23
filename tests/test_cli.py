@@ -62,6 +62,21 @@ def test_review_dpa_playbook():
     assert "No breach-notification timeline" in proc.stdout
 
 
+def test_review_json_format():
+    import json
+
+    proc = run_cli("review", str(ROOT / "examples" / "sample-msa.pdf"), "--format", "json")
+    assert proc.returncode == 0, proc.stderr
+    data = json.loads(proc.stdout)
+    assert data["contract"] == "sample-msa.pdf"
+    assert data["playbook"] == "saas-vendor"
+    assert data["finding_count"] == len(data["findings"]) == 6
+    first = data["findings"][0]
+    assert first["rule_id"] == "liability-cap"
+    assert first["severity"] == "high"
+    assert "Not legal advice" in data["disclaimer"]
+
+
 def test_review_contractor_playbook():
     proc = run_cli(
         "review",

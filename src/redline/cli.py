@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from .ingest import IngestionError, extract_text
-from .memo import render_memo
+from .memo import render_json, render_memo
 from .playbook import PlaybookError, load_playbook
 from .review import review_contract
 
@@ -33,7 +33,10 @@ def cmd_review(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     findings = review_contract(text, playbook)
-    print(render_memo(contract_path.name, playbook.name, findings))
+    if args.format == "json":
+        print(render_json(contract_path.name, playbook.name, findings))
+    else:
+        print(render_memo(contract_path.name, playbook.name, findings))
     return 0
 
 
@@ -51,6 +54,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--playbook",
         default=str(_default_playbook()),
         help="playbook YAML file (default: bundled saas-vendor)",
+    )
+    review.add_argument(
+        "--format",
+        choices=("memo", "json"),
+        default="memo",
+        help="output format: human-readable memo (default) or machine-readable JSON",
     )
     review.set_defaults(func=cmd_review)
     return parser

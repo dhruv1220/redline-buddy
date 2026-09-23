@@ -1,5 +1,8 @@
-"""Render findings as a plain-language markdown memo."""
+"""Render findings as a plain-language markdown memo or machine-readable JSON."""
 from __future__ import annotations
+
+import json
+from dataclasses import asdict
 
 from .review import Finding
 
@@ -40,3 +43,17 @@ def render_memo(contract_name: str, playbook_name: str, findings: list[Finding])
                 lines += [f"**Suggested fallback:** {f.suggestion}", ""]
     lines += ["", "---", "", DISCLAIMER, ""]
     return "\n".join(lines)
+
+
+def render_json(contract_name: str, playbook_name: str, findings: list[Finding]) -> str:
+    """Machine-readable findings, e.g. for CI gates: fail the build on findings."""
+    return json.dumps(
+        {
+            "contract": contract_name,
+            "playbook": playbook_name,
+            "finding_count": len(findings),
+            "disclaimer": "Not legal advice. Heuristic checks only — draft for attorney review.",
+            "findings": [asdict(f) for f in findings],
+        },
+        indent=2,
+    )
