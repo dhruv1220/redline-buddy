@@ -1,0 +1,83 @@
+name: dpa
+version: 1
+description: Red-flag rules for reviewing Data Processing Agreements (DPAs) from the customer / data-controller side.
+rules:
+  - id: subprocessor-objection
+    title: No right to object to new subprocessors
+    severity: high
+    description: The DPA lets the vendor add subprocessors without giving you notice or a right to object.
+    why: A subprocessor you never vetted gets your personal data; enterprise DPAs normally require 14-30 days' notice and an objection/termination right.
+    suggestion: Require advance notice of subprocessor changes and a right to object or terminate if you reasonably object.
+    check:
+      kind: requires_any
+      patterns:
+        - sub-?processor.{0,40}(object|notice|consent)
+        - notify.{0,40}sub-?processor
+
+  - id: data-deletion
+    title: No return-or-delete obligation at termination
+    severity: high
+    description: The DPA does not require the vendor to return or delete your personal data when the agreement ends.
+    why: Without this, your data can linger on vendor systems indefinitely after you churn — a GDPR Art. 28 requirement and a breach-surface issue.
+    suggestion: Require deletion or return of all personal data within 30-90 days of termination, with written certification.
+    check:
+      kind: requires_any
+      patterns:
+        - delet.{0,40}(personal )?data
+        - return.{0,40}(personal )?data.{0,30}terminat
+        - data.{0,30}(delet|destroy).{0,30}terminat
+
+  - id: breach-notification
+    title: No breach-notification timeline
+    severity: medium
+    description: The DPA has no stated deadline for the vendor to notify you of a personal data breach.
+    why: You likely owe regulators and data subjects notification on fixed clocks (e.g., GDPR's 72 hours); a vague "promptly" leaves you exposed.
+    suggestion: Require breach notification without undue delay and no later than 48-72 hours after the vendor becomes aware.
+    check:
+      kind: requires_any
+      patterns:
+        - breach.{0,40}notif
+        - notif.{0,40}breach
+        - 72 hours
+        - 48 hours
+
+  - id: security-measures
+    title: No described security measures
+    severity: medium
+    description: The DPA does not describe the technical and organizational security measures protecting your data.
+    why: A promise of appropriate security with no specifics is unenforceable — you want encryption, access controls, and the measures spelled out or annexed.
+    suggestion: Annex the specific measures (encryption at rest/in transit, access controls, logging, pen-testing cadence).
+    check:
+      kind: requires_any
+      patterns:
+        - technical and organi[sz]ational
+        - security measures
+        - encrypt
+
+  - id: audit-rights
+    title: No customer audit rights
+    severity: medium
+    description: You have no right to audit the vendor's compliance with the DPA.
+    why: Without audit rights (or at least an annual third-party report like SOC 2), you cannot verify any of the DPA's promises.
+    suggestion: Add a right to audit on reasonable notice, or require an annual SOC 2 Type II / ISO 27001 report.
+    check:
+      kind: requires_any
+      patterns:
+        - right to audit
+        - audit.{0,40}compliance
+        - SOC 2
+        - ISO 27001
+
+  - id: international-transfers
+    title: No transfer mechanism for cross-border data flows
+    severity: medium
+    description: The DPA is silent on how personal data transferred outside your jurisdiction is protected.
+    why: EU/UK transfers need a mechanism (SCCs, adequacy, BCRs); silence here is a compliance gap for any vendor hosting abroad.
+    suggestion: Incorporate the EU Standard Contractual Clauses (or the applicable transfer mechanism) for cross-border transfers.
+    check:
+      kind: requires_any
+      patterns:
+        - standard contractual clauses
+        - SCCs
+        - transfer.{0,40}(mechanism|safeguard|adequacy)
+        - binding corporate rules

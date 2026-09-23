@@ -49,6 +49,19 @@ def test_review_pdf():
     assert "Auto-renewal without a clear opt-out" in proc.stdout
 
 
+def test_review_dpa_playbook():
+    proc = run_cli(
+        "review",
+        str(ROOT / "examples" / "sample-dpa.md"),
+        "--playbook",
+        str(ROOT / "playbooks" / "dpa.yaml"),
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "No return-or-delete obligation at termination" in proc.stdout
+    assert "No right to object to new subprocessors" in proc.stdout
+    assert "No breach-notification timeline" in proc.stdout
+
+
 def test_review_contractor_playbook():
     proc = run_cli(
         "review",
