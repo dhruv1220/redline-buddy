@@ -28,6 +28,7 @@ redline review contract.md --playbook playbooks/saas-vendor.yaml
 | `saas-vendor` | customer side | liability cap, mutual indemnification, auto-renewal, termination for convenience, confidentiality, notice period |
 | `nda-recipient` | recipient side | hidden non-compete, survival > 5 years, missing standard exclusions, injunctive relief, return-or-destroy |
 | `contractor` | hiring-company side | IP assignment, hidden non-compete, payment terms, termination at will, confidentiality, expense pre-approval |
+| `dpa` | customer / controller side | subprocessor objection, return-or-delete, breach-notification timeline, security measures, audit rights, cross-border transfers |
 
 Write your own playbook in YAML — see `playbooks/saas-vendor.yaml` for the schema.
 
