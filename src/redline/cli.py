@@ -8,6 +8,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .ingest import IngestionError, extract_text
 from .memo import render_memo
 from .playbook import PlaybookError, load_playbook
 from .review import review_contract
@@ -19,30 +20,17 @@ def _default_playbook() -> Path:
     return Path(__file__).resolve().parent.parent.parent / "playbooks" / "saas-vendor.yaml"
 
 
-def read_contract_text(path: Path) -> str:
-    """Read contract text from .md/.txt or .docx (extracted locally)."""
-    if path.suffix.lower() == ".docx":
-        from docx import Document
-
-        doc = Document(str(path))
-        return "\n".join(p.text for p in doc.paragraphs)
-    return path.read_text(encoding="utf-8")
-
-
 def cmd_review(args: argparse.Namespace) -> int:
     contract_path = Path(args.contract)
-    if not contract_path.is_file():
-        print(f"error: contract file not found: {contract_path}", file=sys.stderr)
-        return 2
     try:
         playbook = load_playbook(args.playbook)
     except PlaybookError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     try:
-        text = read_contract_text(contract_path)
-    except Exception as exc:
-        print(f"error: could not read {contract_path}: {exc}", file=sys.stderr)
+        text = extract_text(contract_path)
+    except IngestionError as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 2
     findings = review_contract(text, playbook)
     print(render_memo(contract_path.name, playbook.name, findings))
@@ -58,7 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     review = sub.add_parser("review", help="review a contract file against a playbook")
-    review.add_argument("contract", help="path to the contract file (markdown or text)")
+    review.add_argument("contract", help="path to the contract file (markdown, text, .docx, or .pdf)")
     review.add_argument(
         "--playbook",
         default=str(_default_playbook()),

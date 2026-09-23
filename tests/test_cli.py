@@ -42,6 +42,34 @@ def test_review_bad_playbook(tmp_path):
     assert proc.returncode == 2
 
 
+def test_review_pdf():
+    proc = run_cli("review", str(ROOT / "examples" / "sample-msa.pdf"))
+    assert proc.returncode == 0, proc.stderr
+    assert "No limitation of liability" in proc.stdout
+    assert "Auto-renewal without a clear opt-out" in proc.stdout
+
+
+def test_review_contractor_playbook():
+    proc = run_cli(
+        "review",
+        str(ROOT / "examples" / "sample-contractor.md"),
+        "--playbook",
+        str(ROOT / "playbooks" / "contractor.yaml"),
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "No IP / work-product assignment" in proc.stdout
+    assert "Hidden non-compete in a contractor agreement" in proc.stdout
+    assert "Expenses reimbursable without pre-approval" in proc.stdout
+
+
+def test_review_unsupported_type(tmp_path):
+    rtf = tmp_path / "contract.rtf"
+    rtf.write_text("hello")
+    proc = run_cli("review", str(rtf))
+    assert proc.returncode == 2
+    assert "unsupported" in proc.stderr
+
+
 def test_review_docx(tmp_path):
     from docx import Document
 

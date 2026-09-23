@@ -1,0 +1,58 @@
+%PDF-1.3
+%‚„œ”
+1 0 obj
+<<
+/Producer (pypdf)
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 4 0 R ]
+>>
+endobj
+3 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+4 0 obj
+<<
+/Type /Page
+/Resources <<
+/Font <<
+/F1 <<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+>>
+>>
+/MediaBox [ 0 0 612 792 ]
+/Parent 2 0 R
+/Contents <<
+/Length 1625
+>>
+stream
+BT /F1 11 Tf 72 720 Td 15 TL (MASTER SERVICES AGREEMENT) Tj T* () Tj T* (This Master Services Agreement \("Agreement"\) is entered into as of March 1, 2026, by and) Tj T* (between Acme Cloud Inc. \("Vendor"\) and Customer.) Tj T* () Tj T* (1. Services) Tj T* () Tj T* (Vendor shall provide the subscription services described in each Order Form.) Tj T* () Tj T* (2. Term) Tj T* () Tj T* (The initial term of this Agreement is twelve \(12\) months from the Effective Date. This) Tj T* (Agreement shall automatically renew for successive twelve \(12\) month terms.) Tj T* () Tj T* (3. Fees and Payment) Tj T* () Tj T* (Customer shall pay all fees set forth in the applicable Order Form within fifteen \(15\) days of) Tj T* (invoice. Late payments bear interest at 1.5% per month.) Tj T* () Tj T* (4. Termination) Tj T* () Tj T* (Either party may terminate this Agreement for material breach if the breach remains uncured) Tj T* (sixty \(60\) days written notice after receipt of notice. Termination for any other reason is not) Tj T* (permitted during the initial term.) Tj T* () Tj T* (5. Indemnification) Tj T* () Tj T* (Customer shall indemnify, defend, and hold harmless Vendor from and against any third-party) Tj T* (claims arising from Customer's use of the Services.) Tj T* () Tj T* (6. Warranties) Tj T* () Tj T* (Vendor warrants the Services will perform materially as described. EXCEPT AS SET FORTH HEREIN,) Tj T* (VENDOR DISCLAIMS ALL OTHER WARRANTIES, EXPRESS OR IMPLIED.) Tj T* () Tj T* (7. Governing Law) Tj T* () Tj T* (This Agreement shall be governed by the laws of the State of California.) Tj T* () Tj T* ET
+endstream
+>>
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000015 00000 n 
+0000000054 00000 n 
+0000000113 00000 n 
+0000000162 00000 n 
+trailer
+<<
+/Size 5
+/Root 3 0 R
+/Info 1 0 R
+>>
+startxref
+1995
+%%EOF
