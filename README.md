@@ -27,12 +27,15 @@ redline review contract.md --playbook playbooks/saas-vendor.yaml
 |---|---|---|
 | `saas-vendor` | customer side | liability cap, mutual indemnification, auto-renewal, termination for convenience, confidentiality, notice period |
 | `nda-recipient` | recipient side | hidden non-compete, survival > 5 years, missing standard exclusions, injunctive relief, return-or-destroy |
+| `contractor` | hiring-company side | IP assignment, hidden non-compete, payment terms, termination at will, confidentiality, expense pre-approval |
 
 Write your own playbook in YAML — see `playbooks/saas-vendor.yaml` for the schema.
 
 ## Input formats
 
-Markdown, plain text, and `.docx` (Word) files are accepted — `.docx` text is extracted locally with no network calls.
+Markdown, plain text, `.docx` (Word), and **PDF** files are accepted — all text is extracted locally with no network calls.
+
+Scanned/image-only PDFs are rejected with a clear error instead of silently reviewing nothing (OCR is not supported yet). If a readable PDF contains pages with no extractable text, the memo notes which pages were skipped.
 
 ## Development
 
