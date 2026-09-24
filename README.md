@@ -35,6 +35,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `nda-recipient` | recipient side | hidden non-compete, survival > 5 years, missing standard exclusions, injunctive relief, return-or-destroy |
 | `contractor` | hiring-company side | IP assignment, hidden non-compete, payment terms, termination at will, confidentiality, expense pre-approval |
 | `dpa` | customer / controller side | subprocessor objection, return-or-delete, breach-notification timeline, security measures, audit rights, cross-border transfers |
+| `offer-letter` | candidate side | equity terms, non-compete, severance, stated base salary, arbitration, at-will |
 
 Write your own playbook in YAML — see `playbooks/saas-vendor.yaml` for the schema.
 

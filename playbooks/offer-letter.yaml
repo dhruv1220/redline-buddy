@@ -1,0 +1,88 @@
+name: offer-letter
+version: 1
+description: Red-flag rules for reviewing employment offer letters from the candidate side.
+rules:
+  - id: equity-terms
+    title: Offer is silent on equity terms
+    severity: high
+    description: The offer mentions no equity, vesting schedule, cliff, or strike price.
+    why: For startup offers, equity can be most of the compensation — without a vesting schedule, cliff, and strike price in writing, you cannot value the offer or compare it.
+    suggestion: Get the equity grant, 4-year vesting with 1-year cliff, and strike price stated in the offer or an equity appendix before signing.
+    fallback: "Equity: [N] [options/RSUs], vesting over four (4) years with a one (1) year cliff, strike price $[X] per share as of the grant date."
+    check:
+      kind: requires_any
+      patterns:
+        - vesting
+        - stock option
+        - RSUs?
+        - equity grant
+        - cliff
+
+  - id: non-compete
+    title: Non-compete in the offer letter
+    severity: high
+    description: The offer restricts you from competing after you leave.
+    why: Non-competes limit where you can work next and are unenforceable in several states (including California) — they should not be hiding in an offer letter.
+    suggestion: Strike the non-compete, or replace it with a narrow non-solicitation of employees and customers.
+    fallback: "Strike the non-compete. If needed: Employee shall not, for six (6) months after termination, solicit the Company's employees or customers."
+    check:
+      kind: forbids_any
+      patterns:
+        - non-compete
+        - noncompete
+        - covenant not to compete
+        - shall\s+not\s+(engage in|work for|join).{0,60}compet
+
+  - id: severance
+    title: No severance terms
+    severity: medium
+    description: The offer says nothing about severance if you are let go without cause.
+    why: Without severance language, a layoff means your paycheck stops immediately — 2-4 weeks per year of service is a common ask for senior roles.
+    suggestion: Ask for severance of 2-4 weeks per year of service on termination without cause, plus COBRA coverage.
+    fallback: "On termination without cause, Employee receives severance of two (2) weeks per year of service (minimum eight (8) weeks) plus three (3) months of COBRA premiums."
+    check:
+      kind: requires_any
+      patterns:
+        - severance
+        - separation pay
+
+  - id: base-salary
+    title: No stated base salary figure
+    severity: medium
+    description: The offer states no explicit base salary amount.
+    why: Vague compensation language ("competitive salary") is the top source of offer disputes — the number, pay cadence, and start date should be explicit.
+    suggestion: Get the annual base salary figure, pay cadence, and start date in writing.
+    fallback: "Base salary: $[X] per year, paid semi-monthly, effective on the Start Date of [date]."
+    check:
+      kind: requires_any
+      patterns:
+        - \$ ?\d[\d,]*(\.\d{2})?
+        - base salary.{0,30}\d
+        - per year.{0,30}\d
+
+  - id: arbitration
+    title: Mandatory binding arbitration
+    severity: low
+    description: The offer requires binding arbitration (often with a class-action waiver) for employment disputes.
+    why: Worth knowing — arbitration is usually employer-friendly and waives your right to a jury trial or class action — but it is market standard.
+    suggestion: Usually acceptable; just be aware you are waiving court and class-action rights.
+    fallback: "Consider adding: 'Either party may opt out of arbitration within thirty (30) days of signing by written notice.'"
+    check:
+      kind: forbids_any
+      patterns:
+        - binding arbitration
+        - arbitrat.{0,40}disputes
+        - class.action waiver
+
+  - id: at-will
+    title: At-will employment acknowledgment
+    severity: low
+    description: Employment is at-will — either side can end it at any time.
+    why: "Standard in most US states, but worth knowing explicitly: it means the offer's protections (severance, notice) only exist if written elsewhere."
+    suggestion: Usually acceptable; confirm any promised protections (severance, notice period) appear in writing.
+    fallback: "Consider adding: 'Termination without cause requires thirty (30) days written notice or pay in lieu thereof.'"
+    check:
+      kind: forbids_any
+      patterns:
+        - at-will
+        - at will employment
