@@ -128,3 +128,23 @@ def test_fail_on_low_fails_on_any_finding():
 def test_no_fail_on_flag_never_fails():
     proc = run_cli("review", str(ROOT / "examples" / "sample-msa.md"))
     assert proc.returncode == 0, proc.stderr
+
+
+def test_validate_good_playbook():
+    proc = run_cli("validate", str(ROOT / "playbooks" / "saas-vendor.yaml"))
+    assert proc.returncode == 0, proc.stderr
+    assert "valid:" in proc.stdout
+    assert "rules: 6" in proc.stdout
+
+
+def test_validate_bad_playbook(tmp_path):
+    bad = tmp_path / "bad.yaml"
+    bad.write_text("name: x\n")
+    proc = run_cli("validate", str(bad))
+    assert proc.returncode == 2
+    assert "invalid:" in proc.stderr
+
+
+def test_validate_missing_file():
+    proc = run_cli("validate", str(ROOT / "playbooks" / "nope.yaml"))
+    assert proc.returncode == 2
