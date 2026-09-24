@@ -17,6 +17,7 @@ class Finding:
     excerpt: str
     why: str
     suggestion: str
+    fallback: str = ""
 
 
 def _compile(patterns: list[str]) -> list[re.Pattern]:
@@ -37,13 +38,13 @@ def _check_rule(text: str, rule: Rule) -> Finding | None:
     if check.kind == "requires_any":
         if any(p.search(text) for p in patterns):
             return None
-        return Finding(rule.id, rule.title, rule.severity, "", rule.why, rule.suggestion)
+        return Finding(rule.id, rule.title, rule.severity, "", rule.why, rule.suggestion, rule.fallback)
 
     if check.kind == "forbids_any":
         for p in patterns:
             m = p.search(text)
             if m:
-                return Finding(rule.id, rule.title, rule.severity, _excerpt(text, m), rule.why, rule.suggestion)
+                return Finding(rule.id, rule.title, rule.severity, _excerpt(text, m), rule.why, rule.suggestion, rule.fallback)
         return None
 
     if check.kind == "forbids_unless":
@@ -58,7 +59,7 @@ def _check_rule(text: str, rule: Rule) -> Finding | None:
         for u in _compile(check.unless_any):
             if u.search(text):
                 return None
-        return Finding(rule.id, rule.title, rule.severity, _excerpt(text, hit), rule.why, rule.suggestion)
+        return Finding(rule.id, rule.title, rule.severity, _excerpt(text, hit), rule.why, rule.suggestion, rule.fallback)
 
     if check.kind == "max_value":
         if check.max is None:
@@ -71,7 +72,7 @@ def _check_rule(text: str, rule: Rule) -> Finding | None:
                     continue
                 if value > check.max:
                     why = f"{rule.why} (found {m.group(check.group)}, limit is {check.max:g})"
-                    return Finding(rule.id, rule.title, rule.severity, _excerpt(text, m), why, rule.suggestion)
+                    return Finding(rule.id, rule.title, rule.severity, _excerpt(text, m), why, rule.suggestion, rule.fallback)
         return None
 
     return None  # unreachable: validated at load

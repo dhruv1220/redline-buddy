@@ -8,6 +8,7 @@ rules:
     description: The agreement does not assign intellectual property in the deliverables to the company.
     why: Without an assignment clause (or work-made-for-hire language), the contractor may retain ownership of what you paid them to build.
     suggestion: Add a present-tense assignment of all work product and IP to the company, plus a waiver of moral rights where applicable.
+    fallback: "Contractor hereby assigns to the Company all right, title, and interest in all work product and intellectual property created under this Agreement, and waives moral rights to the extent permitted by law."
     check:
       kind: requires_any
       patterns:
@@ -22,6 +23,7 @@ rules:
     description: The agreement restricts the contractor from competing — unusual and often unenforceable for true contractors.
     why: Non-competes in contractor agreements raise misclassification risk and are void in several states; use a narrow non-solicitation instead if needed.
     suggestion: Remove the non-compete, or replace it with a time-boxed non-solicitation of employees and customers.
+    fallback: "Strike the non-compete. If needed: Contractor shall not, for six (6) months after termination, solicit the Company's employees or customers."
     check:
       kind: forbids_any
       patterns:
@@ -36,6 +38,7 @@ rules:
     description: The agreement states no rate, invoicing cadence, or payment timeline.
     why: Vague payment terms are the top source of contractor disputes — agree on rate, invoice schedule, and net terms up front.
     suggestion: State the rate (hourly/fixed), invoicing cadence, and payment due date (e.g., net 30).
+    fallback: "Contractor shall invoice monthly; the Company shall pay undisputed invoices within thirty (30) days (net 30) at the rates set out in Exhibit A."
     check:
       kind: requires_any
       patterns:
@@ -51,6 +54,7 @@ rules:
     description: The company has no right to end the engagement except for the contractor's breach.
     why: If the work quality drops or priorities change, you need a clean exit — 7 to 15 days' notice is standard for contractors.
     suggestion: Add termination for convenience with 14 days' written notice and payment for work completed through the termination date.
+    fallback: "Either party may terminate this Agreement for convenience on fourteen (14) days' written notice; the Company shall pay for all work completed through the termination date."
     check:
       kind: requires_any
       patterns:
@@ -65,6 +69,7 @@ rules:
     description: The contractor is not bound to keep company information confidential.
     why: Contractors routinely see roadmaps, code, and customer data — without a confidentiality clause you have no contractual protection.
     suggestion: Add a mutual confidentiality clause with standard exclusions and a 3-5 year survival period.
+    fallback: "Each party shall keep the other's Confidential Information confidential for three (3) years from disclosure, using at least reasonable care, subject to standard exclusions."
     check:
       kind: requires_any
       patterns:
@@ -78,6 +83,7 @@ rules:
     description: The agreement reimburses expenses with no pre-approval or cap requirement.
     why: Open-ended expense reimbursement invites surprise invoices; require written pre-approval for anything beyond a stated threshold.
     suggestion: Require prior written approval for expenses over $250 and itemized receipts for all reimbursement.
+    fallback: "Expenses require prior written approval and shall not exceed $250 per item without itemized receipts."
     check:
       kind: forbids_unless
       patterns:
