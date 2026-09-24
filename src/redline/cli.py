@@ -12,6 +12,7 @@ from .ingest import IngestionError, extract_text
 from .memo import render_diff, render_json, render_memo
 from .playbook import PlaybookError, load_playbook
 from .review import SEVERITY_RANK, review_contract
+from .serve import cmd_serve
 
 VERSION = "0.1.0"
 
@@ -118,6 +119,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="sample contract to test the playbook against; reports per-rule hit/miss",
     )
     validate.set_defaults(func=cmd_validate)
+
+    serve = sub.add_parser("serve", help="start a minimal local web UI (127.0.0.1 only)")
+    serve.add_argument("--port", type=int, default=8000, help="port to listen on (default: 8000)")
+    serve.add_argument("--bind", default="127.0.0.1", help="interface to bind (default: 127.0.0.1)")
+    serve.set_defaults(func=cmd_serve)
     return parser
 
 

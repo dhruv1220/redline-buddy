@@ -17,6 +17,10 @@ redline review contract.pdf --playbook playbooks/saas-vendor.yaml
 redline review contract.pdf --format json | jq '.finding_count'
 # fail CI when a high-or-worse finding appears:
 redline review contract.pdf --fail-on high || echo "contract gate failed"
+# minimal local web UI (paste text, pick a playbook, get the memo):
+redline serve
+# validate a playbook you wrote, optionally against a sample contract:
+redline validate my-playbook.yaml --sample examples/sample-msa.md
 # redline diff view: their language vs. your fallback, per finding:
 redline review contract.pdf --format diff
 ```
