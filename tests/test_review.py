@@ -105,3 +105,41 @@ def test_max_value_captures_full_number():
     f = _check_rule("obligations shall survive for ten (10)\nyears", rule)
     assert f is not None
     assert "10" in f.why
+
+
+def test_excerpt_snaps_to_sentence_boundaries():
+    import re
+
+    from redline.review import _excerpt
+
+    text = (
+        "This is the first sentence. Here is a second sentence with the TARGET "
+        "phrase inside it. And a third sentence follows."
+    )
+    m = re.search(r"TARGET", text)
+    excerpt = _excerpt(text, m)
+    assert excerpt == "…Here is a second sentence with the TARGET phrase inside it.…"
+
+
+def test_excerpt_at_text_start_has_no_leading_ellipsis():
+    import re
+
+    from redline.review import _excerpt
+
+    text = "TARGET appears right at the start. Then more text follows here."
+    m = re.search(r"TARGET", text)
+    excerpt = _excerpt(text, m)
+    assert not excerpt.startswith("…")
+    assert excerpt.startswith("TARGET appears right at the start.")
+
+
+def test_excerpt_caps_runaway_sentences():
+    import re
+
+    from redline.review import _excerpt
+
+    text = "Start. " + "word " * 200 + "TARGET " + "word " * 200 + ". End."
+    m = re.search(r"TARGET", text)
+    excerpt = _excerpt(text, m)
+    assert len(excerpt) <= 410
+    assert excerpt.endswith("…")
