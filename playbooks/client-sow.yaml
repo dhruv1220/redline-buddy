@@ -1,0 +1,94 @@
+name: client-sow
+version: 1
+description: Red-flag rules for reviewing client statements of work / service agreements from the freelancer or agency side.
+rules:
+  - id: scope-change-process
+    title: No change-order process for scope changes
+    severity: high
+    description: The SOW has no process for handling work beyond the agreed scope.
+    why: Scope creep is the top source of unbilled freelancer hours — without a written change-order process, "just one more thing" never gets paid.
+    suggestion: Require that out-of-scope work needs a signed change order with price and timeline before it starts.
+    fallback: "Work outside the scope in Exhibit A requires a signed change order stating the additional fees and revised timeline before such work begins."
+    check:
+      kind: requires_any
+      patterns:
+        - change order
+        - change request
+        - out.of.scope.{0,40}(approv|sign|fees)
+        - additional work.{0,40}(approv|sign|fees)
+
+  - id: payment-terms
+    title: No clear payment terms
+    severity: medium
+    description: The SOW states no rate, invoicing cadence, or payment timeline.
+    why: Vague payment terms are the top source of freelancer disputes — agree on rate, invoice schedule, and net terms up front.
+    suggestion: State the rate (hourly/fixed), invoicing cadence, and payment due date (e.g., net 15).
+    fallback: "Freelancer shall invoice [weekly/monthly]; Client shall pay undisputed invoices within fifteen (15) days (net 15) at the rates in Exhibit A."
+    check:
+      kind: requires_any
+      patterns:
+        - \$ ?\d
+        - per hour
+        - fixed fee
+        - net \d{1,2}
+        - invoice.{0,30}within
+
+  - id: late-payment
+    title: No late-payment remedy
+    severity: medium
+    description: The SOW has no late fee or interest on overdue invoices.
+    why: Without a late-payment clause, a client can pay 90 days late at zero cost to them — 1-1.5% monthly interest is standard leverage.
+    suggestion: Add 1.5% monthly interest (or a flat late fee) on invoices overdue by more than 15 days, plus a right to pause work.
+    fallback: "Overdue invoices accrue interest at 1.5% per month; Freelancer may pause work on fifteen (15) days' notice while invoices remain unpaid."
+    check:
+      kind: requires_any
+      patterns:
+        - late fee
+        - late payment
+        - interest.{0,30}overdue
+        - overdue.{0,30}interest
+
+  - id: kill-fee
+    title: No kill fee on early termination
+    severity: medium
+    description: The client can cancel the engagement with no compensation for committed time.
+    why: If the client cancels in week two of a six-week booking, you have turned down other work — a kill fee (25-50% of remaining fees) covers that.
+    suggestion: Add a kill fee of 25-50% of remaining fees on termination without cause, plus payment for work completed.
+    fallback: "On termination without cause, Client pays for work completed plus a kill fee of 50% of the remaining fees under the then-current SOW."
+    check:
+      kind: requires_any
+      patterns:
+        - kill fee
+        - termination fee
+        - cancellation fee
+        - early termination.{0,40}compensat
+
+  - id: liability-cap
+    title: Freelancer liability is uncapped
+    severity: high
+    description: The SOW has no clause capping your liability as the service provider.
+    why: Without a cap, a single disputed deliverable can expose you to damages far beyond the project fee — cap at the fees paid under the SOW.
+    suggestion: Cap your aggregate liability at the fees paid under the SOW, excluding IP infringement and confidentiality breaches.
+    fallback: "Freelancer's aggregate liability shall not exceed the fees paid under this SOW, excluding breaches of confidentiality and IP infringement."
+    check:
+      kind: requires_any
+      patterns:
+        - limitation of liability
+        - liability.{0,40}shall not exceed
+        - cap.{0,30}liabilit
+        - liabilit.{0,30}cap
+
+  - id: non-compete
+    title: Non-compete in a client SOW
+    severity: high
+    description: The SOW restricts you from competing — unusual and often unenforceable for independent contractors.
+    why: Non-competes in contractor agreements raise misclassification risk and are void in several states; use a narrow non-solicitation instead if needed.
+    suggestion: Remove the non-compete, or replace it with a time-boxed non-solicitation of the client's employees and customers.
+    fallback: "Strike the non-compete. If needed: Freelancer shall not, for six (6) months after termination, solicit the Client's employees or customers."
+    check:
+      kind: forbids_any
+      patterns:
+        - non-compete
+        - noncompete
+        - covenant not to compete
+        - shall\s+not\s+(engage\s+in|perform\s+services\s+for).{0,60}compet
