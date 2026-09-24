@@ -61,3 +61,13 @@ def test_unsupported_suffix_rejected(tmp_path):
 def test_missing_file_rejected(tmp_path):
     with pytest.raises(IngestionError, match="not found"):
         extract_text(tmp_path / "nope.pdf")
+
+
+def test_docx_tables_are_extracted():
+    text = extract_text(ROOT / "tests" / "fixtures" / "sow-table.docx")
+    assert "Milestone | Fee" in text
+    assert "Design | $5,000" in text
+    # table content feeds the rule engine: payment terms now detected
+    playbook = load_playbook(ROOT / "playbooks" / "client-sow.yaml")
+    ids = {f.rule_id for f in review_contract(text, playbook)}
+    assert "payment-terms" not in ids
