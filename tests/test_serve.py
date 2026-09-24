@@ -84,3 +84,61 @@ def test_live_server_review_post():
     finally:
         server.shutdown()
         thread.join()
+
+
+def _multipart(fields: dict, files: dict) -> tuple[bytes, str]:
+    boundary = "testboundary123"
+    buf = b""
+    for name, value in fields.items():
+        buf += (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'
+        ).encode()
+    for name, (filename, data) in files.items():
+        buf += (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'
+            "Content-Type: application/octet-stream\r\n\r\n"
+        ).encode() + data + b"\r\n"
+    buf += f"--{boundary}--\r\n".encode()
+    return buf, f"multipart/form-data; boundary={boundary}"
+
+
+def _post(path: str, body: bytes, content_type: str) -> tuple[int, str]:
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        conn = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=10)
+        conn.request("POST", path, body, {"Content-Type": content_type})
+        resp = conn.getresponse()
+        return resp.status, resp.read().decode("utf-8")
+    finally:
+        server.shutdown()
+        thread.join()
+
+
+def test_upload_markdown_file_reviews_it():
+    body, ctype = _multipart(
+        {"playbook": "offer-letter", "format": "memo"},
+        {"contract_file": ("offer.md", OFFER.encode("utf-8"))},
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "Non-compete in the offer letter" in page
+    assert "offer.md" in page
+
+
+def test_upload_unsupported_type_warns():
+    body, ctype = _multipart(
+        {"playbook": "offer-letter", "format": "memo"},
+        {"contract_file": ("evil.exe", b"MZ...")},
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "unsupported upload type" in page
+
+
+def test_empty_post_warns():
+    body, ctype = _multipart({"playbook": "offer-letter", "format": "memo"}, {})
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "paste some contract text or upload a file" in page

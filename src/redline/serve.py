@@ -33,12 +33,14 @@ footer{{color:#666;font-size:0.8rem;margin-top:2rem}}
 <body>
 <h1>redline-buddy</h1>
 <p>Local-first contract red-flag checker. Nothing leaves your machine.</p>
-<form method="post" action="/review">
+<form method="post" action="/review" enctype="multipart/form-data">
 <label>Contract text (paste):<br><textarea name="text"></textarea></label><br><br>
+<label>…or upload a file: <input type="file" name="contract_file"></label><br><br>
 <label>Playbook: <select name="playbook">{options}</select></label>
 <label>View: <select name="format">
 <option value="memo">memo</option><option value="diff">redline diff</option>
 </select></label>
+<label><input type="checkbox" name="ocr" value="1"> OCR scanned PDFs</label>
 <button type="submit">Review</button>
 </form>
 <hr>{result}
@@ -97,7 +99,9 @@ def _render_result_html(contract_name: str, playbook: str, findings, fmt: str) -
     return "\n".join(blocks)
 
 
-def review_to_html(text: str, playbook_name: str, fmt: str) -> str:
+def review_to_html(
+    text: str, playbook_name: str, fmt: str, contract_name: str = "pasted contract"
+) -> str:
     """Run a review and render the result fragment. Raises ValueError on bad input."""
     pb_path = PLAYBOOKS_DIR / f"{playbook_name}.yaml"
     try:
@@ -105,9 +109,40 @@ def review_to_html(text: str, playbook_name: str, fmt: str) -> str:
     except PlaybookError as exc:
         raise ValueError(f"bad playbook: {exc}") from exc
     if not text.strip():
-        raise ValueError("paste some contract text first")
+        raise ValueError("paste some contract text or upload a file first")
     findings = review_contract(text, playbook)
-    return _render_result_html("pasted contract", playbook.name, findings, fmt)
+    return _render_result_html(contract_name, playbook.name, findings, fmt)
+
+
+def _parse_multipart(body: bytes, content_type: str):
+    """Minimal multipart/form-data parser.
+
+    Returns (fields, files): fields maps names to str, files maps names to
+    (filename, bytes). Only what the upload form needs — not a general parser.
+    """
+    import re
+
+    m = re.search(r"boundary=([^;]+)", content_type)
+    if not m:
+        return {}, {}
+    boundary = ("--" + m.group(1).strip().strip('"')).encode("ascii")
+    fields: dict[str, str] = {}
+    files: dict[str, tuple[str, bytes]] = {}
+    for part in body.split(boundary):
+        if b"\r\n\r\n" not in part:
+            continue
+        head, data = part.split(b"\r\n\r\n", 1)
+        data = data.removesuffix(b"\r\n")
+        head_s = head.decode("latin-1", errors="replace")
+        name_m = re.search(r'name="([^"]+)"', head_s)
+        if not name_m:
+            continue
+        file_m = re.search(r'filename="([^"]*)"', head_s)
+        if file_m and file_m.group(1):
+            files[name_m.group(1)] = (file_m.group(1), data)
+        else:
+            fields[name_m.group(1)] = data.decode("utf-8", errors="replace")
+    return fields, files
 
 
 def page_html(result: str = "", selected: str = "saas-vendor") -> str:
@@ -135,15 +170,44 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if self.path != "/review":
             return self._send("<h1>not found</h1>", 404)
         length = int(self.headers.get("Content-Length", 0))
-        fields = urllib.parse.parse_qs(
-            self.rfile.read(length).decode("utf-8", errors="replace")
-        )
-        text = fields.get("text", [""])[0]
-        playbook = fields.get("playbook", ["saas-vendor"])[0]
-        fmt = fields.get("format", ["memo"])[0]
+        raw = self.rfile.read(length)
+        content_type = self.headers.get("Content-Type", "")
+        fields: dict[str, str] = {}
+        files: dict[str, tuple[str, bytes]] = {}
+        if content_type.startswith("multipart/form-data"):
+            fields, files = _parse_multipart(raw, content_type)
+        else:
+            fields = {
+                k: v[0]
+                for k, v in urllib.parse.parse_qs(
+                    raw.decode("utf-8", errors="replace")
+                ).items()
+            }
+        text = fields.get("text", "")
+        playbook = fields.get("playbook", "saas-vendor") or "saas-vendor"
+        fmt = fields.get("format", "memo") or "memo"
+        ocr = fields.get("ocr") == "1"
+        contract_name = "pasted contract"
+        uploaded = files.get("contract_file")
         try:
-            result = review_to_html(text, playbook, fmt)
-        except ValueError as exc:
+            if uploaded and uploaded[1]:
+                filename, data = uploaded
+                suffix = Path(filename).suffix.lower()
+                if suffix not in (".md", ".txt", ".docx", ".pdf"):
+                    raise ValueError(f"unsupported upload type {suffix!r}")
+                import tempfile
+
+                with tempfile.NamedTemporaryFile(
+                    suffix=suffix, prefix="redline-upload-", delete=False
+                ) as tmp:
+                    tmp.write(data)
+                try:
+                    text = extract_text(tmp.name, ocr=ocr)
+                finally:
+                    Path(tmp.name).unlink(missing_ok=True)
+                contract_name = Path(filename).name
+            result = review_to_html(text, playbook, fmt, contract_name)
+        except (ValueError, IngestionError) as exc:
             result = f'<div class="warn">⚠️ {html.escape(str(exc))}</div>'
         self._send(page_html(result, playbook))
 
