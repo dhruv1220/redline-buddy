@@ -182,3 +182,30 @@ def test_validate_with_missing_sample():
         str(ROOT / "examples" / "nope.md"),
     )
     assert proc.returncode == 2
+
+
+def test_playbook_by_bundled_name():
+    proc = run_cli(
+        "review", str(ROOT / "examples" / "sample-offer.md"),
+        "--playbook", "offer-letter", "--format", "json",
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert '"playbook": "offer-letter"' in proc.stdout
+
+
+def test_playbook_by_bundled_name_with_extension():
+    proc = run_cli(
+        "review", str(ROOT / "examples" / "sample-sow.md"),
+        "--playbook", "client-sow.yaml", "--format", "json",
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert '"playbook": "client-sow"' in proc.stdout
+
+
+def test_playbook_unknown_name_errors_clearly():
+    proc = run_cli(
+        "review", str(ROOT / "examples" / "sample-msa.md"),
+        "--playbook", "no-such-playbook",
+    )
+    assert proc.returncode == 2
+    assert "not found" in proc.stderr
