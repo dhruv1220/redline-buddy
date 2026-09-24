@@ -28,7 +28,7 @@ def cmd_review(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     try:
-        text = extract_text(contract_path)
+        text = extract_text(contract_path, ocr=args.ocr)
     except IngestionError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -56,6 +56,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--playbook",
         default=str(_default_playbook()),
         help="playbook YAML file (default: bundled saas-vendor)",
+    )
+    review.add_argument(
+        "--ocr",
+        action="store_true",
+        help="run scanned/image-only PDF pages through Tesseract OCR "
+        "(requires the tesseract and pdftoppm system binaries)",
     )
     review.add_argument(
         "--format",
