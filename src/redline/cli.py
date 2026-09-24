@@ -55,9 +55,21 @@ def cmd_validate(args: argparse.Namespace) -> int:
     print(f"valid: {args.playbook}")
     print(f"name: {playbook.name} (version {playbook.version})")
     print(f"rules: {len(playbook.rules)}")
+    fired: set[str] = set()
+    if args.sample:
+        try:
+            text = extract_text(args.sample)
+        except IngestionError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        fired = {f.rule_id for f in review_contract(text, playbook)}
+        print(f"sample: {args.sample} — {len(fired)}/{len(playbook.rules)} rules fired")
     for r in playbook.rules:
         fb = " +fallback" if r.fallback else ""
-        print(f"  - {r.id} [{r.severity}] {r.check.kind}{fb}")
+        hit = ""
+        if args.sample:
+            hit = " FIRED" if r.id in fired else " -"
+        print(f"  - {r.id} [{r.severity}] {r.check.kind}{fb}{hit}")
     return 0
 
 
@@ -100,6 +112,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = sub.add_parser("validate", help="validate a playbook YAML file")
     validate.add_argument("playbook", help="playbook YAML file to validate")
+    validate.add_argument(
+        "--sample",
+        default=None,
+        help="sample contract to test the playbook against; reports per-rule hit/miss",
+    )
     validate.set_defaults(func=cmd_validate)
     return parser
 

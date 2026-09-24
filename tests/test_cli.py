@@ -148,3 +148,37 @@ def test_validate_bad_playbook(tmp_path):
 def test_validate_missing_file():
     proc = run_cli("validate", str(ROOT / "playbooks" / "nope.yaml"))
     assert proc.returncode == 2
+
+
+def test_validate_with_sample_reports_coverage():
+    proc = run_cli(
+        "validate",
+        str(ROOT / "playbooks" / "offer-letter.yaml"),
+        "--sample",
+        str(ROOT / "examples" / "sample-offer.md"),
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "6/6 rules fired" in proc.stdout
+    assert "non-compete [high] forbids_any +fallback FIRED" in proc.stdout
+
+
+def test_validate_with_sample_shows_misses():
+    proc = run_cli(
+        "validate",
+        str(ROOT / "playbooks" / "offer-letter.yaml"),
+        "--sample",
+        str(ROOT / "examples" / "clean-msa.md"),
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "3/6 rules fired" in proc.stdout
+    assert "at-will [low] forbids_any +fallback -" in proc.stdout
+
+
+def test_validate_with_missing_sample():
+    proc = run_cli(
+        "validate",
+        str(ROOT / "playbooks" / "offer-letter.yaml"),
+        "--sample",
+        str(ROOT / "examples" / "nope.md"),
+    )
+    assert proc.returncode == 2
