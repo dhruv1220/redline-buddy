@@ -43,7 +43,7 @@ Write your own playbook in YAML — see `playbooks/saas-vendor.yaml` for the sch
 
 Markdown, plain text, `.docx` (Word), and **PDF** files are accepted — all text is extracted locally with no network calls.
 
-Scanned/image-only PDFs are rejected with a clear error instead of silently reviewing nothing (OCR is not supported yet). If a readable PDF contains pages with no extractable text, the memo notes which pages were skipped.
+Scanned/image-only PDFs are rejected with a clear error instead of silently reviewing nothing. Pass `--ocr` to run those pages through Tesseract OCR instead — it needs the `tesseract` and `pdftoppm` system binaries (e.g. `apt install tesseract-ocr poppler-utils`), still fully local, no extra Python packages. If a readable PDF contains pages with no extractable text, the memo notes which pages were skipped.
 
 ## Development
 
