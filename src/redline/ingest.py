@@ -65,7 +65,12 @@ def _read_docx(p: Path) -> str:
         doc = Document(str(p))
     except Exception as exc:
         raise IngestionError(f"could not parse Word document {p}: {exc}") from exc
-    text = "\n".join(par.text for par in doc.paragraphs).strip()
+    # Paragraphs plus tables (fee schedules and term tables often live in tables).
+    chunks = [par.text for par in doc.paragraphs]
+    for table in doc.tables:
+        for row in table.rows:
+            chunks.append(" | ".join(cell.text.strip() for cell in row.cells))
+    text = "\n".join(c for c in chunks if c.strip()).strip()
     if not text:
         raise IngestionError(f"no text found in Word document: {p}")
     return text
