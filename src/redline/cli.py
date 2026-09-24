@@ -21,10 +21,22 @@ def _default_playbook() -> Path:
     return Path(__file__).resolve().parent.parent.parent / "playbooks" / "saas-vendor.yaml"
 
 
+def _resolve_playbook(name_or_path: str) -> Path:
+    """Accept a bundled playbook name (``offer-letter``) or any file path."""
+    p = Path(name_or_path)
+    if p.is_file():
+        return p
+    bundled_dir = Path(__file__).resolve().parent.parent.parent / "playbooks"
+    for candidate in (bundled_dir / f"{name_or_path}.yaml", bundled_dir / name_or_path):
+        if candidate.is_file():
+            return candidate
+    return p  # not found: load_playbook raises the clear error
+
+
 def cmd_review(args: argparse.Namespace) -> int:
     contract_path = Path(args.contract)
     try:
-        playbook = load_playbook(args.playbook)
+        playbook = load_playbook(_resolve_playbook(args.playbook))
     except PlaybookError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -87,7 +99,8 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument(
         "--playbook",
         default=str(_default_playbook()),
-        help="playbook YAML file (default: bundled saas-vendor)",
+        help="playbook YAML file or bundled playbook name "
+        "(e.g. offer-letter; default: bundled saas-vendor)",
     )
     review.add_argument(
         "--ocr",
