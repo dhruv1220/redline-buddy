@@ -46,6 +46,21 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_validate(args: argparse.Namespace) -> int:
+    try:
+        playbook = load_playbook(args.playbook)
+    except PlaybookError as exc:
+        print(f"invalid: {exc}", file=sys.stderr)
+        return 2
+    print(f"valid: {args.playbook}")
+    print(f"name: {playbook.name} (version {playbook.version})")
+    print(f"rules: {len(playbook.rules)}")
+    for r in playbook.rules:
+        fb = " +fallback" if r.fallback else ""
+        print(f"  - {r.id} [{r.severity}] {r.check.kind}{fb}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="redline",
@@ -82,6 +97,10 @@ def build_parser() -> argparse.ArgumentParser:
         "for CI gates (default: never fail)",
     )
     review.set_defaults(func=cmd_review)
+
+    validate = sub.add_parser("validate", help="validate a playbook YAML file")
+    validate.add_argument("playbook", help="playbook YAML file to validate")
+    validate.set_defaults(func=cmd_validate)
     return parser
 
 
