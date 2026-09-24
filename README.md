@@ -15,6 +15,8 @@ redline review examples/sample-msa.md
 redline review contract.pdf --playbook playbooks/saas-vendor.yaml
 # machine-readable output for CI gates:
 redline review contract.pdf --format json | jq '.finding_count'
+# fail CI when a high-or-worse finding appears:
+redline review contract.pdf --fail-on high || echo "contract gate failed"
 # redline diff view: their language vs. your fallback, per finding:
 redline review contract.pdf --format diff
 ```

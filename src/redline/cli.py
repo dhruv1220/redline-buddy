@@ -11,7 +11,7 @@ from pathlib import Path
 from .ingest import IngestionError, extract_text
 from .memo import render_diff, render_json, render_memo
 from .playbook import PlaybookError, load_playbook
-from .review import review_contract
+from .review import SEVERITY_RANK, review_contract
 
 VERSION = "0.1.0"
 
@@ -39,6 +39,10 @@ def cmd_review(args: argparse.Namespace) -> int:
         print(render_diff(contract_path.name, playbook.name, findings))
     else:
         print(render_memo(contract_path.name, playbook.name, findings))
+    if args.fail_on:
+        threshold = SEVERITY_RANK[args.fail_on]
+        if any(SEVERITY_RANK.get(f.severity, 9) <= threshold for f in findings):
+            return 1
     return 0
 
 
@@ -69,6 +73,13 @@ def build_parser() -> argparse.ArgumentParser:
         default="memo",
         help="output format: human-readable memo (default), machine-readable JSON, "
         "or redline diff view (their language vs. your fallback)",
+    )
+    review.add_argument(
+        "--fail-on",
+        choices=("critical", "high", "medium", "low"),
+        default=None,
+        help="exit 1 (fail) when any finding is at or above this severity — "
+        "for CI gates (default: never fail)",
     )
     review.set_defaults(func=cmd_review)
     return parser
