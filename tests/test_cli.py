@@ -108,3 +108,23 @@ def test_review_docx(tmp_path):
     proc = run_cli("review", str(p))
     assert proc.returncode == 0, proc.stderr
     assert "Auto-renewal without a clear opt-out" in proc.stdout
+
+
+def test_fail_on_high_fails_on_high_findings():
+    proc = run_cli("review", str(ROOT / "examples" / "sample-msa.md"), "--fail-on", "high")
+    assert proc.returncode == 1, proc.stderr
+
+
+def test_fail_on_critical_passes_without_critical():
+    proc = run_cli("review", str(ROOT / "examples" / "sample-msa.md"), "--fail-on", "critical")
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_fail_on_low_fails_on_any_finding():
+    proc = run_cli("review", str(ROOT / "examples" / "sample-msa.md"), "--fail-on", "low")
+    assert proc.returncode == 1
+
+
+def test_no_fail_on_flag_never_fails():
+    proc = run_cli("review", str(ROOT / "examples" / "sample-msa.md"))
+    assert proc.returncode == 0, proc.stderr
