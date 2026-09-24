@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from .ingest import IngestionError, extract_text
-from .memo import render_json, render_memo
+from .memo import render_diff, render_json, render_memo
 from .playbook import PlaybookError, load_playbook
 from .review import review_contract
 
@@ -35,6 +35,8 @@ def cmd_review(args: argparse.Namespace) -> int:
     findings = review_contract(text, playbook)
     if args.format == "json":
         print(render_json(contract_path.name, playbook.name, findings))
+    elif args.format == "diff":
+        print(render_diff(contract_path.name, playbook.name, findings))
     else:
         print(render_memo(contract_path.name, playbook.name, findings))
     return 0
@@ -57,9 +59,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     review.add_argument(
         "--format",
-        choices=("memo", "json"),
+        choices=("memo", "json", "diff"),
         default="memo",
-        help="output format: human-readable memo (default) or machine-readable JSON",
+        help="output format: human-readable memo (default), machine-readable JSON, "
+        "or redline diff view (their language vs. your fallback)",
     )
     review.set_defaults(func=cmd_review)
     return parser

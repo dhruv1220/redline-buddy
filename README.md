@@ -15,13 +15,17 @@ redline review examples/sample-msa.md
 redline review contract.pdf --playbook playbooks/saas-vendor.yaml
 # machine-readable output for CI gates:
 redline review contract.pdf --format json | jq '.finding_count'
+# redline diff view: their language vs. your fallback, per finding:
+redline review contract.pdf --format diff
 ```
 
 ## How it works
 
 1. A **playbook** (`playbooks/saas-vendor.yaml`) declares rules: severity, plain-language explanation, and checks (`requires_any`, `forbids_any`, `forbids_unless`, `max_value`).
 2. The **review engine** runs every rule against the contract text and collects findings with excerpts.
-3. Findings render as a **markdown memo**: severity-ranked, each with why-it-matters and suggested fallback language.
+3. Findings render three ways: a **markdown memo** (default), **JSON** (`--format json`) for CI gates, or a **redline diff** (`--format diff`) — each finding as a unified-diff hunk with the flagged contract language as `-` lines and quotable fallback clause language as `+` lines, ready to paste into your counter-draft.
+
+Every rule carries a `fallback:` field: concrete, quotable clause language — not just advice — so the diff view gives you something you can actually propose back.
 
 ## Playbooks
 

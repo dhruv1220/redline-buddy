@@ -8,6 +8,7 @@ rules:
     description: The NDA restricts you from competing, not just from disclosing.
     why: Non-competes limit where you can work next. They don't belong in a confidentiality agreement — negotiate them separately or not at all.
     suggestion: Strike the non-compete, or narrow it to named competitors with a 6-month limit.
+    fallback: "Strike the non-compete. If the discloser insists: Recipient shall not, for six (6) months, solicit the Discloser's named customers listed in Exhibit A."
     check:
       kind: forbids_any
       patterns:
@@ -22,6 +23,7 @@ rules:
     description: The duty of confidentiality lasts longer than 5 years.
     why: A decade-long tail means a casual mention years later can still be a breach claim.
     suggestion: Cap survival at 3–5 years (trade secrets can be carved out separately).
+    fallback: "Obligations survive for five (5) years from disclosure, except for trade secrets, which survive as long as they remain trade secrets under applicable law."
     check:
       kind: max_value
       group: value
@@ -36,6 +38,7 @@ rules:
     description: No carve-outs for information that's public, independently developed, or rightfully received from others.
     why: Without exclusions, you can breach by sharing things you already knew or learned elsewhere.
     suggestion: Add exclusions for (a) publicly available, (b) independently developed, (c) rightfully received from a third party.
+    fallback: "Confidential Information excludes information that is (a) publicly available, (b) independently developed without use of the Discloser's information, or (c) rightfully received from a third party without restriction."
     check:
       kind: requires_any
       patterns:
@@ -49,6 +52,7 @@ rules:
     description: The discloser may get a court order against you without showing actual damages.
     why: Worth knowing — it lowers their bar for emergency legal action — but it's market standard.
     suggestion: Usually acceptable; just be aware of it.
+    fallback: "The Discloser must demonstrate irreparable harm and post a bond as required by applicable law before injunctive relief is granted."
     check:
       kind: forbids_any
       patterns:
@@ -61,6 +65,7 @@ rules:
     description: Nothing says what happens to confidential materials when the relationship ends.
     why: You want a clean ending — materials returned or certified destroyed, not lingering on laptops.
     suggestion: Add return-or-destroy (with certification) within 30 days of termination.
+    fallback: "Within thirty (30) days of termination, Recipient shall return or destroy all Confidential Information and certify destruction in writing."
     check:
       kind: requires_any
       patterns:

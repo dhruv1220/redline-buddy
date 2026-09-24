@@ -8,6 +8,7 @@ rules:
     description: The DPA lets the vendor add subprocessors without giving you notice or a right to object.
     why: A subprocessor you never vetted gets your personal data; enterprise DPAs normally require 14-30 days' notice and an objection/termination right.
     suggestion: Require advance notice of subprocessor changes and a right to object or terminate if you reasonably object.
+    fallback: "Vendor shall notify Customer at least thirty (30) days before engaging a new subprocessor; Customer may object on reasonable grounds and terminate the affected services if the objection is not resolved."
     check:
       kind: requires_any
       patterns:
@@ -20,6 +21,7 @@ rules:
     description: The DPA does not require the vendor to return or delete your personal data when the agreement ends.
     why: Without this, your data can linger on vendor systems indefinitely after you churn — a GDPR Art. 28 requirement and a breach-surface issue.
     suggestion: Require deletion or return of all personal data within 30-90 days of termination, with written certification.
+    fallback: "Within ninety (90) days of termination, Vendor shall delete or return all Customer personal data and certify deletion in writing."
     check:
       kind: requires_any
       patterns:
@@ -33,6 +35,7 @@ rules:
     description: The DPA has no stated deadline for the vendor to notify you of a personal data breach.
     why: You likely owe regulators and data subjects notification on fixed clocks (e.g., GDPR's 72 hours); a vague "promptly" leaves you exposed.
     suggestion: Require breach notification without undue delay and no later than 48-72 hours after the vendor becomes aware.
+    fallback: "Vendor shall notify Customer of a personal data breach without undue delay and in no event later than seventy-two (72) hours after becoming aware of it."
     check:
       kind: requires_any
       patterns:
@@ -47,6 +50,7 @@ rules:
     description: The DPA does not describe the technical and organizational security measures protecting your data.
     why: A promise of appropriate security with no specifics is unenforceable — you want encryption, access controls, and the measures spelled out or annexed.
     suggestion: Annex the specific measures (encryption at rest/in transit, access controls, logging, pen-testing cadence).
+    fallback: "Vendor shall implement the technical and organizational measures in Annex 1, including encryption at rest and in transit, access controls, and logging."
     check:
       kind: requires_any
       patterns:
@@ -60,6 +64,7 @@ rules:
     description: You have no right to audit the vendor's compliance with the DPA.
     why: Without audit rights (or at least an annual third-party report like SOC 2), you cannot verify any of the DPA's promises.
     suggestion: Add a right to audit on reasonable notice, or require an annual SOC 2 Type II / ISO 27001 report.
+    fallback: "Customer may audit Vendor's compliance with this DPA on thirty (30) days' notice, or rely on Vendor's annual SOC 2 Type II report."
     check:
       kind: requires_any
       patterns:
@@ -74,6 +79,7 @@ rules:
     description: The DPA is silent on how personal data transferred outside your jurisdiction is protected.
     why: EU/UK transfers need a mechanism (SCCs, adequacy, BCRs); silence here is a compliance gap for any vendor hosting abroad.
     suggestion: Incorporate the EU Standard Contractual Clauses (or the applicable transfer mechanism) for cross-border transfers.
+    fallback: "Transfers of personal data outside the Customer's jurisdiction shall be governed by the EU Standard Contractual Clauses (or the applicable transfer mechanism)."
     check:
       kind: requires_any
       patterns:

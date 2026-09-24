@@ -11,7 +11,8 @@ A playbook is YAML:
         severity: high            # critical | high | medium | low
         description: ...
         why: ...
-        suggestion: ...
+        suggestion: ...   # advice-style: what to ask for
+        fallback: ...     # optional: quotable replacement/insertion clause language
         check:
           kind: requires_any      # requires_any | forbids_any | forbids_unless | max_value
           patterns: [...]
@@ -49,6 +50,7 @@ class Rule:
     why: str
     suggestion: str
     check: Check
+    fallback: str = ""
 
 
 @dataclass
@@ -117,6 +119,7 @@ def load_playbook(path: str | Path) -> Playbook:
                 description=str(r.get("description", "")),
                 why=str(r.get("why", "")),
                 suggestion=str(r.get("suggestion", "")),
+                fallback=str(r.get("fallback", "") or ""),
                 check=Check(
                     kind=kind,
                     patterns=[str(x) for x in patterns],
