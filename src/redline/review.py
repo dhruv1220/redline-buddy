@@ -24,10 +24,28 @@ def _compile(patterns: list[str]) -> list[re.Pattern]:
     return [re.compile(p, re.IGNORECASE | re.DOTALL) for p in patterns]
 
 
-def _excerpt(text: str, match: re.Match, window: int = 120) -> str:
-    start = max(0, match.start() - window)
-    end = min(len(text), match.end() + window)
+_SENTENCE_END = re.compile(r"[.!?](\s|$)")
+
+def _excerpt(text: str, match: re.Match, window: int = 120, max_len: int = 400) -> str:
+    """Snippet around the match, snapped to sentence boundaries.
+
+    The old fixed-char window cut excerpts mid-word ("r receipt of notice"),
+    which reads badly in the memo and the diff view. We still cap length so
+    a run-on sentence can't blow up the output.
+    """
+    start = match.start()
+    back = text[max(0, start - window):start]
+    ends = list(_SENTENCE_END.finditer(back))
+    start = max(0, start - window) + (ends[-1].end() if ends else 0)
+
+    end = match.end()
+    fwd = text[end:end + window]
+    m = _SENTENCE_END.search(fwd)
+    end = end + (m.end() if m else len(fwd))
+
     snippet = text[start:end].replace("\n", " ").strip()
+    if len(snippet) > max_len:
+        snippet = snippet[:max_len].rsplit(" ", 1)[0].rstrip() + "…"
     return ("…" if start > 0 else "") + snippet + ("…" if end < len(text) else "")
 
 
