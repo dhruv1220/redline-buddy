@@ -12,6 +12,10 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   (PR #19)
 
 ### Added
+- Batch review: `redline review <directory>` reviews every supported contract
+  file recursively — summary table (per-file counts by severity) plus per-file
+  memos, batch JSON with totals, concatenated diffs; `--fail-on` applies
+  across all files (PR #22)
 - `lease-tenant` playbook: tenant-side review of residential leases — 11 rules
   (deposit cap via max_value, rent-escalation cap, repair obligations, early
   termination, personal guarantee, entry notice, subletting, attorneys' fees,

@@ -13,6 +13,8 @@ pip install -e .
 redline review examples/sample-msa.md
 # or with your own playbook:
 redline review contract.pdf --playbook saas-vendor
+# batch review: point at a directory of contracts, get a summary table + per-file memos
+redline review ./contracts/ --playbook lease-tenant
 # machine-readable output for CI gates:
 redline review contract.pdf --format json | jq '.finding_count'
 # fail CI when a high-or-worse finding appears:

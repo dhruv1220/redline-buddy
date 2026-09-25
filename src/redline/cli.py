@@ -8,13 +8,35 @@ import argparse
 import sys
 from pathlib import Path
 
-from .ingest import IngestionError, extract_text
-from .memo import render_diff, render_json, render_memo
+from .ingest import IngestionError, SUPPORTED_SUFFIXES, extract_text
+from .memo import render_batch_json, render_batch_memo, render_diff, render_json, render_memo
 from .playbook import PlaybookError, bundled_playbook_path, load_playbook
 from .review import SEVERITY_RANK, review_contract
 from .serve import cmd_serve
 
 VERSION = "0.1.0"
+
+
+def _contract_files(directory: Path) -> list[Path]:
+    """Supported contract files under a directory, sorted, recursive."""
+    return sorted(
+        p for p in directory.rglob("*")
+        if p.is_file() and p.suffix.lower() in SUPPORTED_SUFFIXES
+    )
+
+
+def _review_batch(
+    directory: Path, playbook, *, ocr: bool
+) -> list[tuple[str, list, str | None]]:
+    results = []
+    for path in _contract_files(directory):
+        try:
+            text = extract_text(path, ocr=ocr)
+        except IngestionError as exc:
+            results.append((path.name, [], str(exc)))
+            continue
+        results.append((path.name, review_contract(text, playbook), None))
+    return results
 
 
 def _default_playbook() -> Path:
@@ -40,6 +62,8 @@ def cmd_review(args: argparse.Namespace) -> int:
     except PlaybookError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    if contract_path.is_dir():
+        return _cmd_review_batch(contract_path, playbook, args)
     try:
         text = extract_text(contract_path, ocr=args.ocr)
     except IngestionError as exc:
@@ -55,6 +79,32 @@ def cmd_review(args: argparse.Namespace) -> int:
     if args.fail_on:
         threshold = SEVERITY_RANK[args.fail_on]
         if any(SEVERITY_RANK.get(f.severity, 9) <= threshold for f in findings):
+            return 1
+    return 0
+
+
+def _cmd_review_batch(contract_dir: Path, playbook, args: argparse.Namespace) -> int:
+    results = _review_batch(contract_dir, playbook, ocr=args.ocr)
+    if not results:
+        print(f"error: no supported contract files under {contract_dir}", file=sys.stderr)
+        return 2
+    if args.format == "json":
+        print(render_batch_json(results, playbook.name))
+    elif args.format == "diff":
+        for name, findings, error in results:
+            if error:
+                print(f"# {name}\n\n⚠️ Skipped: {error}\n")
+            else:
+                print(render_diff(name, playbook.name, findings))
+    else:
+        print(render_batch_memo(results, playbook.name))
+    if args.fail_on:
+        threshold = SEVERITY_RANK[args.fail_on]
+        if any(
+            SEVERITY_RANK.get(f.severity, 9) <= threshold
+            for _, findings, _ in results
+            for f in findings
+        ):
             return 1
     return 0
 
@@ -94,8 +144,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    review = sub.add_parser("review", help="review a contract file against a playbook")
-    review.add_argument("contract", help="path to the contract file (markdown, text, .docx, or .pdf)")
+    review = sub.add_parser("review", help="review a contract file (or a directory of contracts) against a playbook")
+    review.add_argument("contract", help="path to a contract file (markdown, text, .docx, or .pdf) or a directory of contracts for batch review")
     review.add_argument(
         "--playbook",
         default=str(_default_playbook()),
