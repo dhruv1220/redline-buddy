@@ -16,6 +16,7 @@ PAIRS = [
     ("nda-recipient", "clean-nda.md"),
     ("contractor", "clean-contractor.md"),
     ("dpa", "clean-dpa.md"),
+    ("consulting-msa", "clean-consulting-msa.md"),
 ]
 
 

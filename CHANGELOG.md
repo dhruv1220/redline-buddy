@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `consulting-msa` playbook: client (hiring-company) side review of consulting
+  MSAs — 15 rules (work-product IP assignment, background-IP carve-out,
+  liability cap, mutual indemnity, termination for convenience, rate-increase
+  cap, warranty, acceptance, auto-renewal, mutual confidentiality, non-compete,
+  transition assistance, governing law), each with quotable fallback language;
+  sample + clean fixtures
 - `redline review --format diff`: redline-style diff view — each finding as a
   unified-diff hunk with flagged contract language as `-` lines and quotable
   fallback clause language as `+` lines (PR #4)

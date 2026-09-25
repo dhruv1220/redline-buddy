@@ -1,0 +1,223 @@
+name: consulting-msa
+version: 1
+description: Red-flag rules for reviewing consulting / professional-services MSAs from the client (hiring-company) side.
+rules:
+  - id: ip-work-product
+    title: No IP assignment for work product
+    severity: high
+    description: The MSA does not assign intellectual property in the custom work product or deliverables to the client.
+    why: You are paying for custom work — without a present assignment, the consultant owns what you paid to build and can reuse it, withhold it, or charge you to keep using it.
+    suggestion: Require a present assignment of all IP in work product and deliverables to the client, effective on creation.
+    fallback: "Consultant hereby assigns to Client all right, title, and interest in the work product and deliverables, including all intellectual property rights therein."
+    check:
+      kind: requires_any
+      patterns:
+        - intellectual\s+property.{0,80}assign
+        - assign.{0,80}intellectual\s+property
+        - work\s+product.{0,80}(assign|ownership)
+        - ownership.{0,80}deliverables
+        - deliverables.{0,80}(owned\s+by\s+client|assign.{0,20}to\s+client)
+
+  - id: ip-background-carveout
+    title: No background-IP carve-out
+    severity: medium
+    description: The MSA has no carve-out for the consultant's pre-existing IP, tools, or know-how.
+    why: Without a background-IP carve-out, a broad IP assignment can sweep in the consultant's pre-existing tools — or the silence leaves ownership of reused components ambiguous and litigable.
+    suggestion: Carve out pre-existing IP and tools, granting the client a license to them only as embedded in the deliverables.
+    fallback: "Pre-existing IP, tools, and know-how owned by Consultant before the engagement (\"Background IP\") remain Consultant's property, licensed to Client as embedded in the deliverables."
+    check:
+      kind: requires_any
+      patterns:
+        - pre.exist
+        - background\s+(ip|intellectual)
+        - prior\s+(inventions|ip)
+        - tools.{0,40}remain.{0,20}consultant
+
+  - id: liability-cap
+    title: No limitation of liability
+    severity: high
+    description: The MSA has no clause capping either party's liability.
+    why: Without a cap, a failed engagement can expose you to damages far beyond the fees paid — cap aggregate liability at the fees paid under the SOW.
+    suggestion: Add a mutual liability cap at the fees paid in the twelve months preceding the claim, excluding IP infringement and confidentiality breaches.
+    fallback: "Each party's aggregate liability shall not exceed the fees paid under the applicable SOW in the twelve (12) months preceding the claim."
+    check:
+      kind: requires_any
+      patterns:
+        - limitation\s+of\s+liability
+        - liabilit.{0,40}shall\s+not\s+exceed
+        - cap.{0,30}liabilit
+        - aggregate\s+liability
+
+  - id: indemnity-mutual
+    title: One-sided indemnification
+    severity: high
+    description: The indemnity clause runs only one way instead of being mutual.
+    why: If only you indemnify the consultant, you absorb the cost of their mistakes too — indemnity for breach, negligence, and IP claims should run both ways.
+    suggestion: "Make indemnification mutual: each party covers third-party claims arising from its own breach, negligence, or willful misconduct."
+    fallback: "Each party shall indemnify the other against third-party claims arising from the indemnifying party's breach, negligence, or willful misconduct."
+    check:
+      kind: forbids_unless
+      patterns:
+        - indemnif
+      unless_any:
+        - mutual.{0,40}indemnif
+        - indemnif.{0,40}mutual
+
+  - id: termination-convenience
+    title: No termination for convenience
+    severity: high
+    description: The MSA allows termination only for cause — you cannot exit a failing engagement without proving breach.
+    why: Consulting engagements sour for non-breach reasons (priorities change, the team underperforms but cures). Without termination for convenience you are locked in or negotiating an exit.
+    suggestion: Add termination for convenience on 30 days' notice, paying only for work completed through the termination date.
+    fallback: "Either party may terminate for convenience on thirty (30) days' written notice, paying for work completed through the termination date."
+    check:
+      kind: requires_any
+      patterns:
+        - terminat\w*\s+for\s+convenience
+        - terminat.{0,40}without\s+cause
+        - convenience.{0,30}terminat
+
+  - id: termination-notice
+    title: No termination notice period
+    severity: medium
+    description: The MSA states no notice period for termination.
+    why: Without a notice period, either side can walk away overnight — 30 days' written notice is the standard cushion to transition work.
+    suggestion: Require at least 30 days' prior written notice for any termination.
+    fallback: "Termination requires at least thirty (30) days' prior written notice."
+    check:
+      kind: requires_any
+      patterns:
+        - \d{1,3}\s+days.{0,30}notice
+        - notice.{0,30}terminat
+        - terminat.{0,30}notice
+
+  - id: payment-terms
+    title: No clear payment terms
+    severity: medium
+    description: The MSA states no rate, invoicing cadence, or payment timeline.
+    why: Vague payment terms are the top source of client-consultant disputes — agree on rate, invoice schedule, and net terms up front.
+    suggestion: State the rate, invoicing cadence, and payment due date (e.g., net 30).
+    fallback: "Consultant shall invoice monthly; Client shall pay undisputed invoices within thirty (30) days (net 30)."
+    check:
+      kind: requires_any
+      patterns:
+        - \$ ?\d
+        - per\s+hour
+        - fixed\s+fee
+        - net\s+\d{1,2}
+        - invoice.{0,30}within
+
+  - id: rate-increase-cap
+    title: Uncapped rate increases
+    severity: medium
+    description: The consultant can raise rates with no cap or notice requirement.
+    why: On a multi-quarter engagement, uncapped annual increases compound quietly — cap increases (e.g., 5%/year) and require advance notice.
+    suggestion: Cap rate increases at a fixed percentage per year and require 60 days' prior written notice.
+    fallback: "Rate increases are capped at 5% per year and require sixty (60) days' prior written notice."
+    check:
+      kind: forbids_unless
+      patterns:
+        - rate.{0,40}(increas|adjust|change)
+        - (increas|adjust).{0,30}rates
+      unless_any:
+        - \d{1,2}\s*%
+        - cap.{0,20}(rate|increas)
+        - notice.{0,20}(rate|increas)
+        - (rate|increas).{0,20}notice
+
+  - id: warranty
+    title: No warranty on services or deliverables
+    severity: medium
+    description: The MSA disclaims or omits any warranty that services will be performed professionally and deliverables will meet specifications.
+    why: Without a warranty you have no contractual lever if the deliverables are defective — at minimum require professional performance and a cure period.
+    suggestion: Require a warranty of professional performance and material conformance to specifications, with a 90-day cure window.
+    fallback: "Consultant warrants the services will be performed professionally and the deliverables will materially conform to the specifications for ninety (90) days after delivery."
+    check:
+      kind: requires_any
+      patterns:
+        - warrant
+
+  - id: acceptance
+    title: No acceptance process for deliverables
+    severity: medium
+    description: The MSA has no acceptance or testing process for deliverables.
+    why: Without acceptance criteria, "done" is whatever the consultant says — define a testing window after which silence counts as acceptance.
+    suggestion: Add a 15-day acceptance testing window per deliverable; silence at the end of the window is deemed acceptance.
+    fallback: "Client has fifteen (15) days after delivery to test deliverables; silence is deemed acceptance."
+    check:
+      kind: requires_any
+      patterns:
+        - acceptance
+        - accept.{0,40}deliverable
+        - deliverable.{0,40}accept
+
+  - id: auto-renewal
+    title: Auto-renewal without notice
+    severity: medium
+    description: The agreement auto-renews with no notice or opt-out mechanism.
+    why: Auto-renewal without a non-renewal notice locks you into another term of an engagement you meant to end — require advance notice of non-renewal.
+    suggestion: Require written notice of non-renewal (e.g., 60 days) before any auto-renewal term.
+    fallback: "Auto-renewal requires sixty (60) days' prior written notice of non-renewal to prevent the next term."
+    check:
+      kind: forbids_unless
+      patterns:
+        - auto.{0,20}renew
+        - renew.{0,20}automatic
+      unless_any:
+        - renew.{0,80}notice
+        - notice.{0,80}renew
+
+  - id: confidentiality-mutual
+    title: One-sided confidentiality
+    severity: low
+    description: Confidentiality obligations protect only the consultant's information, not the client's.
+    why: You will share roadmaps, data, and strategy with the consultant — confidentiality should be mutual, not a one-way shield.
+    suggestion: Make confidentiality mutual with a 2-year survival period.
+    fallback: "Each party's confidential information is protected; obligations are mutual and survive two (2) years after disclosure."
+    check:
+      kind: forbids_unless
+      patterns:
+        - confidential
+      unless_any:
+        - mutual
+
+  - id: non-compete
+    title: Non-compete in a consulting MSA
+    severity: high
+    description: The MSA restricts the client from engaging competing consultants.
+    why: A client-side non-compete locks you into one vendor and can be used as leverage at renewal — strike it or replace it with a narrow non-solicitation of personnel.
+    suggestion: Remove the non-compete; if needed, substitute a 12-month mutual non-solicitation of employees.
+    fallback: "Strike the non-compete; a mutual non-solicitation of employees for twelve (12) months is the standard substitute."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.compete
+        - noncompete
+        - covenant\s+not\s+to\s+compete
+
+  - id: transition-assistance
+    title: No transition assistance on exit
+    severity: low
+    description: The MSA has no transition assistance or knowledge-transfer obligation when the engagement ends.
+    why: When you switch vendors, undocumented work walks out the door with the old consultant — require a transition assistance period at agreed rates.
+    suggestion: Require up to 30 days of transition assistance and knowledge transfer on termination, at the then-current rates.
+    fallback: "On termination, Consultant shall provide up to thirty (30) days of transition assistance and knowledge transfer at the then-current rates."
+    check:
+      kind: requires_any
+      patterns:
+        - transition.{0,30}assistance
+        - knowledge\s+transfer
+        - wind.down
+
+  - id: governing-law
+    title: No governing law clause
+    severity: low
+    description: The MSA states no governing law for disputes.
+    why: Without a governing-law clause, the venue and law of any dispute are uncertain — name your home jurisdiction.
+    suggestion: Name the client's home state law as governing, without regard to conflicts principles.
+    fallback: "This Agreement is governed by the laws of [Client's state], without regard to conflicts principles."
+    check:
+      kind: requires_any
+      patterns:
+        - governing\s+law
+        - governed\s+by\s+the\s+laws

@@ -1,3 +1,16 @@
+Metadata-Version: 2.4
+Name: redline-buddy
+Version: 0.1.0
+Summary: Local-first contract red-flag checker: paste in a vendor MSA, get a plain-language risk memo. No API keys, no data leaves your machine.
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pyyaml>=6
+Requires-Dist: python-docx>=1.1
+Requires-Dist: pypdf>=6
+Dynamic: license-file
+
 # redline-buddy
 
 **Local-first contract red-flag checker.** Paste in a vendor MSA, get a plain-language risk memo — with zero data leaving your machine.
