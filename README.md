@@ -19,6 +19,8 @@ redline review contract.pdf --format json | jq '.finding_count'
 redline review contract.pdf --fail-on high || echo "contract gate failed"
 # minimal local web UI (paste text, pick a playbook, get the memo):
 redline serve
+# the web UI now shows playbook descriptions in the picker, one-click
+# "Copy fallback" buttons per finding, and severity filters on memos
 # validate a playbook you wrote, optionally against a sample contract:
 redline validate my-playbook.yaml --sample examples/sample-msa.md
 # redline diff view: their language vs. your fallback, per finding:

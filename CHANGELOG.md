@@ -12,6 +12,9 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   (PR #19)
 
 ### Added
+- `redline serve` upgrades: playbook descriptions in the picker, one-click
+  "Copy fallback" buttons on memo findings (clipboard via hidden textarea —
+  XSS-safe), and severity filter toggles on the memo view (PR #20)
 - PyPI packaging metadata: classifiers, keywords, author, project URLs
   (PR #19)
 - `RELEASING.md`: release checklist + one-time PyPI token setup (PR #19)
