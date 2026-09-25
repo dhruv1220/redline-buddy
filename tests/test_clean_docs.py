@@ -17,6 +17,7 @@ PAIRS = [
     ("contractor", "clean-contractor.md"),
     ("dpa", "clean-dpa.md"),
     ("consulting-msa", "clean-consulting-msa.md"),
+    ("lease-tenant", "clean-lease.md"),
 ]
 
 
