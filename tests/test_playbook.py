@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from redline.playbook import PlaybookError, load_playbook
+from redline.playbook import PlaybookError, bundled_playbook_path, load_playbook
 
 ROOT = Path(__file__).resolve().parent.parent
-PLAYBOOK = ROOT / "playbooks" / "saas-vendor.yaml"
+PLAYBOOK = bundled_playbook_path("saas-vendor")
 
 
 def test_bundled_playbook_loads():

@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from redline.memo import render_diff
-from redline.playbook import load_playbook
+from redline.playbook import bundled_playbook_path, load_playbook
 from redline.review import Finding, review_contract
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -83,7 +83,7 @@ def test_diff_sorted_like_memo():
 
 def test_bundled_playbooks_all_have_fallback():
     for pb in ["saas-vendor", "nda-recipient", "contractor", "dpa"]:
-        playbook = load_playbook(ROOT / "playbooks" / f"{pb}.yaml")
+        playbook = load_playbook(bundled_playbook_path(f"{pb}.yaml"))
         missing = [r.id for r in playbook.rules if not r.fallback]
         assert not missing, f"{pb}: rules missing fallback: {missing}"
 

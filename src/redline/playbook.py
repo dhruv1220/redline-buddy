@@ -20,12 +20,28 @@ A playbook is YAML:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from importlib import resources
 from pathlib import Path
 
 import yaml
 
 SEVERITIES = ("critical", "high", "medium", "low")
 CHECK_KINDS = ("requires_any", "forbids_any", "forbids_unless", "max_value")
+
+
+def bundled_playbooks_dir() -> Path:
+    """Directory of the playbooks shipped with the installed package.
+
+    Uses importlib.resources so this works for regular installs, wheels,
+    and editable checkouts alike.
+    """
+    return Path(str(resources.files("redline") / "playbooks"))
+
+
+def bundled_playbook_path(name: str) -> Path:
+    """Resolve a bundled playbook name (``offer-letter`` or ``offer-letter.yaml``)."""
+    stem = name[:-5] if name.endswith(".yaml") else name
+    return bundled_playbooks_dir() / f"{stem}.yaml"
 
 
 class PlaybookError(ValueError):

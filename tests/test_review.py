@@ -1,11 +1,11 @@
 from pathlib import Path
 
 from redline.memo import render_memo
-from redline.playbook import load_playbook
+from redline.playbook import bundled_playbook_path, load_playbook
 from redline.review import review_contract
 
 ROOT = Path(__file__).resolve().parent.parent
-PLAYBOOK = ROOT / "playbooks" / "saas-vendor.yaml"
+PLAYBOOK = bundled_playbook_path("saas-vendor")
 SAMPLE = ROOT / "examples" / "sample-msa.md"
 
 
@@ -55,9 +55,9 @@ def test_memo_renders_findings_and_disclaimer():
 
 
 def test_nda_playbook_flags_sample():
-    from redline.playbook import load_playbook
+    from redline.playbook import bundled_playbook_path, load_playbook
 
-    pb = load_playbook(ROOT / "playbooks" / "nda-recipient.yaml")
+    pb = load_playbook(bundled_playbook_path("nda-recipient"))
     findings = review_contract((ROOT / "examples" / "sample-nda.md").read_text(), pb)
     ids = {f.rule_id for f in findings}
     assert {
@@ -76,9 +76,9 @@ def test_memo_clean_contract():
 
 
 def test_nda_playbook_loads():
-    from redline.playbook import load_playbook
+    from redline.playbook import bundled_playbook_path, load_playbook
 
-    pb = load_playbook(ROOT / "playbooks" / "nda-recipient.yaml")
+    pb = load_playbook(bundled_playbook_path("nda-recipient"))
     assert pb.name == "nda-recipient"
     assert len(pb.rules) == 5
 

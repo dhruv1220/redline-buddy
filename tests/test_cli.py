@@ -2,6 +2,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from redline.playbook import bundled_playbook_path
+
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 
@@ -54,7 +56,7 @@ def test_review_dpa_playbook():
         "review",
         str(ROOT / "examples" / "sample-dpa.md"),
         "--playbook",
-        str(ROOT / "playbooks" / "dpa.yaml"),
+        str(bundled_playbook_path("dpa")),
     )
     assert proc.returncode == 0, proc.stderr
     assert "No return-or-delete obligation at termination" in proc.stdout
@@ -82,7 +84,7 @@ def test_review_contractor_playbook():
         "review",
         str(ROOT / "examples" / "sample-contractor.md"),
         "--playbook",
-        str(ROOT / "playbooks" / "contractor.yaml"),
+        str(bundled_playbook_path("contractor")),
     )
     assert proc.returncode == 0, proc.stderr
     assert "No IP / work-product assignment" in proc.stdout
@@ -131,7 +133,7 @@ def test_no_fail_on_flag_never_fails():
 
 
 def test_validate_good_playbook():
-    proc = run_cli("validate", str(ROOT / "playbooks" / "saas-vendor.yaml"))
+    proc = run_cli("validate", str(bundled_playbook_path("saas-vendor")))
     assert proc.returncode == 0, proc.stderr
     assert "valid:" in proc.stdout
     assert "rules: 6" in proc.stdout
@@ -146,14 +148,14 @@ def test_validate_bad_playbook(tmp_path):
 
 
 def test_validate_missing_file():
-    proc = run_cli("validate", str(ROOT / "playbooks" / "nope.yaml"))
+    proc = run_cli("validate", str(bundled_playbook_path("nope")))
     assert proc.returncode == 2
 
 
 def test_validate_with_sample_reports_coverage():
     proc = run_cli(
         "validate",
-        str(ROOT / "playbooks" / "offer-letter.yaml"),
+        str(bundled_playbook_path("offer-letter")),
         "--sample",
         str(ROOT / "examples" / "sample-offer.md"),
     )
@@ -165,7 +167,7 @@ def test_validate_with_sample_reports_coverage():
 def test_validate_with_sample_shows_misses():
     proc = run_cli(
         "validate",
-        str(ROOT / "playbooks" / "offer-letter.yaml"),
+        str(bundled_playbook_path("offer-letter")),
         "--sample",
         str(ROOT / "examples" / "clean-msa.md"),
     )
@@ -177,7 +179,7 @@ def test_validate_with_sample_shows_misses():
 def test_validate_with_missing_sample():
     proc = run_cli(
         "validate",
-        str(ROOT / "playbooks" / "offer-letter.yaml"),
+        str(bundled_playbook_path("offer-letter")),
         "--sample",
         str(ROOT / "examples" / "nope.md"),
     )

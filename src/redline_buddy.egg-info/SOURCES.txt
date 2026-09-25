@@ -8,6 +8,13 @@ src/redline/memo.py
 src/redline/playbook.py
 src/redline/review.py
 src/redline/serve.py
+src/redline/playbooks/client-sow.yaml
+src/redline/playbooks/consulting-msa.yaml
+src/redline/playbooks/contractor.yaml
+src/redline/playbooks/dpa.yaml
+src/redline/playbooks/nda-recipient.yaml
+src/redline/playbooks/offer-letter.yaml
+src/redline/playbooks/saas-vendor.yaml
 src/redline_buddy.egg-info/PKG-INFO
 src/redline_buddy.egg-info/SOURCES.txt
 src/redline_buddy.egg-info/dependency_links.txt

@@ -4,13 +4,23 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Changed
+- Bundled playbooks moved into the installed package (`src/redline/playbooks/`)
+  and resolved via `importlib.resources`, so `redline review --playbook <name>`
+  works after a plain `pip install redline-buddy` — previously they only
+  resolved from a source checkout, which would have broken the PyPI install
+  (PR #19)
+
 ### Added
+- PyPI packaging metadata: classifiers, keywords, author, project URLs
+  (PR #19)
+- `RELEASING.md`: release checklist + one-time PyPI token setup (PR #19)
 - `consulting-msa` playbook: client (hiring-company) side review of consulting
   MSAs — 15 rules (work-product IP assignment, background-IP carve-out,
   liability cap, mutual indemnity, termination for convenience, rate-increase
   cap, warranty, acceptance, auto-renewal, mutual confidentiality, non-compete,
   transition assistance, governing law), each with quotable fallback language;
-  sample + clean fixtures
+  sample + clean fixtures (PR #18)
 - `redline review --format diff`: redline-style diff view — each finding as a
   unified-diff hunk with flagged contract language as `-` lines and quotable
   fallback clause language as `+` lines (PR #4)

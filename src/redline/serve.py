@@ -14,10 +14,10 @@ from pathlib import Path
 
 from .ingest import IngestionError, extract_text
 from .memo import render_diff, render_memo
-from .playbook import PlaybookError, load_playbook
+from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
 from .review import review_contract
 
-PLAYBOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "playbooks"
+PLAYBOOKS_DIR = bundled_playbooks_dir()
 
 PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><title>redline-buddy</title>

@@ -2,7 +2,22 @@ Metadata-Version: 2.4
 Name: redline-buddy
 Version: 0.1.0
 Summary: Local-first contract red-flag checker: paste in a vendor MSA, get a plain-language risk memo. No API keys, no data leaves your machine.
+Author: Dhruv Arora
 License: MIT
+Project-URL: Homepage, https://github.com/dhruv1220/redline-buddy
+Project-URL: Repository, https://github.com/dhruv1220/redline-buddy
+Project-URL: Issues, https://github.com/dhruv1220/redline-buddy/issues
+Keywords: contracts,legal-tech,redlining,playbook,msa,nda,cli
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Legal Industry
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Office/Business
+Classifier: Topic :: Utilities
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 License-File: LICENSE
@@ -25,7 +40,7 @@ Existing contract AI tools send your documents to someone else's LLM. redline-bu
 pip install -e .
 redline review examples/sample-msa.md
 # or with your own playbook:
-redline review contract.pdf --playbook playbooks/saas-vendor.yaml
+redline review contract.pdf --playbook saas-vendor
 # machine-readable output for CI gates:
 redline review contract.pdf --format json | jq '.finding_count'
 # fail CI when a high-or-worse finding appears:
@@ -40,7 +55,7 @@ redline review contract.pdf --format diff
 
 ## How it works
 
-1. A **playbook** (`playbooks/saas-vendor.yaml`) declares rules: severity, plain-language explanation, and checks (`requires_any`, `forbids_any`, `forbids_unless`, `max_value`).
+1. A **playbook** (`src/redline/playbooks/saas-vendor.yaml`) declares rules: severity, plain-language explanation, and checks (`requires_any`, `forbids_any`, `forbids_unless`, `max_value`).
 2. The **review engine** runs every rule against the contract text and collects findings with excerpts.
 3. Findings render three ways: a **markdown memo** (default), **JSON** (`--format json`) for CI gates, or a **redline diff** (`--format diff`) — each finding as a unified-diff hunk with the flagged contract language as `-` lines and quotable fallback clause language as `+` lines, ready to paste into your counter-draft.
 
@@ -58,7 +73,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `client-sow` | freelancer / agency side | change-order process, payment terms, late-payment remedy, kill fee, liability cap, non-compete |
 | `consulting-msa` | client (hiring-company) side | work-product IP assignment, background-IP carve-out, liability cap, mutual indemnity, termination for convenience, rate-increase cap, warranty, acceptance, auto-renewal, transition assistance |
 
-Write your own playbook in YAML — see `playbooks/saas-vendor.yaml` for the schema.
+Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema.
 
 ## Input formats
 

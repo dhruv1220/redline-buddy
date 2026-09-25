@@ -3,12 +3,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from redline.playbook import load_playbook
+from redline.playbook import bundled_playbook_path, load_playbook
 from redline.review import review_contract
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
-PLAYBOOK = ROOT / "playbooks" / "offer-letter.yaml"
+PLAYBOOK = bundled_playbook_path("offer-letter")
 SAMPLE = ROOT / "examples" / "sample-offer.md"
 
 
