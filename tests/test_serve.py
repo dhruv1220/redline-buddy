@@ -51,7 +51,8 @@ def test_review_to_html_rejects_bad_playbook():
 def test_page_lists_all_bundled_playbooks():
     html_text = page_html()
     for name in ["saas-vendor", "nda-recipient", "contractor", "dpa", "offer-letter",
-                 "client-sow", "consulting-msa", "lease-tenant", "consulting-vendor"]:
+                 "client-sow", "consulting-msa", "lease-tenant", "consulting-vendor",
+                 "loan-borrower"]:
         assert f'value="{name}"' in html_text
     assert "<form" in html_text
 

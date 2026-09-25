@@ -12,6 +12,11 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   (PR #19)
 
 ### Added
+- `loan-borrower` playbook: borrower-side review of business term loans —
+  11 rules (confession of judgment [critical], prepayment penalty / yield
+  maintenance, uncapped variable rate, personal guarantee, blanket lien,
+  default cure period, vague late fee, arbitration, lender assignment),
+  each with quotable fallback language; sample + clean fixtures (PR #24)
 - `consulting-vendor` playbook: vendor (consultant/agency) side MSA review —
   12 rules (IP assignment scope, liability cap, mutual indemnity, payment
   terms, late-payment remedy, kill fee, non-compete, one-sided
