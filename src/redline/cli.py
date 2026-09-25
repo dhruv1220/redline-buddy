@@ -1,6 +1,6 @@
 """redline CLI: review a contract file against a playbook.
 
-    redline review contract.md --playbook playbooks/saas-vendor.yaml
+    redline review contract.md --playbook saas-vendor
 """
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .ingest import IngestionError, extract_text
 from .memo import render_diff, render_json, render_memo
-from .playbook import PlaybookError, load_playbook
+from .playbook import PlaybookError, bundled_playbook_path, load_playbook
 from .review import SEVERITY_RANK, review_contract
 from .serve import cmd_serve
 
@@ -18,7 +18,7 @@ VERSION = "0.1.0"
 
 
 def _default_playbook() -> Path:
-    return Path(__file__).resolve().parent.parent.parent / "playbooks" / "saas-vendor.yaml"
+    return bundled_playbook_path("saas-vendor")
 
 
 def _resolve_playbook(name_or_path: str) -> Path:
@@ -26,8 +26,8 @@ def _resolve_playbook(name_or_path: str) -> Path:
     p = Path(name_or_path)
     if p.is_file():
         return p
-    bundled_dir = Path(__file__).resolve().parent.parent.parent / "playbooks"
-    for candidate in (bundled_dir / f"{name_or_path}.yaml", bundled_dir / name_or_path):
+    for candidate in (bundled_playbook_path(name_or_path),
+                      bundled_playbook_path(f"{name_or_path}.yaml")):
         if candidate.is_file():
             return candidate
     return p  # not found: load_playbook raises the clear error

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from redline.playbook import load_playbook
+from redline.playbook import bundled_playbook_path, load_playbook
 from redline.review import review_contract
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,7 +22,7 @@ PAIRS = [
 
 @pytest.mark.parametrize("playbook_name,example", PAIRS)
 def test_clean_document_fires_nothing(playbook_name, example):
-    pb = load_playbook(ROOT / "playbooks" / f"{playbook_name}.yaml")
+    pb = load_playbook(bundled_playbook_path(f"{playbook_name}.yaml"))
     text = (ROOT / "examples" / example).read_text(encoding="utf-8")
     findings = review_contract(text, pb)
     assert findings == [], [f.rule_id for f in findings]

@@ -12,7 +12,7 @@ Existing contract AI tools send your documents to someone else's LLM. redline-bu
 pip install -e .
 redline review examples/sample-msa.md
 # or with your own playbook:
-redline review contract.pdf --playbook playbooks/saas-vendor.yaml
+redline review contract.pdf --playbook saas-vendor
 # machine-readable output for CI gates:
 redline review contract.pdf --format json | jq '.finding_count'
 # fail CI when a high-or-worse finding appears:
@@ -27,7 +27,7 @@ redline review contract.pdf --format diff
 
 ## How it works
 
-1. A **playbook** (`playbooks/saas-vendor.yaml`) declares rules: severity, plain-language explanation, and checks (`requires_any`, `forbids_any`, `forbids_unless`, `max_value`).
+1. A **playbook** (`src/redline/playbooks/saas-vendor.yaml`) declares rules: severity, plain-language explanation, and checks (`requires_any`, `forbids_any`, `forbids_unless`, `max_value`).
 2. The **review engine** runs every rule against the contract text and collects findings with excerpts.
 3. Findings render three ways: a **markdown memo** (default), **JSON** (`--format json`) for CI gates, or a **redline diff** (`--format diff`) — each finding as a unified-diff hunk with the flagged contract language as `-` lines and quotable fallback clause language as `+` lines, ready to paste into your counter-draft.
 
@@ -45,7 +45,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `client-sow` | freelancer / agency side | change-order process, payment terms, late-payment remedy, kill fee, liability cap, non-compete |
 | `consulting-msa` | client (hiring-company) side | work-product IP assignment, background-IP carve-out, liability cap, mutual indemnity, termination for convenience, rate-increase cap, warranty, acceptance, auto-renewal, transition assistance |
 
-Write your own playbook in YAML — see `playbooks/saas-vendor.yaml` for the schema.
+Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema.
 
 ## Input formats
 

@@ -3,13 +3,13 @@ from pathlib import Path
 import pytest
 
 from redline.ingest import IngestionError, extract_text
-from redline.playbook import load_playbook
+from redline.playbook import bundled_playbook_path, load_playbook
 from redline.review import review_contract
 
 ROOT = Path(__file__).resolve().parent.parent
 PDF = ROOT / "examples" / "sample-msa.pdf"
 MD = ROOT / "examples" / "sample-msa.md"
-PLAYBOOK = ROOT / "playbooks" / "saas-vendor.yaml"
+PLAYBOOK = bundled_playbook_path("saas-vendor")
 
 
 def _blank_pdf(path: Path) -> None:
@@ -68,6 +68,6 @@ def test_docx_tables_are_extracted():
     assert "Milestone | Fee" in text
     assert "Design | $5,000" in text
     # table content feeds the rule engine: payment terms now detected
-    playbook = load_playbook(ROOT / "playbooks" / "client-sow.yaml")
+    playbook = load_playbook(bundled_playbook_path("client-sow"))
     ids = {f.rule_id for f in review_contract(text, playbook)}
     assert "payment-terms" not in ids

@@ -4,12 +4,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from redline.playbook import load_playbook
+from redline.playbook import bundled_playbook_path, load_playbook
 from redline.review import review_contract
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
-PLAYBOOK = ROOT / "playbooks" / "consulting-msa.yaml"
+PLAYBOOK = bundled_playbook_path("consulting-msa")
 SAMPLE = ROOT / "examples" / "sample-consulting-msa.md"
 
 # The sample is a vendor-favoring MSA with sane termination-notice,
