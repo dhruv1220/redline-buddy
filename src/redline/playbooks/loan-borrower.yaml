@@ -1,0 +1,164 @@
+name: loan-borrower
+version: 1
+description: Red-flag rules for reviewing business term-loan agreements from the borrower side.
+rules:
+  - id: confession-of-judgment
+    title: Confession of judgment clause
+    severity: critical
+    description: The loan includes a confession of judgment (cognovit) clause.
+    why: A confession of judgment lets the lender seize your assets without a trial or even notice — you waive your day in court up front. This is the single most predatory clause in small-business lending.
+    suggestion: Strike it entirely; several states void these clauses, but don't rely on that.
+    fallback: "Strike the confession of judgment. Lender's remedies require judicial process with notice and an opportunity to be heard."
+    check:
+      kind: forbids_any
+      patterns:
+        - confession\s+of\s+judgment
+        - cognovit
+
+  - id: prepayment-penalty
+    title: Prepayment penalty or yield maintenance
+    severity: high
+    description: The loan penalizes early repayment via a prepayment penalty, yield maintenance, or defeasance.
+    why: Yield maintenance can cost more than the interest you would have paid — it locks you into the loan even when you can refinance cheaper.
+    suggestion: Require prepayment without penalty, or a declining penalty schedule that burns off.
+    fallback: "Borrower may prepay in whole or in part at any time without premium or penalty."
+    check:
+      kind: forbids_unless
+      patterns:
+        - prepayment\s+penalt
+        - prepay.{0,30}penalt
+        - yield\s+maintenance
+        - defeasance
+      unless_any:
+        - without\s+(penalty|penalties)
+        - no\s+prepayment\s+penalt
+
+  - id: variable-rate-cap
+    title: Variable rate with no cap
+    severity: high
+    description: The interest rate floats with no cap, ceiling, or maximum.
+    why: An uncapped floating rate means your payment can double if the index spikes — always cap the rate or fix it.
+    suggestion: Cap the floating rate or convert to a fixed rate.
+    fallback: "The variable rate shall never exceed [X]% per annum (the \"Rate Cap\")."
+    check:
+      kind: forbids_unless
+      patterns:
+        - variable\s+rate
+        - floating\s+rate
+        - adjustable\s+rate
+      unless_any:
+        - \bcap\b
+        - ceiling
+        - maximum.{0,20}rate
+
+  - id: rate-disclosure
+    title: No stated interest rate
+    severity: medium
+    description: The agreement states no interest rate, APR, or per-annum rate.
+    why: If the rate isn't in the agreement, you can't verify what you're paying — the number must be explicit.
+    suggestion: Require the rate stated as a per-annum figure with the index and margin if floating.
+    fallback: "Interest accrues at [X]% per annum [fixed / index + margin]."
+    check:
+      kind: requires_any
+      patterns:
+        - interest\s+rate
+        - \bAPR\b
+        - per\s+annum
+
+  - id: personal-guarantee
+    title: Personal guarantee required
+    severity: high
+    description: The loan requires a personal guarantee.
+    why: A personal guarantee puts your house and savings behind a business loan — negotiate it away, cap it, or add a burn-off tied to repayment milestones.
+    suggestion: Remove the guarantee, cap it, or burn it off after on-time payments.
+    fallback: "Strike the personal guarantee; if required, cap it at 50% of principal and burn it off after 24 months of on-time payment."
+    check:
+      kind: forbids_any
+      patterns:
+        - personal\s+guarant
+        - personally\s+guaranteed
+        - guaranty
+
+  - id: blanket-lien
+    title: Blanket lien on all assets
+    severity: high
+    description: The loan is secured by a blanket lien on all of the borrower's assets.
+    why: A blanket lien means one missed payment can put your entire business — equipment, receivables, inventory — in the lender's hands. Limit collateral to what's needed.
+    suggestion: Limit the lien to specific scheduled collateral.
+    fallback: "The lien is limited to the collateral listed in Exhibit A; no blanket lien on all assets."
+    check:
+      kind: forbids_any
+      patterns:
+        - blanket\s+lien
+        - lien\s+on\s+all\s+assets
+        - all\s+of\s+borrower.{0,20}assets
+
+  - id: default-cure
+    title: No cure period on default
+    severity: medium
+    description: A missed payment or breach is an immediate event of default with no cure or grace period.
+    why: Without a cure period, one late wire transfer triggers default remedies — 10–15 days to cure is standard.
+    suggestion: Add a 15-day cure period for monetary defaults.
+    fallback: "No event of default occurs until Borrower fails to cure within fifteen (15) days after written notice."
+    check:
+      kind: requires_any
+      patterns:
+        - \bcure\b
+        - grace\s+period
+        - opportunity\s+to\s+cure
+
+  - id: late-fee
+    title: Vague late-payment charge
+    severity: medium
+    description: The loan charges late fees with no stated amount or rate.
+    why: An unstated late charge can be anything the lender's servicing department decides — pin it to a dollar amount or percent.
+    suggestion: State the late charge as a fixed dollar amount or percent of the overdue payment.
+    fallback: "Late payments incur a charge of $50 or 5% of the overdue amount, whichever is less."
+    check:
+      kind: forbids_unless
+      patterns:
+        - late\s+(fee|charge|payment)
+      unless_any:
+        - late.{0,40}\d{1,2}\s*%
+        - late.{0,40}\$\s*\d+
+
+  - id: arbitration
+    title: Mandatory binding arbitration
+    severity: medium
+    description: Disputes must go to binding arbitration — no court, no jury, limited appeal.
+    why: Arbitration favors repeat players (the lender) and its outcomes are nearly unappealable — think hard before waiving court access on a loan this size.
+    suggestion: Strike arbitration, or carve out injunctive relief and small claims.
+    fallback: "Strike binding arbitration; disputes go to the state or federal courts of [Borrower's state]."
+    check:
+      kind: forbids_any
+      patterns:
+        - arbitrat
+
+  - id: assignment-lender
+    title: Lender can assign the loan without consent
+    severity: low
+    description: The lender can sell or assign the loan with no notice to you.
+    why: Your loan can be sold to an aggressive servicer overnight — require notice, or consent for assignment to non-bank entities.
+    suggestion: Require notice of any assignment, and consent for assignment to non-bank buyers.
+    fallback: "Lender shall give Borrower thirty (30) days' notice of any assignment; assignment to non-bank entities requires Borrower's consent."
+    check:
+      kind: forbids_unless
+      patterns:
+        - assign.{0,30}(loan|note)
+      unless_any:
+        - prior\s+written\s+consent
+        - with\s+borrower.{0,30}consent
+        - notice\s+of\s+any\s+assignment
+
+  - id: governing-law
+    title: No governing law clause
+    severity: low
+    description: The agreement states no governing law for disputes.
+    why: Without a governing-law clause, the venue and law of any dispute are uncertain — name your home jurisdiction.
+    suggestion: Name the borrower's home state law as governing.
+    fallback: "This Agreement is governed by the laws of [Borrower's state]."
+    check:
+      kind: requires_any
+      patterns:
+        - governing\s+law
+        - governed\s+by\s+the\s+laws
