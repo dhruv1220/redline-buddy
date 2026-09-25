@@ -12,6 +12,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   (PR #19)
 
 ### Added
+- `consulting-vendor` playbook: vendor (consultant/agency) side MSA review —
+  12 rules (IP assignment scope, liability cap, mutual indemnity, payment
+  terms, late-payment remedy, kill fee, non-compete, one-sided
+  non-solicitation, change-order process, client cooperation, insurance
+  terms), each with quotable fallback language; sample + clean fixtures
+  (PR #23)
 - Batch review: `redline review <directory>` reviews every supported contract
   file recursively — summary table (per-file counts by severity) plus per-file
   memos, batch JSON with totals, concatenated diffs; `--fail-on` applies

@@ -49,6 +49,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `client-sow` | freelancer / agency side | change-order process, payment terms, late-payment remedy, kill fee, liability cap, non-compete |
 | `consulting-msa` | client (hiring-company) side | work-product IP assignment, background-IP carve-out, liability cap, mutual indemnity, termination for convenience, rate-increase cap, warranty, acceptance, auto-renewal, transition assistance |
 | `lease-tenant` | tenant side | deposit cap, rent-escalation cap, repair obligations, early termination, personal guarantee, entry notice, subletting, attorneys' fees, auto-renewal, utilities, wear and tear |
+| `consulting-vendor` | vendor (consultant/agency) side | IP assignment scope, liability cap, mutual indemnity, payment terms, late-payment remedy, kill fee, non-compete, one-sided non-solicitation, change-order process, client cooperation, insurance terms |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema.
 
