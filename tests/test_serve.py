@@ -27,8 +27,15 @@ def test_review_to_html_diff_renders_hunks():
 
 
 def test_review_to_html_escapes_input():
-    out = review_to_html("<script>alert(1)</script> " + OFFER, "offer-letter", "memo")
-    assert "<script>" not in out
+    # payload sits inside the excerpted sentence, so it must appear escaped
+    evil = OFFER.replace(
+        "intelligence industries.",
+        "intelligence industries <script>alert(1)</script>.",
+        1,
+    )
+    out = review_to_html(evil, "offer-letter", "memo")
+    assert "<script>alert(1)" not in out
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in out
 
 
 def test_review_to_html_rejects_empty_text():
@@ -43,9 +50,34 @@ def test_review_to_html_rejects_bad_playbook():
 
 def test_page_lists_all_bundled_playbooks():
     html_text = page_html()
-    for name in ["saas-vendor", "nda-recipient", "contractor", "dpa", "offer-letter", "client-sow"]:
+    for name in ["saas-vendor", "nda-recipient", "contractor", "dpa", "offer-letter",
+                 "client-sow", "consulting-msa"]:
         assert f'value="{name}"' in html_text
     assert "<form" in html_text
+
+
+def test_page_playbook_options_show_descriptions():
+    html_text = page_html()
+    # option labels carry the playbook description, not just the stem
+    assert "consulting-msa — Red-flag rules for reviewing consulting" in html_text
+    assert "saas-vendor — " in html_text
+
+
+def test_memo_has_copy_fallback_buttons():
+    out = review_to_html(OFFER, "offer-letter", "memo")
+    assert "Copy fallback" in out
+    assert "<textarea" in out
+    # the fallback's apostrophe is escaped inside the textarea (XSS-safe),
+    # and .value gives the raw clause back to the clipboard
+    assert "Company&#x27;s employees" in out
+    assert 'onclick="copyFb(' in out
+
+
+def test_memo_has_severity_filter():
+    out = review_to_html(OFFER, "offer-letter", "memo")
+    assert 'data-sev="high"' in out
+    assert 'data-sev-toggle="high"' in out
+    assert "Show:" in out
 
 
 def test_live_server_roundtrip():

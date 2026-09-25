@@ -27,6 +27,8 @@ textarea{{width:100%;height:14rem;font:0.85rem/1.4 monospace}}
 pre.diff{{background:#f6f8fa;padding:1rem;overflow-x:auto;font-size:0.8rem}}
 pre.diff .del{{color:#b42318}} pre.diff .add{{color:#067647}}
 .finding{{border:1px solid #ddd;border-radius:8px;padding:1rem;margin:1rem 0}}
+.sevfilter{{margin:1rem 0}}.sevfilter label{{margin-right:1rem}}
+button{{cursor:pointer}}
 .badge{{font-weight:bold}} .warn{{background:#fff8e1;border:1px solid #e6c200;border-radius:8px;padding:1rem}}
 footer{{color:#666;font-size:0.8rem;margin-top:2rem}}
 </style></head>
@@ -53,9 +55,25 @@ _SEV = {"critical": "🔴 CRITICAL", "high": "🟠 HIGH", "medium": "🟡 MEDIUM
 def _playbook_options(selected: str = "saas-vendor") -> str:
     opts = []
     for p in sorted(PLAYBOOKS_DIR.glob("*.yaml")):
+        try:
+            desc = load_playbook(p).description.strip()
+        except PlaybookError:
+            desc = ""
+        label = p.stem if not desc else f"{p.stem} — {desc[:80]}"
         sel = " selected" if p.stem == selected else ""
-        opts.append(f'<option value="{p.stem}"{sel}>{html.escape(p.stem)}</option>')
+        opts.append(f'<option value="{p.stem}"{sel}>{html.escape(label)}</option>')
     return "\n".join(opts)
+
+
+_RESULT_JS = """<script>
+function copyFb(id, btn){var t=document.getElementById(id);if(!t||!t.value)return;
+navigator.clipboard.writeText(t.value).then(function(){var old=btn.textContent;
+btn.textContent='Copied \\u2713';setTimeout(function(){btn.textContent=old;},1500);});}
+document.querySelectorAll('[data-sev-toggle]').forEach(function(cb){
+cb.addEventListener('change',function(){var sev=cb.getAttribute('data-sev-toggle');
+document.querySelectorAll('.finding[data-sev="'+sev+'"]').forEach(function(el){
+el.style.display=cb.checked?'':'none';});});});
+</script>"""
 
 
 def _render_result_html(contract_name: str, playbook: str, findings, fmt: str) -> str:
@@ -85,17 +103,37 @@ def _render_result_html(contract_name: str, playbook: str, findings, fmt: str) -
               f"— {len(findings)} finding(s) ({html.escape(playbook)})</h2>"]
     if not findings:
         blocks.append('<div class="finding">✅ <b>No red flags.</b></div>')
-    for f in findings:
+    else:
+        sevs = list(dict.fromkeys(f.severity for f in findings))
+        toggles = " ".join(
+            f'<label><input type="checkbox" data-sev-toggle="{html.escape(s)}" checked> '
+            f"{html.escape(s)}</label>"
+            for s in sevs
+        )
+        blocks.append(f'<div class="sevfilter">Show: {toggles}</div>')
+    for i, f in enumerate(findings):
         badge = _SEV.get(f.severity, f.severity.upper())
+        copy_btn = ""
+        if f.fallback:
+            # Fallback text lives HTML-escaped in a hidden textarea: reading
+            # .value gives the raw clause back, and quotes can't break out.
+            copy_btn = (
+                f'<textarea id="fb-{i}" hidden>{html.escape(f.fallback)}</textarea>'
+                f'<button type="button" onclick="copyFb(\'fb-{i}\', this)">'
+                "Copy fallback</button>"
+            )
         blocks.append(
-            f'<div class="finding"><span class="badge">{badge}</span> '
+            f'<div class="finding" data-sev="{html.escape(f.severity)}">'
+            f'<span class="badge">{badge}</span> '
             f"<b>{html.escape(f.title)}</b>"
             + (f"<blockquote>{html.escape(f.excerpt)}</blockquote>" if f.excerpt else "")
             + f"<p><b>Why it matters:</b> {html.escape(f.why)}</p>"
             + (f"<p><b>Suggested fallback:</b> {html.escape(f.fallback or f.suggestion)}</p>"
                if (f.fallback or f.suggestion) else "")
+            + copy_btn
             + "</div>"
         )
+    blocks.append(_RESULT_JS)
     return "\n".join(blocks)
 
 
