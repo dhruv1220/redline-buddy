@@ -1,0 +1,185 @@
+name: consulting-vendor
+version: 1
+description: Red-flag rules for reviewing consulting / professional-services MSAs from the vendor (consultant / agency) side.
+rules:
+  - id: ip-assignment-scope
+    title: Overbroad IP assignment with no background carve-out
+    severity: high
+    description: The MSA assigns IP to the client with no carve-out for your pre-existing IP, tools, or know-how.
+    why: A blanket assignment can sweep in the tools and IP you brought to the engagement — always carve out background IP and license it instead.
+    suggestion: Carve out pre-existing IP, tools, and know-how; assign only the custom work product.
+    fallback: "Consultant assigns only the custom work product; pre-existing IP, tools, and know-how (\"Background IP\") remain Consultant's property, licensed to Client as embedded in the deliverables."
+    check:
+      kind: forbids_unless
+      patterns:
+        - assign.{0,60}intellectual
+        - intellectual.{0,60}assign
+        - work\s+product.{0,60}assign
+      unless_any:
+        - pre.exist
+        - background
+        - prior\s+inventions
+
+  - id: liability-cap
+    title: Vendor liability is uncapped
+    severity: high
+    description: The MSA has no clause capping your liability as the service provider.
+    why: Without a cap, a single disputed deliverable can expose you to damages far beyond the project fee — cap at the fees paid under the SOW.
+    suggestion: Cap aggregate liability at the fees paid under the SOW, excluding IP infringement and confidentiality breaches.
+    fallback: "Consultant's aggregate liability shall not exceed the fees paid under the applicable SOW, excluding breaches of confidentiality and IP infringement."
+    check:
+      kind: requires_any
+      patterns:
+        - limitation\s+of\s+liability
+        - liabilit.{0,40}shall\s+not\s+exceed
+        - cap.{0,30}liabilit
+        - aggregate\s+liability
+
+  - id: indemnity-mutual
+    title: One-sided indemnification
+    severity: high
+    description: The indemnity clause runs only one way instead of being mutual.
+    why: If only you indemnify the client, you absorb the cost of their misuse too — indemnity for breach, negligence, and IP claims should run both ways.
+    suggestion: "Make indemnification mutual: each party covers third-party claims arising from its own breach, negligence, or willful misconduct."
+    fallback: "Each party shall indemnify the other against third-party claims arising from the indemnifying party's breach, negligence, or willful misconduct."
+    check:
+      kind: forbids_unless
+      patterns:
+        - indemnif
+      unless_any:
+        - mutual.{0,40}indemnif
+        - indemnif.{0,40}mutual
+
+  - id: payment-terms
+    title: No clear payment terms
+    severity: medium
+    description: The MSA states no rate, invoicing cadence, or payment timeline.
+    why: Vague payment terms are the top source of vendor disputes — agree on rate, invoice schedule, and net terms up front.
+    suggestion: State the rate, invoicing cadence, and payment due date (e.g., net 15).
+    fallback: "Consultant shall invoice [weekly/monthly]; Client shall pay undisputed invoices within fifteen (15) days (net 15) at the rates in Exhibit A."
+    check:
+      kind: requires_any
+      patterns:
+        - \$ ?\d
+        - per\s+hour
+        - fixed\s+fee
+        - net\s+\d{1,2}
+        - invoice.{0,30}within
+
+  - id: late-payment
+    title: No late-payment remedy
+    severity: medium
+    description: The MSA has no late fee or interest on overdue invoices.
+    why: Without a late-payment clause, a client can pay 90 days late at zero cost — 1.5% monthly interest is standard leverage.
+    suggestion: Add 1.5% monthly interest on invoices overdue by more than 15 days, plus a right to pause work.
+    fallback: "Overdue invoices accrue interest at 1.5% per month; Consultant may pause work on fifteen (15) days' notice while invoices remain unpaid."
+    check:
+      kind: requires_any
+      patterns:
+        - late\s+fee
+        - late\s+payment
+        - interest.{0,30}overdue
+        - overdue.{0,30}interest
+
+  - id: termination-notice
+    title: No termination notice period
+    severity: medium
+    description: The MSA states no notice period for termination.
+    why: Without a notice period the client can cut you off overnight mid-sprint — 30 days' written notice is the standard cushion to wind down and re-staff.
+    suggestion: Require at least 30 days' prior written notice for any termination.
+    fallback: "Termination requires at least thirty (30) days' prior written notice."
+    check:
+      kind: requires_any
+      patterns:
+        - \d{1,3}\s+days.{0,30}notice
+        - notice.{0,30}terminat
+        - terminat.{0,30}notice
+
+  - id: kill-fee
+    title: No kill fee on early termination
+    severity: medium
+    description: The client can cancel the engagement with no compensation for committed time.
+    why: If the client cancels in week two of a six-week booking, you have turned down other work — a kill fee of 25-50% of remaining fees covers that.
+    suggestion: Add a kill fee of 25-50% of remaining fees on termination without cause, plus payment for work completed.
+    fallback: "On termination without cause, Client pays for work completed plus a kill fee of 50% of the remaining fees under the then-current SOW."
+    check:
+      kind: requires_any
+      patterns:
+        - kill\s+fee
+        - termination\s+fee
+        - cancellation\s+fee
+        - early\s+termination.{0,40}compensat
+
+  - id: non-compete
+    title: Non-compete on the vendor
+    severity: high
+    description: The MSA restricts you from serving other clients — unusual and often unenforceable for independent contractors.
+    why: Vendor-side non-competes raise misclassification risk and are void in several states; a narrow non-solicitation is the standard substitute.
+    suggestion: Remove the non-compete, or replace it with a time-boxed non-solicitation of the client's employees and customers.
+    fallback: "Strike the non-compete. If needed: Consultant shall not, for six (6) months after termination, solicit the Client's employees or customers."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.compete
+        - noncompete
+        - covenant\s+not\s+to\s+compete
+
+  - id: non-solicitation-one-sided
+    title: One-sided non-solicitation
+    severity: medium
+    description: The non-solicitation clause restricts only you, not the client.
+    why: Clients routinely hire the consultants embedded in their teams — if you can't solicit their people, they shouldn't be able to solicit yours.
+    suggestion: Make the non-solicitation mutual and time-boxed at 12 months.
+    fallback: "The non-solicitation of employees is mutual and expires twelve (12) months after termination."
+    check:
+      kind: forbids_unless
+      patterns:
+        - non.solicit
+      unless_any:
+        - mutual
+
+  - id: scope-change-process
+    title: No change-order process for scope changes
+    severity: medium
+    description: The MSA has no process for handling work beyond the agreed scope.
+    why: Scope creep is the top source of unbilled vendor hours — without a written change-order process, "just one more thing" never gets paid.
+    suggestion: Require that out-of-scope work needs a signed change order with price and timeline before it starts.
+    fallback: "Work outside the scope in Exhibit A requires a signed change order stating the additional fees and revised timeline before such work begins."
+    check:
+      kind: requires_any
+      patterns:
+        - change\s+order
+        - change\s+request
+        - out.of.scope.{0,40}(approv|sign|fees)
+        - additional\s+work.{0,40}(approv|sign|fees)
+
+  - id: client-cooperation
+    title: No client cooperation / delay protection
+    severity: low
+    description: The MSA has no client cooperation duties or protection against client-caused delays.
+    why: Most slipped consulting timelines are the client's fault (late feedback, missing data) — without a cooperation clause you absorb the delay and the blame.
+    suggestion: Require timely client cooperation and extend timelines for client-caused delays.
+    fallback: "Client shall provide timely cooperation, feedback, and materials; timelines extend day-for-day for Client-caused delays."
+    check:
+      kind: requires_any
+      patterns:
+        - cooperat
+        - client.{0,40}delay
+        - delay.{0,30}schedule
+
+  - id: insurance-terms
+    title: Uncapped or vague insurance requirements
+    severity: low
+    description: The MSA requires insurance with no stated types or limits.
+    why: Open-ended insurance obligations ("all insurance Client reasonably requires") can mean surprise six-figure policies — name the types and limits.
+    suggestion: Name required policies with explicit per-occurrence limits.
+    fallback: "Consultant shall maintain general liability ($1M/$2M) and professional liability ($1M) insurance; no other coverage is required."
+    check:
+      kind: forbids_unless
+      patterns:
+        - insurance
+      unless_any:
+        - \$\s*\d+\s*[Mm]
+        - million
+        - per\s+occurrence
+        - limits?\s+of
