@@ -12,6 +12,11 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   (PR #19)
 
 ### Added
+- `lease-tenant` playbook: tenant-side review of residential leases — 11 rules
+  (deposit cap via max_value, rent-escalation cap, repair obligations, early
+  termination, personal guarantee, entry notice, subletting, attorneys' fees,
+  auto-renewal, utilities, wear and tear), each with quotable fallback
+  language; sample + clean fixtures (PR #21)
 - `redline serve` upgrades: playbook descriptions in the picker, one-click
   "Copy fallback" buttons on memo findings (clipboard via hidden textarea —
   XSS-safe), and severity filter toggles on the memo view (PR #20)

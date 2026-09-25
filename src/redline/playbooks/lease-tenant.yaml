@@ -1,0 +1,169 @@
+name: lease-tenant
+version: 1
+description: Red-flag rules for reviewing residential lease agreements from the tenant side.
+rules:
+  - id: security-deposit-cap
+    title: Security deposit exceeds one month's rent
+    severity: high
+    description: The security deposit is stated as more than one month's rent.
+    why: California caps deposits at one month's rent (unfurnished); many states cap at one to two months — anything above your state's cap is uncollectible and a red flag.
+    suggestion: Cap the deposit at one month's rent and require an itemized return per state law.
+    fallback: "Security deposit shall not exceed one month's rent, refundable with an itemized statement per state law."
+    check:
+      kind: max_value
+      group: value
+      max: 1
+      patterns:
+        - (?P<value>\d+(?:\.\d+)?)\s*months?.{0,40}security\s+deposit
+
+  - id: rent-escalation-cap
+    title: Uncapped rent escalation
+    severity: medium
+    description: The landlord can raise the rent with no cap, index, or notice requirement.
+    why: An uncapped escalation clause lets the landlord raise rent by any amount on renewal — tie increases to a cap or index with advance notice.
+    suggestion: Cap annual increases (e.g., a fixed percent) and require advance written notice.
+    fallback: "Annual rent increases are capped at 5% and require sixty (60) days' prior written notice."
+    check:
+      kind: forbids_unless
+      patterns:
+        - rent.{0,40}(increas|escalat|adjust)
+        - (increas|escalat).{0,30}rent
+      unless_any:
+        - \d{1,2}\s*%
+        - cpi
+        - cap.{0,20}(rent|increas)
+        - notice.{0,20}(rent|increas)
+
+  - id: repair-obligations
+    title: Tenant bears all repair obligations
+    severity: high
+    description: The lease makes the tenant responsible for all repairs and maintenance.
+    why: Tenants should not be on the hook for structural or major-system repairs — those belong to the landlord. Unlimited repair duty can mean a five-figure HVAC bill.
+    suggestion: Limit tenant repairs to routine maintenance; landlord covers structural and major systems.
+    fallback: "Landlord is responsible for structural repairs and major systems; Tenant handles routine maintenance only."
+    check:
+      kind: forbids_unless
+      patterns:
+        - tenant.{0,60}(repair|maintenance)
+        - (repair|maintenance).{0,60}tenant
+      unless_any:
+        - landlord.{0,40}repair
+        - structural.{0,30}landlord
+        - landlord.{0,30}structural
+
+  - id: early-termination
+    title: No early termination right
+    severity: medium
+    description: The lease has no early termination or lease-break provision.
+    why: Without a break clause, leaving early means owing the full remaining rent — a defined termination fee (e.g., 1–2 months' rent) caps that exposure.
+    suggestion: Add an early termination right on 60 days' notice with a capped fee.
+    fallback: "Tenant may terminate early on sixty (60) days' notice upon payment of one month's rent as a termination fee."
+    check:
+      kind: requires_any
+      patterns:
+        - early\s+termination
+        - terminat.{0,30}before.{0,20}expir
+        - break.{0,20}lease
+
+  - id: personal-guarantee
+    title: Personal guarantee required
+    severity: high
+    description: The lease requires a personal guarantee of the tenant's obligations.
+    why: A personal guarantee pierces any entity or roommate structure — one signer becomes personally liable for the full lease, including damage beyond the deposit.
+    suggestion: Remove the personal guarantee, or cap it and add a burn-off after 12 months of on-time payment.
+    fallback: "Strike the personal guarantee; if required, cap it at three months' rent and burn it off after twelve (12) months of on-time payment."
+    check:
+      kind: forbids_any
+      patterns:
+        - personal\s+guarant
+        - personally\s+guaranteed
+        - guaranty
+
+  - id: entry-notice
+    title: Landlord entry without notice
+    severity: medium
+    description: The lease allows landlord entry with no notice period.
+    why: Most states require 24 hours' written notice before non-emergency entry — a lease silent on notice invites surprise walk-throughs.
+    suggestion: Require 24 hours' written notice for non-emergency entry.
+    fallback: "Landlord may enter only with twenty-four (24) hours' prior written notice, except in emergencies."
+    check:
+      kind: requires_any
+      patterns:
+        - 24\s*hours?.{0,20}notice
+        - notice.{0,20}(entry|enter)
+        - (entry|enter).{0,20}notice
+
+  - id: subletting
+    title: Absolute ban on subletting
+    severity: low
+    description: The lease bans subletting or assignment outright, with no consent standard.
+    why: Life happens — a flat ban with no reasonableness standard lets the landlord refuse a qualified subtenant for any reason, leaving you paying for an empty unit.
+    suggestion: Allow subletting with landlord consent, not to be unreasonably withheld.
+    fallback: "Tenant may sublet or assign with Landlord's prior written consent, not to be unreasonably withheld."
+    check:
+      kind: forbids_unless
+      patterns:
+        - sublet
+        - sub.leas
+        - assign.{0,20}(lease|premises)
+      unless_any:
+        - not\s+be\s+unreasonably\s+withheld
+        - unreasonably\s+withheld
+        - consent.{0,40}unreasonabl
+
+  - id: attorneys-fees
+    title: One-sided attorneys' fees
+    severity: medium
+    description: Only the landlord recovers attorneys' fees in a dispute.
+    why: One-sided fee clauses discourage you from disputing even valid claims — fees should go to the prevailing party, whoever wins.
+    suggestion: "Make attorneys' fees reciprocal: the prevailing party recovers."
+    fallback: "The prevailing party in any dispute shall recover reasonable attorneys' fees."
+    check:
+      kind: forbids_unless
+      patterns:
+        - attorney.{0,20}fees
+        - legal\s+fees
+      unless_any:
+        - prevailing\s+party
+
+  - id: auto-renewal
+    title: Auto-renewal without notice
+    severity: medium
+    description: The lease auto-renews with no notice or opt-out mechanism.
+    why: Auto-renewal without a non-renewal notice can lock you into another full term after you meant to leave — require advance notice of non-renewal.
+    suggestion: Require written notice of non-renewal (e.g., 30 days) before any auto-renewal.
+    fallback: "Auto-renewal requires thirty (30) days' prior written notice of non-renewal to prevent the next term."
+    check:
+      kind: forbids_unless
+      patterns:
+        - auto.{0,20}renew
+        - renew.{0,20}automatic
+      unless_any:
+        - renew.{0,80}notice
+        - notice.{0,80}renew
+
+  - id: utilities
+    title: No utilities allocation
+    severity: low
+    description: The lease does not say who pays for utilities.
+    why: An unallocated utility bill becomes a dispute at the first $400 electric bill — name the payer up front.
+    suggestion: State explicitly which party pays each utility.
+    fallback: "Tenant pays for all utilities serving the premises; Landlord pays for common-area utilities."
+    check:
+      kind: requires_any
+      patterns:
+        - utilit
+
+  - id: wear-and-tear
+    title: No ordinary wear-and-tear exception
+    severity: low
+    description: The move-out condition clause has no exception for ordinary wear and tear.
+    why: Without a wear-and-tear exception, the landlord can charge your deposit for scuffed paint and worn carpet — ordinary wear is legally the landlord's cost in most states.
+    suggestion: Add "ordinary wear and tear excepted" to the move-out condition.
+    fallback: "Tenant shall return the premises in the same condition as received, ordinary wear and tear excepted."
+    check:
+      kind: requires_any
+      patterns:
+        - normal\s+wear
+        - wear\s+and\s+tear
+        - ordinary\s+wear
