@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict
 
+from .compare import Comparison
 from .review import Finding
 
 DISCLAIMER = (
@@ -113,7 +114,7 @@ def render_batch_memo(
     Each result is (contract_name, findings, error); error is None on success.
     """
     lines = [
-        f"# Batch red-flag review",
+        "# Batch red-flag review",
         "",
         f"Playbook: `{playbook_name}` — {len(results)} file(s).",
         "",
@@ -166,6 +167,129 @@ def render_batch_json(
             "by_severity": total,
             "disclaimer": "Not legal advice. Heuristic checks only — draft for attorney review.",
             "contracts": contracts,
+        },
+        indent=2,
+    )
+
+
+def _finding_block(f: Finding, num: int) -> list[str]:
+    badge = _SEVERITY_BADGE.get(f.severity, f.severity.upper())
+    lines = [f"### {num}. [{badge}] {f.title}", ""]
+    if f.excerpt:
+        lines += [f"> {f.excerpt}", ""]
+    lines += [f"**Why it matters:** {f.why}", ""]
+    fallback = f.fallback or f.suggestion
+    if fallback:
+        lines += [f"**Suggested fallback:** {fallback}", ""]
+    return lines
+
+
+def render_compare_memo(cmp: Comparison) -> str:
+    """Markdown memo for a two-draft comparison: what changed, what risk changed."""
+    added = sum(1 for c in cmp.changes if c.kind == "added")
+    removed = sum(1 for c in cmp.changes if c.kind == "removed")
+    modified = sum(1 for c in cmp.changes if c.kind == "modified")
+    lines = [
+        f"# Contract comparison: {cmp.old_name} → {cmp.new_name}",
+        "",
+        f"Playbook: `{cmp.playbook_name}`.",
+        "",
+        DISCLAIMER,
+        "",
+        "## Summary",
+        "",
+        (
+            f"- Text changes: **{len(cmp.changes)}** "
+            f"({added} added, {removed} removed, {modified} reworded)"
+        ),
+        (
+            f"- Findings: **{len(cmp.findings_old)}** → **{len(cmp.findings_new)}** — "
+            f"🚨 {len(cmp.gained)} new red flag(s), "
+            f"✅ {len(cmp.resolved)} resolved, "
+            f"🔁 {len(cmp.reworded)} reworded but still flagged"
+        ),
+        "",
+    ]
+
+    if cmp.gained:
+        lines += ["## 🚨 New red flags introduced in this round", ""]
+        for i, f in enumerate(cmp.gained, 1):
+            lines += _finding_block(f, i)
+    else:
+        lines += ["## 🚨 New red flags introduced in this round", "",
+                  "None — the new draft introduces no new playbook findings.", ""]
+
+    if cmp.resolved:
+        lines += ["## ✅ Resolved this round", ""]
+        for f in cmp.resolved:
+            badge = _SEVERITY_BADGE.get(f.severity, f.severity.upper())
+            lines += [f"- [{badge}] {f.title}"]
+        lines += [""]
+    else:
+        lines += ["## ✅ Resolved this round", "", "None.", ""]
+
+    if cmp.reworded:
+        lines += ["## 🔁 Reworded but still flagged", ""]
+        for i, rw in enumerate(cmp.reworded, 1):
+            badge = _SEVERITY_BADGE.get(rw.after.severity, rw.after.severity.upper())
+            lines += [f"### {i}. [{badge}] {rw.after.title}", ""]
+            lines += [f"- Before: {rw.before.excerpt or '(clause missing)'}", ""]
+            lines += [f"- Now: {rw.after.excerpt or '(clause missing)'}", ""]
+    else:
+        lines += ["## 🔁 Reworded but still flagged", "", "None.", ""]
+
+    if cmp.changes:
+        lines += ["## 📝 Text changes", ""]
+        for i, ch in enumerate(cmp.changes, 1):
+            kind_label = {"added": "paragraph added",
+                          "removed": "paragraph removed",
+                          "modified": "paragraph reworded"}[ch.kind]
+            lines += [f"### Change {i} — {kind_label}", "", "```diff"]
+            if ch.kind in ("removed", "modified"):
+                for ln in ch.old.splitlines():
+                    lines += [f"- {ln}"]
+            if ch.kind in ("added", "modified"):
+                for ln in ch.new.splitlines():
+                    lines += [f"+ {ln}"]
+            lines += ["```", ""]
+    else:
+        lines += ["## 📝 Text changes", "",
+                  "No text changes — the documents are identical.", ""]
+
+    lines += ["", "---", "", DISCLAIMER, ""]
+    return "\n".join(lines)
+
+
+def render_compare_json(cmp: Comparison) -> str:
+    """Machine-readable comparison, e.g. for CI gates on negotiation rounds."""
+    return json.dumps(
+        {
+            "old": cmp.old_name,
+            "new": cmp.new_name,
+            "playbook": cmp.playbook_name,
+            "summary": {
+                "changes": {
+                    "total": len(cmp.changes),
+                    "added": sum(1 for c in cmp.changes if c.kind == "added"),
+                    "removed": sum(1 for c in cmp.changes if c.kind == "removed"),
+                    "modified": sum(1 for c in cmp.changes if c.kind == "modified"),
+                },
+                "findings_old": len(cmp.findings_old),
+                "findings_new": len(cmp.findings_new),
+                "gained": len(cmp.gained),
+                "resolved": len(cmp.resolved),
+                "reworded": len(cmp.reworded),
+            },
+            "gained": [asdict(f) for f in cmp.gained],
+            "resolved": [asdict(f) for f in cmp.resolved],
+            "reworded": [
+                {"before": asdict(rw.before), "after": asdict(rw.after)}
+                for rw in cmp.reworded
+            ],
+            "changes": [
+                {"kind": c.kind, "old": c.old, "new": c.new} for c in cmp.changes
+            ],
+            "disclaimer": "Not legal advice. Heuristic checks only — draft for attorney review.",
         },
         indent=2,
     )

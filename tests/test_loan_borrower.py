@@ -52,6 +52,7 @@ def test_cli_loan_playbook_by_bundled_name():
     proc = subprocess.run(
         [sys.executable, "-m", "redline.cli", "review", str(SAMPLE),
          "--playbook", "loan-borrower", "--format", "memo"],
+        check=False,
         capture_output=True, text=True, env=env, timeout=30,
     )
     assert proc.returncode == 0, proc.stderr

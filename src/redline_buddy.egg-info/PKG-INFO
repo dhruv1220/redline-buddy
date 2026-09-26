@@ -41,12 +41,16 @@ pip install -e .
 redline review examples/sample-msa.md
 # or with your own playbook:
 redline review contract.pdf --playbook saas-vendor
+# batch review: point at a directory of contracts, get a summary table + per-file memos
+redline review ./contracts/ --playbook lease-tenant
 # machine-readable output for CI gates:
 redline review contract.pdf --format json | jq '.finding_count'
 # fail CI when a high-or-worse finding appears:
 redline review contract.pdf --fail-on high || echo "contract gate failed"
 # minimal local web UI (paste text, pick a playbook, get the memo):
 redline serve
+# the web UI now shows playbook descriptions in the picker, one-click
+# "Copy fallback" buttons per finding, and severity filters on memos
 # validate a playbook you wrote, optionally against a sample contract:
 redline validate my-playbook.yaml --sample examples/sample-msa.md
 # redline diff view: their language vs. your fallback, per finding:
@@ -72,6 +76,9 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `offer-letter` | candidate side | equity terms, non-compete, severance, stated base salary, arbitration, at-will |
 | `client-sow` | freelancer / agency side | change-order process, payment terms, late-payment remedy, kill fee, liability cap, non-compete |
 | `consulting-msa` | client (hiring-company) side | work-product IP assignment, background-IP carve-out, liability cap, mutual indemnity, termination for convenience, rate-increase cap, warranty, acceptance, auto-renewal, transition assistance |
+| `lease-tenant` | tenant side | deposit cap, rent-escalation cap, repair obligations, early termination, personal guarantee, entry notice, subletting, attorneys' fees, auto-renewal, utilities, wear and tear |
+| `consulting-vendor` | vendor (consultant/agency) side | IP assignment scope, liability cap, mutual indemnity, payment terms, late-payment remedy, kill fee, non-compete, one-sided non-solicitation, change-order process, client cooperation, insurance terms |
+| `loan-borrower` | borrower side | confession of judgment, prepayment penalty / yield maintenance, variable-rate cap, personal guarantee, blanket lien, default cure period, vague late fee, arbitration, lender assignment, rate disclosure, governing law |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema.
 

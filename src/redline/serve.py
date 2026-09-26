@@ -13,7 +13,7 @@ import urllib.parse
 from pathlib import Path
 
 from .ingest import IngestionError, extract_text
-from .memo import render_diff, render_memo
+from .memo import render_diff
 from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
 from .review import review_contract
 
@@ -99,8 +99,8 @@ def _render_result_html(contract_name: str, playbook: str, findings, fmt: str) -
             elif esc.strip():
                 out.append(f"<p>{esc}</p>")
         return '<pre class="diff">' + "\n".join(out) + "</pre>"
-    blocks = [f"<h2>Red-flag memo: {html.escape(contract_name)} "
-              f"— {len(findings)} finding(s) ({html.escape(playbook)})</h2>"]
+    blocks = [(f"<h2>Red-flag memo: {html.escape(contract_name)} "
+               f"— {len(findings)} finding(s) ({html.escape(playbook)})</h2>")]
     if not findings:
         blocks.append('<div class="finding">✅ <b>No red flags.</b></div>')
     else:

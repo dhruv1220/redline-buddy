@@ -40,7 +40,7 @@ def bundled_playbooks_dir() -> Path:
 
 def bundled_playbook_path(name: str) -> Path:
     """Resolve a bundled playbook name (``offer-letter`` or ``offer-letter.yaml``)."""
-    stem = name[:-5] if name.endswith(".yaml") else name
+    stem = name.removesuffix(".yaml")
     return bundled_playbooks_dir() / f"{stem}.yaml"
 
 

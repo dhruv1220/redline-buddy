@@ -4,6 +4,20 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+- `commercial-landlord` playbook: landlord-side review of commercial leases —
+  12 rules (uncapped CAM / operating-expense pass-throughs, missing base year,
+  no audit right, no personal / good-guy guarantee, holdover without premium,
+  assignment without consent, exclusivity grant, no casualty termination
+  right, unlimited relocation, no environmental indemnity, unallocated ADA
+  duty, no subrogation waiver), each with quotable fallback language;
+  sample + clean fixtures
+- `redline compare OLD NEW` — negotiation-round diffing: paragraph-level text
+  changes (added/removed/reworded) plus risk deltas between drafts — new red
+  flags introduced, findings resolved, and clauses reworded but still flagged;
+  memo and JSON output, `--fail-on-gain` CI gating, and bundled
+  `examples/compare-round1.md` / `compare-round2.md` demo pair
+
 ### Changed
 - Bundled playbooks moved into the installed package (`src/redline/playbooks/`)
   and resolved via `importlib.resources`, so `redline review --playbook <name>`

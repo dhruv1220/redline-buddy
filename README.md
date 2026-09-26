@@ -27,6 +27,32 @@ redline serve
 redline validate my-playbook.yaml --sample examples/sample-msa.md
 # redline diff view: their language vs. your fallback, per finding:
 redline review contract.pdf --format diff
+# compare two negotiation rounds — what changed, what risk changed:
+redline compare round1.pdf round2.pdf --playbook saas-vendor
+# fail CI when the new draft introduces new high-or-worse red flags:
+redline compare round1.pdf round2.pdf --fail-on-gain high
+```
+
+## Comparing negotiation rounds
+
+Contracts move in rounds: the other side sends "draft v2" and you need to know
+what they quietly edited. `redline compare` diffs the two drafts at the
+paragraph level and re-runs the playbook on both, reporting:
+
+- **🚨 New red flags** — findings present in the new draft but not the old one
+  (with the offending language, why it matters, and quotable fallback text),
+- **✅ Resolved** — findings the new draft fixed (their concessions),
+- **🔁 Reworded but still flagged** — a rule still fires, but on rewritten
+  language (they redrafted the clause; it's still risky),
+- **📝 Text changes** — every paragraph added, removed, or reworded, as
+  `+`/`-` diff hunks.
+
+Use `--format json` for machine-readable output and `--fail-on-gain high`
+as a CI gate: fail the pipeline when a new round introduces new red flags at
+or above a severity. Try it on the bundled example:
+
+```bash
+redline compare examples/compare-round1.md examples/compare-round2.md
 ```
 
 ## How it works
@@ -51,6 +77,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `lease-tenant` | tenant side | deposit cap, rent-escalation cap, repair obligations, early termination, personal guarantee, entry notice, subletting, attorneys' fees, auto-renewal, utilities, wear and tear |
 | `consulting-vendor` | vendor (consultant/agency) side | IP assignment scope, liability cap, mutual indemnity, payment terms, late-payment remedy, kill fee, non-compete, one-sided non-solicitation, change-order process, client cooperation, insurance terms |
 | `loan-borrower` | borrower side | confession of judgment, prepayment penalty / yield maintenance, variable-rate cap, personal guarantee, blanket lien, default cure period, vague late fee, arbitration, lender assignment, rate disclosure, governing law |
+| `commercial-landlord` | landlord side | CAM cap / exclusions, base year, audit right, personal / good-guy guarantee, holdover premium, assignment consent, exclusivity, casualty termination, relocation limits, environmental indemnity, ADA allocation, subrogation waiver |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema.
 
