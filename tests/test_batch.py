@@ -24,6 +24,7 @@ def _run(*argv: str) -> subprocess.CompletedProcess:
     env = dict(os.environ, PYTHONPATH=str(SRC))
     return subprocess.run(
         [sys.executable, "-m", "redline.cli", *argv],
+        check=False,
         capture_output=True, text=True, env=env, timeout=60,
     )
 

@@ -55,6 +55,7 @@ def test_cli_offer_letter_playbook():
     proc = subprocess.run(
         [sys.executable, "-m", "redline.cli", "review", str(SAMPLE),
          "--playbook", str(PLAYBOOK), "--format", "diff"],
+        check=False,
         capture_output=True, text=True, env=env, timeout=30,
     )
     assert proc.returncode == 0, proc.stderr

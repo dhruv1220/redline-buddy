@@ -51,6 +51,7 @@ def test_cli_msa_playbook_memo_and_diff():
         proc = subprocess.run(
             [sys.executable, "-m", "redline.cli", "review", str(SAMPLE),
              "--playbook", "consulting-msa", "--format", fmt],
+            check=False,
             capture_output=True, text=True, env=env, timeout=30,
         )
         assert proc.returncode == 0, proc.stderr

@@ -1,0 +1,185 @@
+name: commercial-landlord
+version: 1
+description: Red-flag rules for reviewing a commercial lease from the landlord/lessor side.
+rules:
+  - id: cam-no-cap
+    title: Uncapped CAM / operating-expense pass-through
+    severity: high
+    description: Tenant reimburses CAM or operating expenses with no cap, exclusion list, or gross-up control.
+    why: Uncapped pass-throughs get disputed at every reconciliation — caps, excluded categories (capital, leasing commissions), and a gross-up for partial occupancy keep the math defensible.
+    suggestion: Cap controllable CAM increases per year, exclude capital expenditures and leasing costs, and gross up variable expenses to full occupancy.
+    fallback: "Controllable operating expenses shall not increase more than 5% per year; capital expenditures and leasing commissions are excluded from CAM."
+    check:
+      kind: forbids_unless
+      patterns:
+        - common\s+area\s+maintenance
+        - \bcam\b
+        - operating\s+expenses
+        - pass.through
+      unless_any:
+        - \bcam\b.{0,40}cap|cap.{0,40}\bcam\b
+        - gross.{0,10}up
+        - exclud.{0,30}(capital|commission)
+
+  - id: base-year-missing
+    title: No base year for expense pass-throughs
+    severity: medium
+    description: The lease passes operating expenses to the tenant without a base year or expense stop.
+    why: Without a base year the tenant pays first-dollar expenses and will fight the reconciliation — a base year (or fixed expense stop) defines what is "excess".
+    suggestion: Set a base year for operating expenses or a per-square-foot expense stop.
+    fallback: "\"Base year\" means calendar year 2026; Tenant pays its share of operating expenses exceeding the base-year amount."
+    check:
+      kind: requires_any
+      patterns:
+        - base\s+year
+        - expense\s+stop
+        - base\s+stop
+
+  - id: no-audit-right
+    title: Tenant pays pass-throughs with no audit right
+    severity: medium
+    description: Tenant reimburses expenses but the lease grants no right to audit the landlord's books.
+    why: No audit right turns every CAM reconciliation into a credibility fight — a bounded audit right (e.g., 60 days, once a year) closes disputes fast.
+    suggestion: Grant a limited audit right with a challenge deadline and a fee-shifting threshold for material errors.
+    fallback: "Tenant may audit Landlord's expense books once per year within sixty (60) days of the reconciliation statement; errors over 5% are corrected at Landlord's cost."
+    check:
+      kind: forbids_unless
+      patterns:
+        - common\s+area\s+maintenance
+        - \bcam\b
+        - operating\s+expenses
+      unless_any:
+        - audit
+
+  - id: no-personal-guarantee
+    title: No personal or good-guy guarantee from tenant principals
+    severity: high
+    description: A corporate or LLC tenant signs with no personal or good-guy guarantee from its principals.
+    why: A shell tenant can walk away from a 5-year lease with nothing at risk — a good-guy guarantee (liability limited to proper surrender) is the standard compromise.
+    suggestion: Require a good-guy guarantee, or a full personal guarantee that burns off after on-time performance.
+    fallback: "Tenant's principals execute a good-guy guarantee, liable only until Tenant surrenders the premises in good condition with rent current."
+    check:
+      kind: requires_any
+      patterns:
+        - personal\s+guarant
+        - good.guy\s+guarant
+        - guaranty
+
+  - id: holdover-no-premium
+    title: Holdover rent not set at a premium
+    severity: medium
+    description: A tenant that holds over pays base rent with no penalty multiplier.
+    why: Without a 150%-style holdover premium there is no economic reason to vacate on time — and the next tenant's commencement slips.
+    suggestion: Set holdover rent at 150% of base rent plus damages for delaying the next tenant.
+    fallback: "Holdover rent is 150% of the then-current base rent; Tenant is liable for damages from delaying the succeeding tenant."
+    check:
+      kind: forbids_unless
+      patterns:
+        - holdover
+        - hold\s+over
+      unless_any:
+        - 150\s*%
+        - 1\.5\s*(x|times)
+        - one\s+hundred\s+fifty\s+percent
+
+  - id: assignment-no-consent
+    title: Tenant may assign or sublet without landlord consent
+    severity: medium
+    description: The lease lets the tenant assign or sublet without the landlord's consent or any credit standard.
+    why: Free assignment hands your building to an unknown operator — consent (not unreasonably withheld) plus recapture rights protect the rent roll.
+    suggestion: Require landlord consent for assignment/subletting and reserve a recapture right.
+    fallback: "Tenant may not assign or sublet without Landlord's prior written consent, not to be unreasonably withheld; Landlord may recapture the space instead."
+    check:
+      kind: forbids_unless
+      patterns:
+        - assign.{0,30}(lease|premises|interest)
+        - sublet
+        - sub.leas
+      unless_any:
+        - consent
+
+  - id: exclusivity-grant
+    title: Exclusivity granted to tenant
+    severity: high
+    description: The lease grants the tenant exclusive rights to a use category, blocking other tenants.
+    why: Exclusivity caps your leasing upside and invites litigation over what counts as a competing use — keep it narrow, conditional on performance, and carve out existing tenants.
+    suggestion: Narrow any exclusivity to a precise use, condition it on sales or occupancy thresholds, and carve out existing and future anchors.
+    fallback: "Any exclusivity is limited to the exact permitted use, conditioned on Tenant's continued operation, and does not apply to tenants already in the center."
+    check:
+      kind: forbids_any
+      patterns:
+        - exclusiv
+
+  - id: casualty-no-termination
+    title: No landlord termination right after major casualty
+    severity: medium
+    description: After major damage or destruction, the landlord cannot terminate the lease.
+    why: If rebuilding takes 18 months, the landlord should be able to terminate rather than carry a dead lease — termination thresholds (e.g., 50% destroyed) are standard.
+    suggestion: Give the landlord a termination right when damage exceeds a threshold or restoration exceeds 12 months.
+    fallback: "If over 50% of the premises is destroyed or restoration would exceed twelve (12) months, Landlord may terminate on thirty (30) days' notice."
+    check:
+      kind: forbids_unless
+      patterns:
+        - casualty
+        - destruct
+        - damage\s+or\s+destruction
+      unless_any:
+        - landlord.{0,60}terminat
+        - terminat.{0,60}landlord
+
+  - id: unlimited-relocation
+    title: Unlimited landlord relocation right
+    severity: medium
+    description: The landlord may relocate the tenant anywhere in the center with no limits or cost obligation.
+    why: A bare relocation right lets the landlord move a tenant to a dead corner — limit relocations, require comparable space, and make the landlord pay the move.
+    suggestion: Cap relocation (once per term), require comparable or better space, and put moving and improvement costs on the landlord.
+    fallback: "Relocation is limited to once per term to comparable space, with all moving and tenant-improvement costs paid by Landlord."
+    check:
+      kind: forbids_unless
+      patterns:
+        - relocat
+      unless_any:
+        - relocat.{0,80}(cost|expense).{0,40}landlord
+        - landlord.{0,40}(cost|expense).{0,40}relocat
+        - comparabl.{0,40}relocat|relocat.{0,40}comparabl
+
+  - id: no-env-indemnity
+    title: No tenant environmental indemnity
+    severity: high
+    description: The lease has no tenant indemnity for hazardous materials or environmental contamination.
+    why: Cleanup liability can exceed the lease's total rent — the tenant must indemnify for contamination it causes, and represent no pre-existing issues.
+    suggestion: Require a tenant environmental indemnity plus a representation of no hazardous-material use beyond ordinary office/retail quantities.
+    fallback: "Tenant indemnifies Landlord for any hazardous-material contamination caused by Tenant and represents it stores none beyond ordinary business quantities."
+    check:
+      kind: requires_any
+      patterns:
+        - environment.{0,30}indemnif
+        - indemnif.{0,30}environment
+        - hazardous.{0,30}indemnif
+        - indemnif.{0,30}hazardous
+
+  - id: ada-unallocated
+    title: ADA compliance duty unallocated
+    severity: medium
+    description: The lease never assigns responsibility for ADA (Americans with Disabilities Act) compliance.
+    why: ADA work inside the premises versus common areas must be split explicitly, or the landlord inherits the tenant's build-out liability.
+    suggestion: Assign interior ADA compliance to the tenant and common-area compliance to the landlord.
+    fallback: "Tenant is responsible for ADA compliance within the premises; Landlord is responsible for ADA compliance in the common areas."
+    check:
+      kind: requires_any
+      patterns:
+        - \bada\b
+        - americans\s+with\s+disabilities
+
+  - id: no-subrogation-waiver
+    title: No mutual waiver of subrogation
+    severity: low
+    description: The lease lacks a mutual waiver of subrogation between landlord and tenant.
+    why: Without it, each party's insurer can sue the other after a fire or flood — the waiver is free insurance peace both sides expect.
+    suggestion: Add a mutual waiver of subrogation for losses covered by property insurance.
+    fallback: "Landlord and Tenant mutually waive subrogation for losses covered by their respective property insurance policies."
+    check:
+      kind: requires_any
+      patterns:
+        - waiver\s+of\s+subrogation
+        - waive.{0,20}subrogation
