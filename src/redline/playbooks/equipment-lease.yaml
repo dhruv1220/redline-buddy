@@ -1,0 +1,133 @@
+name: equipment-lease
+version: 1
+description: Lessee-side review of equipment lease agreements.
+rules:
+  - id: hell-or-high-water
+    title: Hell-or-high-water payment clause
+    severity: high
+    description: Rent is due no matter what — even if the equipment never works.
+    why: "Hell-or-high-water makes your payment obligation absolute — broken, late, or never-delivered equipment still costs you every penny, with no right to withhold rent or cancel."
+    suggestion: Condition rent on delivery and acceptance, with abatement
+      while equipment is unusable.
+    fallback: "Rent abates during any period the Equipment is not delivered
+      or is materially unusable, and Lessee may terminate if unusability
+      exceeds sixty (60) days."
+    check:
+      kind: forbids_any
+      patterns:
+        - hell or high water
+        - absolute and unconditional.{0,30}(payment|obligation)
+
+  - id: evergreen-auto-renewal
+    title: Evergreen auto-renewal
+    severity: high
+    description: The lease auto-renews unless you cancel in a narrow window.
+    why: Evergreen clauses renew you for another full term if you miss a
+      90-day notice window — paying years of rent on equipment you no
+      longer need.
+    suggestion: Require the lessor to remind you 120 days before renewal,
+      and cap renewals at month-to-month.
+    fallback: "This lease does not auto-renew. Any renewal is month to
+      month unless both parties sign a new schedule, and Lessor shall remind
+      Lessee 120 days before term end."
+    check:
+      kind: forbids_any
+      patterns:
+        - automatically renew
+        - evergreen
+        - auto.?renew.{0,40}successive
+
+  - id: no-early-termination
+    title: No early-termination right
+    severity: high
+    description: The lease offers no way to terminate early.
+    why: Without an early-termination right, a business downturn still
+      leaves you paying full rent on idle equipment for the whole term.
+    suggestion: Add a buyout or termination-for-convenience option with a
+      stated fee (e.g. 6 months' rent).
+    fallback: "Lessee may terminate early on 90 days' notice by paying a
+      termination fee equal to six (6) months' rent."
+    check:
+      kind: requires_any
+      patterns:
+        - terminat
+
+  - id: no-purchase-option
+    title: No end-of-term purchase option
+    severity: medium
+    description: The lease gives you no option to buy the equipment at term end.
+    why: After years of payments you own nothing and have no agreed price —
+      the lessor can demand fair market value assessed by its own appraiser.
+    suggestion: Add a $1 or fair-market-value buyout with an independent
+      appraisal process.
+    fallback: "At term end, Lessee may purchase the Equipment for $1.00,
+      or at fair market value determined by a mutually agreed appraiser."
+    check:
+      kind: requires_any
+      patterns:
+        - purchase option
+        - buyout
+        - buy.?out
+        - fair market value
+
+  - id: as-is-disclaimer
+    title: Equipment accepted "as is" — no warranties
+    severity: medium
+    description: You accept the equipment as-is with all warranties disclaimed.
+    why: "As-is acceptance plus a hell-or-high-water clause is the worst combination — you pay unconditionally for equipment nobody warrants."
+    suggestion: Require a warranty of condition at delivery and a right to
+      reject defective equipment.
+    fallback: "Lessor warrants the Equipment is in good working condition
+      at delivery. Lessee may reject non-conforming Equipment within thirty
+      (30) days."
+    check:
+      kind: forbids_any
+      patterns:
+        - as.?is.{0,30}(basis|condition)
+        - disclaim.{0,30}warrant
+
+  - id: insurance-burden
+    title: Lessee bears all insurance costs
+    severity: medium
+    description: You must insure the equipment at your expense for its full value.
+    why: Full-value insurance on expensive equipment is a significant
+      hidden cost — sometimes thousands per year on top of rent.
+    suggestion: Cap the insurance obligation or have the lessor carry the
+      master policy and pass through cost at a stated rate.
+    fallback: "Lessor shall maintain the master insurance policy and pass
+      through premiums at cost, not to exceed $X per year."
+    check:
+      kind: forbids_any
+      patterns:
+        - lessee shall (maintain|carry|procure).{0,30}insurance
+
+  - id: assignment-restriction
+    title: Cannot assign or sublease without consent
+    severity: low
+    description: You may not assign the lease or sublease the equipment without consent.
+    why: If you downsize or sell the business, you cannot hand the lease
+      to a buyer without the lessor's permission — which can be withheld.
+    suggestion: Allow assignment in connection with a business sale, with
+      consent not to be unreasonably withheld.
+    fallback: "Lessee may assign this lease in connection with the sale of
+      its business, with Lessor's consent not to be unreasonably withheld."
+    check:
+      kind: forbids_any
+      patterns:
+        - may not assign.{0,30}lease
+        - no.{0,20}(assignment|sublease).{0,20}without consent
+
+  - id: excessive-late-fees
+    title: Excessive late fees
+    severity: low
+    description: Late payments trigger steep fees or penalty interest.
+    why: A 5–10% late fee on a large monthly payment compounds fast — one
+      administrative slip can cost thousands.
+    suggestion: Cap late fees at a reasonable flat amount or 1.5% per month.
+    fallback: "Late payments bear interest at one and one-half percent
+      (1.5%) per month, with no additional late fees."
+    check:
+      kind: forbids_any
+      patterns:
+        - late fee
+        - late charge
