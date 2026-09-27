@@ -81,6 +81,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `employment-agreement` | employee side | post-employment non-compete, invention-assignment scope (§2870 carve-out), non-solicitation, perpetual confidentiality, mandatory arbitration, severance, signing-bonus clawback, equity acceleration, garden leave, moonlighting ban, termination notice period, prior-inventions exhibit |
 | `nda-discloser` | discloser side | marked-only definition, residual-knowledge carve-out, license grant, unbounded affiliate sharing, return-or-destroy, one-year survival, injunctive relief, defined purpose, fixed term, compelled-disclosure notice, no-obligation clause |
 | `advisor-agreement` | advisor side | vesting schedule, stated compensation, background-IP carve-out, termination right, non-compete, confidentiality, expense reimbursement, term length |
+| `franchise-agreement` | franchisee side | exclusive territory, unilateral fee increases, personal guarantee, post-term non-compete, sole-supplier pricing, transfer fee, unilateral manual amendments, renewal right |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 

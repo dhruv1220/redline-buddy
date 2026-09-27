@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `franchise-agreement` playbook: franchisee-side review of franchise
+  agreements — 8 rules (no exclusive territory, unilateral fee increases,
+  personal guarantee, post-term non-compete, sole-supplier pricing,
+  transfer fee, unilateral manual amendments, no renewal right), each with
+  quotable fallback language; built end-to-end with the new `new-playbook`
+  scaffolder as a dogfood test; sample (8/8 fire) + clean (0 fire) fixtures
 - `redline new-playbook <name>`: scaffolds a new playbook — YAML with
   commented schema and example rules for every check kind, sample/clean
   fixture stubs, and a test skeleton — plus printed next steps; refuses to
