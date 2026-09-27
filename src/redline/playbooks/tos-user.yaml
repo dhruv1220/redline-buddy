@@ -1,0 +1,142 @@
+name: tos-user
+version: 1
+description: User-side review of website and app Terms of Service.
+rules:
+  - id: mandatory-arbitration
+    title: Mandatory binding arbitration
+    severity: high
+    description: Disputes must go to binding arbitration — no court, no jury.
+    why: Arbitration strips your right to sue in court, usually before an
+      arbitrator the company has used many times before, with limited appeal.
+    suggestion: Look for an opt-out window (often 30 days after signup) and
+      use it; prefer services that allow small-claims court.
+    fallback: "Either party may elect to resolve disputes in small-claims
+      court, and you may opt out of arbitration within thirty (30) days of
+      account creation by written notice."
+    check:
+      kind: forbids_any
+      patterns:
+        - binding arbitration
+        - mandatory arbitration
+        - arbitrat.{0,40}waive.{0,20}(court|jury)
+
+  - id: class-action-waiver
+    title: Class-action waiver
+    severity: high
+    description: You waive the right to join a class action.
+    why: Class actions are often the only economical way to challenge
+      small-dollar, mass harms (hidden fees, data breaches). Waiving them
+      leaves you with claims too small to pursue alone.
+    suggestion: Same as arbitration — use any opt-out window, and know that
+      some states limit these waivers.
+    fallback: "Nothing in this agreement waives your right to participate
+      in a class action where permitted by law."
+    check:
+      kind: forbids_any
+      patterns:
+        - class action waiver
+        - waive.{0,40}class action
+        - no class action
+
+  - id: unilateral-changes
+    title: Terms can change unilaterally at any time
+    severity: medium
+    description: The company may change the terms at any time without direct notice to you.
+    why: Terms that change by silent website update mean the deal you
+      agreed to is not the deal you live under — and continued use counts
+      as acceptance.
+    suggestion: Require emailed notice of material changes plus a right to
+      cancel if you disagree.
+    fallback: "Material changes take effect thirty (30) days after emailed
+      notice. If you disagree, you may cancel your account before the
+      effective date."
+    check:
+      kind: forbids_any
+      patterns:
+        - may (modify|change|update).{0,40}terms.{0,40}(any time|without notice|sole discretion)
+        - continued use.{0,30}constitutes acceptance
+
+  - id: account-termination-any-reason
+    title: Account terminated for any reason, content lost
+    severity: medium
+    description: The company may suspend or terminate your account for any reason or no reason.
+    why: Years of photos, files, messages, or creative work can vanish on a
+      platform's whim, with no appeal and no export window.
+    suggestion: Require termination only for cause with notice, plus a data
+      export window before deletion.
+    fallback: "We will terminate accounts only for material breach with
+      thirty (30) days' notice, and you may export your content for sixty
+      (60) days after termination."
+    check:
+      kind: forbids_any
+      patterns:
+        - (terminate|suspend).{0,30}account.{0,30}(any reason|sole discretion|no reason)
+        - reserve the right to.{0,30}(terminate|suspend).{0,30}account
+
+  - id: data-sale-to-third-parties
+    title: Your personal data can be sold or shared with advertisers
+    severity: high
+    description: The terms allow selling or sharing your personal data with advertisers or data brokers.
+    why: Once your data is sold, you cannot claw it back — it propagates
+      through broker databases you will never see.
+    suggestion: Use services that commit to never selling personal data,
+      and check the privacy settings immediately after signup.
+    fallback: "We do not sell your personal data and do not share it with
+      advertisers or data brokers."
+    check:
+      kind: forbids_any
+      patterns:
+        - sell.{0,30}(personal|your) data
+        - share.{0,30}data.{0,30}(advertisers?|data brokers?|third parties)
+        - monetiz.{0,20}(your|personal) data
+
+  - id: no-data-deletion
+    title: No right to delete your data
+    severity: medium
+    description: The terms never mention deleting your personal data.
+    why: Without a deletion right, your data lives on company servers
+      forever — through breaches, acquisitions, and pivots you never agreed to.
+    suggestion: Confirm a delete-my-data option exists in settings or
+      support, as required by laws like the CCPA.
+    fallback: "You may request deletion of your personal data at any time
+      through your account settings, and we will complete deletion within
+      forty-five (45) days."
+    check:
+      kind: requires_any
+      patterns:
+        - delet
+
+  - id: perpetual-content-license
+    title: Perpetual license to your content
+    severity: medium
+    description: You grant the company a perpetual, irrevocable license to your photos, posts, and creations.
+    why: A perpetual content license lets the platform keep using, selling,
+      or licensing your work forever — even after you delete your account.
+    suggestion: Limit the license to what is needed to operate the service,
+      ending when you delete the content.
+    fallback: "Your license to us ends when you delete your content or
+      account, except for copies retained in backups for up to ninety (90)
+      days."
+    check:
+      kind: forbids_any
+      patterns:
+        - perpetual.{0,40}license.{0,50}content
+        - irrevocable.{0,40}license.{0,50}content
+        - (license|right).{0,30}to (use|exploit).{0,30}your content.{0,30}(perpetual|irrevocable|forever)
+
+  - id: no-easy-cancellation
+    title: No easy way to cancel
+    severity: medium
+    description: The terms describe no simple, online cancellation path.
+    why: Subscriptions that are easy to start and hard to cancel are a
+      deliberate revenue strategy — some jurisdictions now require
+      click-to-cancel parity.
+    suggestion: Before subscribing, verify you can cancel online in a few
+      clicks; set a calendar reminder before any trial ends.
+    fallback: "You may cancel your subscription at any time from your
+      account settings with the same number of clicks required to subscribe."
+    check:
+      kind: requires_any
+      patterns:
+        - cancel.{0,40}(any time|online|account settings)
+        - click.?to.?cancel
