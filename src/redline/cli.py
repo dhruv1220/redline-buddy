@@ -21,6 +21,7 @@ from .memo import (
 )
 from .playbook import PlaybookError, bundled_playbook_path, load_playbook
 from .review import SEVERITY_RANK, review_contract
+from .scaffold import NEXT_STEPS, scaffold_playbook
 from .serve import cmd_serve
 
 VERSION = "0.1.0"
@@ -174,6 +175,33 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_new_playbook(args: argparse.Namespace) -> int:
+    from .scaffold import validate_name
+
+    try:
+        validate_name(args.name)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    root = Path(args.root).resolve()
+    try:
+        created = scaffold_playbook(root, args.name, args.description)
+    except FileExistsError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    for path in created:
+        print(f"created: {path.relative_to(root)}")
+    print()
+    print(
+        NEXT_STEPS.format(
+            playbook=f"src/redline/playbooks/{args.name}.yaml",
+            sample=f"examples/sample-{args.name}.md",
+            test=f"tests/test_{args.name.replace('-', '_')}.py",
+        )
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="redline",
@@ -259,6 +287,22 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--port", type=int, default=8000, help="port to listen on (default: 8000)")
     serve.add_argument("--bind", default="127.0.0.1", help="interface to bind (default: 127.0.0.1)")
     serve.set_defaults(func=cmd_serve)
+
+    new_playbook = sub.add_parser(
+        "new-playbook", help="scaffold a new playbook (YAML + fixtures + test skeleton)"
+    )
+    new_playbook.add_argument("name", help="playbook slug, e.g. franchise-agreement")
+    new_playbook.add_argument(
+        "--description",
+        default="Red-flag rules for reviewing contracts.",
+        help="one-line playbook description",
+    )
+    new_playbook.add_argument(
+        "--root",
+        default=".",
+        help="project root to scaffold into (default: current directory)",
+    )
+    new_playbook.set_defaults(func=cmd_new_playbook)
     return parser
 
 

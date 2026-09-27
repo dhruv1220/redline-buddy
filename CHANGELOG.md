@@ -5,6 +5,10 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline new-playbook <name>`: scaffolds a new playbook — YAML with
+  commented schema and example rules for every check kind, sample/clean
+  fixture stubs, and a test skeleton — plus printed next steps; refuses to
+  overwrite and validates the slug
 - `advisor-agreement` playbook: advisor-side review of startup advisor
   agreements — 8 rules (no vesting schedule [high], vague compensation
   [high], IP assignment without background-IP carve-out, no termination
