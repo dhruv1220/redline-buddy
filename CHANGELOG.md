@@ -5,6 +5,16 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `employment-agreement` playbook: employee-side review of employment
+  agreements — 12 rules (post-employment non-compete [critical],
+  overbroad invention assignment without a §2870 / own-time carve-out,
+  non-solicitation, perpetual confidentiality without exclusions,
+  mandatory binding arbitration with jury/class waivers, no severance on
+  without-cause termination, signing-bonus clawback, no equity
+  acceleration on termination or acquisition, garden leave, blanket
+  moonlighting ban, without-cause notice longer than 30 days, missing
+  prior-inventions exhibit), each with quotable fallback language;
+  sample (12/12 fire) + clean (0 fire) fixtures
 - `commercial-landlord` playbook: landlord-side review of commercial leases —
   12 rules (uncapped CAM / operating-expense pass-throughs, missing base year,
   no audit right, no personal / good-guy guarantee, holdover without premium,

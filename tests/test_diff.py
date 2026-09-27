@@ -5,7 +5,7 @@ from pathlib import Path
 
 from redline.memo import render_diff
 from redline.playbook import bundled_playbook_path, load_playbook
-from redline.review import Finding, review_contract
+from redline.review import Finding
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
@@ -26,15 +26,15 @@ def run_cli(*args: str) -> subprocess.CompletedProcess:
 
 
 def _finding(**kw) -> Finding:
-    base = dict(
-        rule_id="r1",
-        title="Some rule",
-        severity="high",
-        excerpt="flagged contract language",
-        why="why",
-        suggestion="advice-style suggestion",
-        fallback="Quotable fallback clause.",
-    )
+    base = {
+        "rule_id": "r1",
+        "title": "Some rule",
+        "severity": "high",
+        "excerpt": "flagged contract language",
+        "why": "why",
+        "suggestion": "advice-style suggestion",
+        "fallback": "Quotable fallback clause.",
+    }
     base.update(kw)
     return Finding(**base)
 

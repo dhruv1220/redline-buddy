@@ -1,0 +1,186 @@
+name: employment-agreement
+version: 1
+description: Red-flag rules for reviewing employment agreements from the employee side.
+rules:
+  - id: non-compete
+    title: Post-employment non-compete restriction
+    severity: critical
+    description: The agreement bars you from working for competitors after you leave.
+    why: A non-compete can lock you out of your own industry for months or years. Several states (notably California) void most post-employment non-competes, but employers still include them — and fighting one is expensive even when you would win.
+    suggestion: Delete the non-compete outright, or narrow it to a short, paid non-compete limited to named direct competitors.
+    fallback: "The parties agree that no post-employment restriction on Employee's right to work for a competing business shall apply. Employee's only post-employment obligations are the confidentiality and non-solicitation provisions of this Agreement."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.?compete
+        - covenant not to compete
+        - shall not.{0,60}competing business
+        - engage in.{0,40}competitive.{0,40}(business|activity|employment)
+
+  - id: ip-assignment-overbroad
+    title: Invention assignment claims your own-time work
+    severity: high
+    description: The assignment clause claims inventions beyond work done for the company, with no carve-out for your own time and equipment.
+    why: An overbroad assignment can hand your employer ownership of side projects and open-source work. In California, Labor Code section 2870 voids assignments of inventions made entirely on your own time with your own equipment — a compliant agreement says so explicitly.
+    suggestion: Limit assignment to inventions made with company resources or relating to the company's business, and add an explicit section 2870 / own-time carve-out.
+    fallback: "Employee assigns only inventions conceived or reduced to practice (a) using the Company's equipment, supplies, or facilities, or (b) relating to the Company's business or anticipated research. Inventions made entirely on Employee's own time, without Company resources, and unrelated to the Company's business are excluded (cf. Cal. Labor Code section 2870)."
+    check:
+      kind: forbids_unless
+      patterns:
+        - hereby assigns?.{0,80}all.{0,40}inventions
+        - all right.{0,20}title and interest.{0,60}inventions
+        - assign.{0,40}intellectual property.{0,40}whether or not related
+      unless_any:
+        - "2870"
+        - own time
+        - own equipment
+        - unrelated to.{0,40}business.{0,40}excluded
+
+  - id: non-solicit
+    title: Post-employment non-solicitation of colleagues and customers
+    severity: medium
+    description: You may not solicit the company's employees or customers after leaving.
+    why: Non-solicits are more enforceable than non-competes and can still bite — recruiting a former teammate or serving a former client can trigger a claim even when the work itself is fair game.
+    suggestion: Narrow to named key customers, shorten to 6–12 months, and carve out general job postings and unsolicited inbound interest.
+    fallback: "For twelve (12) months after separation, Employee shall not directly solicit for employment those Company employees with whom Employee materially worked. This does not restrict general advertisements, unsolicited applications, or solicitation of customers who independently seek Employee's services."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.?solicit
+        - shall not solicit.{0,40}(employees|customers|clients)
+
+  - id: confidentiality-overbroad
+    title: Confidentiality obligations with no end date or exclusions
+    severity: medium
+    description: Your duty to keep company information secret has no time limit and no standard exclusions.
+    why: "Perpetual secrecy for everything you learned can follow you forever and chill legitimate future work. Standard practice is a 2-5 year survival period with exclusions for information that becomes public, was already known, or was independently developed."
+    suggestion: Cap survival at 3–5 years (trade secrets excepted) and add the standard exclusions.
+    fallback: "Employee's confidentiality obligations survive for three (3) years after separation, except for information qualifying as a trade secret under applicable law. They do not apply to information that becomes publicly known through no fault of Employee, was already known to Employee, or was independently developed."
+    check:
+      kind: forbids_unless
+      patterns:
+        - in perpetuity
+        - survive.{0,40}indefinit
+        - confidential.{0,30}forever
+      unless_any:
+        - publicly known
+        - public domain
+        - independently developed
+        - readily ascertainable
+
+  - id: mandatory-arbitration
+    title: Mandatory binding arbitration with jury and class waivers
+    severity: medium
+    description: All disputes must go to private binding arbitration; you waive a jury trial and class or collective actions.
+    why: Arbitration is private, harder to appeal, and historically favors repeat-player employers. Waiving class actions also removes your cheapest route to challenge systemic practices like wage violations.
+    suggestion: Keep the option of court for employment claims, or at minimum require the employer to pay arbitration costs and allow small-claims court.
+    fallback: "Either party may elect binding arbitration under the AAA Employment Arbitration Rules, with the Company bearing all forum fees. Nothing in this Agreement waives Employee's right to bring claims in small-claims court or to participate in government agency proceedings."
+    check:
+      kind: forbids_any
+      patterns:
+        - binding arbitration
+        - mandatory.{0,30}arbitration
+        - waive.{0,40}right.{0,20}(jury|class)
+        - class.{0,20}action.{0,20}waiver
+
+  - id: no-severance
+    title: No severance if terminated without cause
+    severity: medium
+    description: The company can end your employment without cause and owes you nothing beyond your last paycheck.
+    why: Without-cause termination is the norm in at-will employment; severance is the standard shock absorber. Its absence means a layoff lands with zero runway.
+    suggestion: Ask for 3–6 months of salary continuation (plus COBRA coverage) on termination without cause.
+    fallback: "If the Company terminates Employee's employment without Cause, Employee shall receive severance equal to six (6) months of base salary, paid as salary continuation, plus Company-paid COBRA premiums for the same period, subject to Employee's execution of a standard release."
+    check:
+      kind: requires_any
+      patterns:
+        - severance
+        - salary continuation
+        - separation pay
+
+  - id: bonus-clawback
+    title: Signing bonus must be repaid if you leave early
+    severity: medium
+    description: Your signing bonus is clawed back if employment ends within the first year.
+    why: A 12-month full-repayment clawback turns the "bonus" into a retention leash — quitting at month 11 costs you the entire amount, even for a layoff in some drafts.
+    suggestion: Shorten to 6 months, pro-rate the repayment, and carve out termination without cause.
+    fallback: "The signing bonus vests monthly over twelve (12) months; only the unvested portion is repayable on voluntary resignation, and no repayment is owed if the Company terminates employment without Cause."
+    check:
+      kind: forbids_any
+      patterns:
+        - signing\s+bonus.{0,60}repaid
+        - repay.{0,60}signing\s+bonus
+        - clawback
+        - bonus.{0,40}forfeit
+
+  - id: equity-acceleration
+    title: No vesting acceleration on termination or acquisition
+    severity: medium
+    description: Unvested equity is forfeited if you are terminated without cause or the company is acquired — no single- or double-trigger acceleration.
+    why: "The most common way startup employees lose equity value is an acquisition right after a layoff, with unvested shares forfeited at exactly the moment they become valuable."
+    suggestion: Ask for double-trigger acceleration (change of control + termination without cause within 12 months) of 50–100% of unvested equity.
+    fallback: "Upon a change of control followed by termination of Employee without Cause within twelve (12) months (double-trigger), fifty percent (50%) of Employee's then-unvested equity shall accelerate and vest immediately."
+    check:
+      kind: requires_any
+      patterns:
+        - accelerat
+        - single.?trigger
+        - double.?trigger
+
+  - id: garden-leave
+    title: Unpaid garden leave after notice of termination
+    severity: low
+    description: The company can sideline you on garden leave for months after giving notice.
+    why: Garden leave keeps you off the market while the clock runs — effectively a non-compete by another name, sometimes without pay.
+    suggestion: Cap garden leave at 1–3 months, require full pay and benefits during it, and credit it against any non-compete period.
+    fallback: "Any garden-leave period shall not exceed three (3) months, during which Employee receives full base salary and benefits, and such period counts toward any post-employment restrictive covenant period."
+    check:
+      kind: forbids_any
+      patterns:
+        - garden.?leave
+
+  - id: moonlighting-ban
+    title: Blanket ban on outside work and side projects
+    severity: low
+    description: You may not engage in any other employment or business activity, with no exception for pre-approved side projects.
+    why: A blanket ban gives the company veto power over open-source contributions, advisory roles, and side businesses — often broader than any legitimate conflict-of-interest concern.
+    suggestion: Allow outside activity with prior written consent (not to be unreasonably withheld) and carve out passive investments and open-source work.
+    fallback: "Employee may engage in outside employment, consulting, and open-source contributions with the Company's prior written consent, not to be unreasonably withheld, provided they do not interfere with Employee's duties or use Company confidential information."
+    check:
+      kind: forbids_unless
+      patterns:
+        - shall not engage in any other.{0,40}(employment|business)
+        - outside employment
+        - other business activit
+      unless_any:
+        - prior\swritten\sconsent
+        - with\sthe.{0,20}consent
+
+  - id: termination-notice
+    title: Long notice period before without-cause termination takes effect
+    severity: low
+    description: Termination without cause requires more than 30 days' notice.
+    why: A 60–90 day notice period sounds protective but usually just delays your exit while the company controls the narrative — and it can push equity vesting cliffs or start dates out of reach.
+    suggestion: Keep without-cause notice at 30 days or less, with pay in lieu of notice at the company's option.
+    fallback: "Either party may terminate employment without cause on thirty (30) days' written notice, or the Company may elect pay in lieu of notice."
+    check:
+      kind: max_value
+      group: value
+      max: 30
+      patterns:
+        - (?<!\d)(?P<value>\d{1,3})\D{0,12}days.{0,30}notice.{0,30}(terminat|separation)
+        - (terminat|separation).{0,60}(?<!\d)(?P<value>\d{1,3})\D{0,12}days.{0,30}notice
+
+  - id: prior-inventions
+    title: No prior-inventions list — your existing IP is unprotected
+    severity: low
+    description: The agreement has no exhibit listing inventions you owned before joining.
+    why: Without a prior-inventions exhibit, the company's broad assignment language can swallow IP you created before day one. Listing it in Exhibit A is free insurance.
+    suggestion: Attach an Exhibit A listing all pre-existing inventions, open-source projects, and pending patents, and exclude them from assignment.
+    fallback: "Employee's prior inventions listed in Exhibit A are excluded from the assignment in this Agreement and remain Employee's sole property."
+    check:
+      kind: requires_any
+      patterns:
+        - prior inventions
+        - exhibit a.{0,30}invention
+        - background.{0,20}intellectual property
+        - list.{0,30}prior.{0,20}inventions
