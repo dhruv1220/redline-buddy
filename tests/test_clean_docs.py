@@ -28,6 +28,7 @@ PAIRS = [
     ("software-license", "clean-software-license.md"),
     ("distribution-agreement", "clean-distribution-agreement.md"),
     ("tos-user", "clean-tos-user.md"),
+    ("privacy-policy", "clean-privacy-policy.md"),
 ]
 
 

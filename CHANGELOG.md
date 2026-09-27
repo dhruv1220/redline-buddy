@@ -5,6 +5,11 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `privacy-policy` playbook: user-side review of privacy policies — 8
+  rules (admitted data sale, no data-deletion right, no retention limit, no
+  breach-notification commitment, biometric collection, marketing sharing,
+  no opt-out of sale/sharing, silent policy changes), each with quotable
+  fallback language; sample (8/8 fire) + clean (0 fire) fixtures
 - `tos-user` playbook: user-side review of website/app Terms of Service —
   8 rules (mandatory arbitration, class-action waiver, unilateral term
   changes, account termination at will, sale of personal data, no
