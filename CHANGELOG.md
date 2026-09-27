@@ -4,6 +4,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+- `advisor-agreement` playbook: advisor-side review of startup advisor
+  agreements — 8 rules (no vesting schedule [high], vague compensation
+  [high], IP assignment without background-IP carve-out, no termination
+  right, non-compete, no confidentiality, unaddressed expenses, term over
+  two years), each with quotable fallback language; sample (8/8 fire) +
+  clean (0 fire) fixtures
+
 ### Fixed
 - Engine now collapses all whitespace runs to single spaces before running
   rules (`review_contract`). PDF/DOCX extraction wraps phrases mid-line

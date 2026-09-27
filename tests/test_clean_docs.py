@@ -23,6 +23,7 @@ PAIRS = [
     ("commercial-landlord", "clean-commercial-lease.md"),
     ("employment-agreement", "clean-employment.md"),
     ("nda-discloser", "clean-nda-discloser.md"),
+    ("advisor-agreement", "clean-advisor.md"),
 ]
 
 

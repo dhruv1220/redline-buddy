@@ -1,0 +1,118 @@
+name: advisor-agreement
+version: 1
+description: Red-flag rules for reviewing startup advisor agreements from the advisor side.
+rules:
+  - id: no-vesting-schedule
+    title: Equity grant with no vesting schedule
+    severity: high
+    description: The agreement grants equity but never says how or when it vests.
+    why: Without vesting terms you cannot tell what you actually earn if the relationship ends early — or whether the company can claw everything back.
+    suggestion: State the vesting schedule explicitly (e.g., monthly over 2 years, no cliff is standard for advisors).
+    fallback: "The equity grant vests in equal monthly installments over twenty-four (24) months from the Effective Date, with no cliff."
+    check:
+      kind: requires_any
+      patterns:
+        - vest
+
+  - id: compensation-unstated
+    title: Compensation left vague or to be decided later
+    severity: high
+    description: The agreement promises compensation without stating the amount, form, or timing.
+    why: Vague promises of future compensation mean you have no enforceable economics — and later never arrives on terms favorable to you.
+    suggestion: Name the equity percentage (of fully diluted shares) or cash amount, plus timing, before signing.
+    fallback: "As compensation, Advisor receives 0.25% of the Company's fully diluted equity as of the Effective Date, vesting monthly over two (2) years."
+    check:
+      kind: requires_any
+      # NOTE: deliberately no bare "compensat" — a "Compensation" section
+      # header alone must not satisfy this; only concrete terms count.
+      patterns:
+        - equity
+        - options
+        - shares
+        - "%"
+        - per month
+        - cash
+        - \$
+
+  - id: ip-no-carveout
+    title: IP assignment with no carve-out for your background IP
+    severity: medium
+    description: You assign intellectual property to the company with no reservation of your pre-existing work.
+    why: A blanket assignment can sweep in frameworks, templates, and methods you built before the engagement — the tools you advise with.
+    suggestion: Assign only work product created for the company, and expressly retain your background IP.
+    fallback: "Advisor assigns work-product IP created specifically for the Company, and retains all rights to Advisor's background IP, pre-existing materials, and general methods."
+    check:
+      kind: forbids_unless
+      patterns:
+        - assign.{0,40}intellectual property
+        - work.?product
+      unless_any:
+        - background
+        - pre-existing
+        - prior inventions
+        - retain
+
+  - id: no-termination-right
+    title: No right to terminate the engagement
+    severity: medium
+    description: Nothing says how either party can end the advisory relationship.
+    why: Without a termination clause you can be stuck advising (or stuck with vesting stopped) through a relationship that is not working.
+    suggestion: Allow either party to terminate on 30 days' written notice, with vesting stopping at termination.
+    fallback: "Either party may terminate this Agreement on thirty (30) days' written notice. Vesting ceases on the termination date; vested equity is retained."
+    check:
+      kind: requires_any
+      patterns:
+        - terminat
+
+  - id: non-compete
+    title: Non-compete hidden in the advisor agreement
+    severity: medium
+    description: The agreement bars you from advising or working with competing businesses.
+    why: Advisors typically work with several companies; a non-compete can cut off your livelihood beyond this one engagement.
+    suggestion: Strike it, or narrow to a short list of named direct competitors.
+    fallback: "Nothing in this Agreement restricts Advisor from providing services to other companies, except those listed in Exhibit A as direct competitors."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.?compete
+        - shall not.{0,60}competing business
+        - not provide services to any compet
+
+  - id: no-confidentiality
+    title: No confidentiality obligations
+    severity: low
+    description: Neither party is bound to keep shared information confidential.
+    why: You will see roadmaps and metrics, and share your own playbooks — both directions deserve protection.
+    suggestion: Add mutual confidentiality with standard exclusions.
+    fallback: "Each party shall protect the other's confidential information with at least reasonable care, and use it only for purposes of this engagement."
+    check:
+      kind: requires_any
+      patterns:
+        - confidential
+
+  - id: expenses-unaddressed
+    title: Expenses not addressed
+    severity: low
+    description: Nothing says whether the company reimburses your out-of-pocket expenses.
+    why: Travel to board meetings and offsites adds up; ambiguity means you eat the cost.
+    suggestion: Provide for reimbursement of reasonable pre-approved expenses.
+    fallback: "The Company shall reimburse Advisor's reasonable, pre-approved out-of-pocket expenses within thirty (30) days of submission."
+    check:
+      kind: requires_any
+      patterns:
+        - expense
+        - reimburs
+
+  - id: term-too-long
+    title: Advisor term longer than two years
+    severity: low
+    description: The initial term exceeds two years.
+    why: Advisory relationships go stale; a 3–4 year lock-in without a termination right overcommits you. One to two years with renewal is the norm.
+    suggestion: Cap the initial term at one to two years, renewable by mutual agreement.
+    fallback: "The initial term is one (1) year, renewing automatically for successive one-year periods unless either party gives notice."
+    check:
+      kind: max_value
+      group: value
+      max: 2
+      patterns:
+        - term.{0,40}(?<!\d)(?P<value>\d{1,2}).{0,10}years
