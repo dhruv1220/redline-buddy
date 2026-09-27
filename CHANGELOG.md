@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `real-estate-purchase` playbook: buyer-side review of purchase
+  agreements — 8 rules (non-refundable earnest money, no inspection
+  contingency, no financing contingency, as-is sale, seller specific
+  performance, buyer pays all closing costs, uncapped HOA assessments,
+  no closing deadline), each with quotable fallback language; sample
+  fixture fires 8/8, clean fixture fires 0.
 - `equipment-lease` playbook: lessee-side review of equipment leases —
   8 rules (hell-or-high-water payment clause, evergreen auto-renewal,
   no early-termination right, no purchase option, as-is disclaimer,
