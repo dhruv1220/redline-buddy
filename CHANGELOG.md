@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `equipment-lease` playbook: lessee-side review of equipment leases —
+  8 rules (hell-or-high-water payment clause, evergreen auto-renewal,
+  no early-termination right, no purchase option, as-is disclaimer,
+  lessee insurance burden, assignment restriction, excessive late fees),
+  each with quotable fallback language; sample fixture fires 8/8, clean
+  fixture fires 0.
 - `severance-agreement` playbook: employee-side review of severance
   agreements — 8 rules (broad general release, 21-day consideration
   period, one-sided non-disparagement, unpaid cooperation clause,

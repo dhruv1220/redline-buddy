@@ -87,6 +87,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `tos-user` | user side | mandatory arbitration, class-action waiver, unilateral term changes, account termination at will, sale of personal data, data-deletion right, perpetual content license, easy cancellation |
 | `privacy-policy` | user side | admitted data sale, data-deletion right, retention limits, breach notification, biometric collection, marketing sharing, opt-out of sale/sharing, policy-change notice |
 | `severance-agreement` | employee side | general release of claims, 21-day consideration period, mutual non-disparagement, paid cooperation, non-compete in severance, no-rehire clause, COBRA coverage, tax treatment |
+| `equipment-lease` | lessee side | hell-or-high-water payment clause, evergreen auto-renewal, no early-termination right, no purchase option, as-is disclaimer, lessee insurance burden, assignment restriction, excessive late fees |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 
