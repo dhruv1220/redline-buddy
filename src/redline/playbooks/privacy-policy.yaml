@@ -1,0 +1,129 @@
+name: privacy-policy
+version: 1
+description: User-side review of website and app privacy policies.
+rules:
+  - id: data-sale-admitted
+    title: Policy admits selling personal information
+    severity: high
+    description: The policy discloses that your personal information is sold.
+    why: A policy that admits sale means your data is a product — it flows
+      to buyers you will never know, for purposes you never approved.
+    suggestion: Prefer services that state plainly they do not sell personal
+      information, and exercise any opt-out immediately.
+    fallback: "We do not sell your personal information, as defined under
+      applicable privacy laws."
+    check:
+      kind: forbids_any
+      patterns:
+        - sell.{0,40}personal
+        - sale of.{0,30}personal
+        - personal information.{0,30}sold
+
+  - id: no-deletion-right
+    title: No right to delete your data
+    severity: medium
+    description: The policy offers no way to request deletion of your personal data.
+    why: Without a deletion right, closing your account does not close your
+      data trail — it persists through breaches and acquisitions.
+    suggestion: Look for a delete-my-data control in settings; in
+      California and the EU you have this right by law regardless.
+    fallback: "You may request deletion of your personal information at any
+      time, and we will complete deletion within forty-five (45) days."
+    check:
+      kind: requires_any
+      patterns:
+        - delet
+
+  - id: no-retention-limit
+    title: No stated data-retention limit
+    severity: medium
+    description: The policy sets no limit on how long your data is kept.
+    why: Data kept indefinitely is data breached eventually — every extra
+      year of retention is extra exposure with zero benefit to you.
+    suggestion: Look for concrete retention periods (e.g. deleted 90 days
+      after account closure).
+    fallback: "We retain personal information no longer than necessary for
+      the purposes described, and delete account data within ninety (90)
+      days of account closure."
+    check:
+      kind: requires_any
+      patterns:
+        - retention
+        - retain.{0,40}no longer than
+
+  - id: no-breach-notification
+    title: No breach-notification commitment
+    severity: medium
+    description: The policy never mentions notifying you of a data breach.
+    why: If the company will not commit to telling you about breaches, you
+      may learn your data leaked from the press — months later.
+    suggestion: Prefer services that commit to notifying affected users
+      promptly after discovering a breach.
+    fallback: "If your personal information is affected by a data breach,
+      we will notify you without unreasonable delay."
+    check:
+      kind: requires_any
+      patterns:
+        - breach
+
+  - id: biometric-collection
+    title: Collects biometric data
+    severity: high
+    description: The policy discloses collection of biometric identifiers (face, voice, fingerprints).
+    why: Biometrics cannot be changed like a password — a biometric breach
+      follows you for life, and some jurisdictions restrict this collection.
+    suggestion: Avoid biometric login unless the data stays on your device;
+      check for explicit consent and a biometric-specific retention policy.
+    fallback: "We do not collect biometric identifiers. Where biometric
+      authentication is offered, all processing happens on your device."
+    check:
+      kind: forbids_any
+      patterns:
+        - biometric
+
+  - id: marketing-sharing
+    title: Shares data with marketing partners
+    severity: medium
+    description: Your data is shared with advertisers or marketing partners.
+    why: Marketing sharing feeds the ad-targeting ecosystem — your behavior
+      becomes someone else's inventory, and opt-outs are often buried.
+    suggestion: Opt out of marketing sharing in settings on day one, or
+      choose services funded by subscriptions instead of ads.
+    fallback: "We do not share your personal information with advertisers
+      or marketing partners."
+    check:
+      kind: forbids_any
+      patterns:
+        - share.{0,40}(advertisers?|marketing partners?)
+        - (advertisers?|marketing partners?).{0,30}receive.{0,30}(personal|your)
+
+  - id: no-opt-out
+    title: No opt-out of sale or sharing
+    severity: medium
+    description: The policy offers no opt-out of data sale or sharing.
+    why: Privacy laws in California and elsewhere give you the right to opt
+      out — a policy with no opt-out mechanism is ignoring that right.
+    suggestion: Look for a "Do Not Sell or Share My Personal Information"
+      link; its absence is itself a red flag.
+    fallback: "You may opt out of the sale or sharing of your personal
+      information at any time via the 'Do Not Sell or Share' link."
+    check:
+      kind: requires_any
+      patterns:
+        - opt.?out
+
+  - id: policy-changes-without-notice
+    title: Policy can change without notice to you
+    severity: low
+    description: The privacy policy may be changed at any time without notifying you.
+    why: A policy that changes silently can quietly expand data collection
+      after you have already handed your data over.
+    suggestion: Check the policy's last-updated date periodically, and use
+      services that email material changes.
+    fallback: "We will notify you by email at least thirty (30) days before
+      any material change to this policy takes effect."
+    check:
+      kind: forbids_any
+      patterns:
+        - may (change|update|revise).{0,30}(privacy policy|this policy).{0,30}(any time|without notice)
+        - policy.{0,30}change.{0,30}without.{0,20}notif
