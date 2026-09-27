@@ -1,0 +1,141 @@
+name: distribution-agreement
+version: 1
+description: Distributor-side review of product distribution agreements.
+rules:
+  - id: post-term-non-compete
+    title: Post-term non-compete
+    severity: high
+    description: You may not sell competing products for years after the agreement ends.
+    why: A post-term non-compete can strand the sales team, customer
+      relationships, and market knowledge you built — while barring you
+      from monetizing them anywhere else.
+    suggestion: Limit the restriction to the term, or to a short tail (e.g.
+      1 year) with a defined product scope.
+    fallback: "The non-competition covenant applies during the term only
+      and does not survive expiration or termination."
+    check:
+      kind: forbids_any
+      patterns:
+        - not compete.{0,120}(termination|expiration|expir)
+        - non.?compete.{0,40}(two|2|three|3).{0,20}years
+
+  - id: no-inventory-buyback
+    title: No buyback of unsold inventory on termination
+    severity: high
+    description: The supplier has no duty to repurchase your unsold inventory when the agreement ends.
+    why: Without a buyback clause, termination leaves you holding a
+      warehouse of unsellable branded stock — inventory you bought at
+      wholesale that is suddenly worth scrap.
+    suggestion: Require the supplier to repurchase unsold, resalable
+      inventory at your cost (less a restocking fee) within 90 days.
+    fallback: "Within ninety (90) days after termination, Supplier shall
+      repurchase all unsold inventory in resalable condition at Distributor's
+      net purchase price, less a ten percent (10%) restocking fee."
+    check:
+      kind: requires_any
+      patterns:
+        - buy.?back
+        - repurchase
+
+  - id: unilateral-price-increases
+    title: Supplier can raise wholesale prices unilaterally
+    severity: high
+    description: The supplier may increase your wholesale prices without your consent.
+    why: Uncapped wholesale hikes squeeze your margin from the other side —
+      your retail price is capped by the market while your cost floats up.
+    suggestion: Cap annual increases (e.g. CPI-linked) and require advance
+      notice so you can adjust retail pricing.
+    fallback: "Wholesale prices are fixed for each calendar year and may
+      increase by no more than the CPI increase, on ninety (90) days'
+      written notice."
+    check:
+      kind: forbids_any
+      patterns:
+        - may increase.{0,30}prices?
+        - reserves the right to (increase|raise).{0,30}prices?
+
+  - id: termination-without-cause
+    title: Supplier can terminate without cause
+    severity: high
+    description: The supplier may terminate the agreement without cause on short notice.
+    why: Termination without cause lets the supplier cut you off the moment
+      you have built the market — then sell direct or appoint a cheaper
+      distributor on your customer base.
+    suggestion: Require termination only for uncured material breach, with
+      at least 90 days' notice and a sell-off period for inventory.
+    fallback: "Either party may terminate only for material breach not
+      cured within ninety (90) days' written notice. Distributor may sell
+      remaining inventory for six (6) months after termination."
+    check:
+      kind: forbids_any
+      patterns:
+        - may terminate.{0,40}(without cause|for convenience|at will|for any reason)
+
+  - id: map-pricing
+    title: Minimum advertised price (MAP) restrictions
+    severity: medium
+    description: A MAP policy restricts the prices at which you may advertise the products.
+    why: MAP policies cap your ability to compete on price and can be used
+      to punish discounting distributors — while the supplier enforces them
+      selectively.
+    suggestion: Narrow MAP to advertised (not selling) prices, or remove it
+      for your territory.
+    fallback: "The MAP policy applies to advertised prices only and does
+      not restrict Distributor's actual selling prices."
+    check:
+      kind: forbids_any
+      patterns:
+        - minimum advertised price
+        - \bmap\b.{0,20}(polic|price)
+
+  - id: no-goodwill-compensation
+    title: No compensation for built-up goodwill on termination
+    severity: medium
+    description: The agreement pays you nothing for the customer goodwill you built if it ends.
+    why: Distributors build the brand's local market for years; without
+      goodwill compensation, the supplier inherits your customer
+      relationships for free at termination.
+    suggestion: Add a goodwill indemnity (common in EU-style agreements)
+      or a multi-year non-compete buyout from the supplier.
+    fallback: "On termination without Distributor's fault, Supplier shall
+      pay Distributor goodwill compensation equal to one year's average
+      gross margin on the products."
+    check:
+      kind: requires_any
+      patterns:
+        - goodwill
+
+  - id: prepayment-required
+    title: Prepayment required — no credit terms
+    severity: medium
+    description: You must prepay for inventory with no credit terms.
+    why: Prepayment shifts all working-capital burden onto you — you fund
+      the supplier's production while carrying the inventory risk.
+    suggestion: Negotiate net-30 or net-60 terms, at least after an initial
+      qualification period.
+    fallback: "After the first six (6) months, purchases are on net-thirty
+      (30) day terms, subject to Distributor remaining within its credit
+      limit."
+    check:
+      kind: forbids_any
+      patterns:
+        - prepayment.{0,20}(required|require)
+        - payment in advance
+        - cash in advance
+
+  - id: no-marketing-support
+    title: No marketing or co-op support from supplier
+    severity: low
+    description: The supplier offers no marketing funds or co-op support.
+    why: You are expected to build local demand at your own expense while
+      the supplier free-rides on your marketing spend.
+    suggestion: Ask for a co-op marketing fund (e.g. 2% of purchases) or
+      market-development funds for launch campaigns.
+    fallback: "Supplier shall make available a co-op marketing fund equal
+      to two percent (2%) of Distributor's net purchases, usable against
+      approved local marketing."
+    check:
+      kind: requires_any
+      patterns:
+        - co-op
+        - marketing (fund|support|allowance)

@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `distribution-agreement` playbook: distributor-side review of product
+  distribution agreements — 8 rules (post-term non-compete, no inventory
+  buyback, unilateral wholesale price increases, termination without cause,
+  MAP pricing, no goodwill compensation, prepayment terms, no marketing
+  support), each with quotable fallback language; sample (8/8 fire) + clean
+  (0 fire) fixtures
 - `software-license` playbook: licensee-side review of perpetual software
   license agreements — 8 rules (vendor audit rights, retroactive true-up
   fees, no source-code escrow, transfer restriction without M&A carve-out,

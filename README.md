@@ -83,11 +83,12 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `advisor-agreement` | advisor side | vesting schedule, stated compensation, background-IP carve-out, termination right, non-compete, confidentiality, expense reimbursement, term length |
 | `franchise-agreement` | franchisee side | exclusive territory, unilateral fee increases, personal guarantee, post-term non-compete, sole-supplier pricing, transfer fee, unilateral manual amendments, renewal right |
 | `software-license` | licensee side | vendor audit rights, retroactive true-up fees, source-code escrow, transfer restriction without M&A carve-out, unilateral discontinuation, seat minimums, mandatory support fees, refund of prepaid fees |
+| `distribution-agreement` | distributor side | post-term non-compete, inventory buyback on termination, unilateral wholesale price increases, termination without cause, MAP pricing, goodwill compensation, prepayment terms, marketing/co-op support |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 
 ```bash
-redline new-playbook franchise-agreement --description "Franchisee-side review of franchise agreements."
+redline new-playbook equipment-lease --description "Lessee-side review of equipment leases."
 ```
 
 ## Input formats
