@@ -1,0 +1,166 @@
+name: nda-discloser
+version: 1
+description: Red-flag rules for reviewing NDAs from the discloser side (you're sharing confidential info).
+rules:
+  - id: narrow-definition
+    title: Only marked, written information counts as confidential
+    severity: high
+    description: Confidential Information is limited to material marked as confidential in writing.
+    why: Most sensitive disclosures happen in conversation, demos, and whiteboard sessions — none of it is "marked in writing." A narrow definition silently excludes the disclosures you most need to protect.
+    suggestion: Define Confidential Information to include oral, visual, and electronic disclosures, whether or not marked.
+    fallback: "Confidential Information means all non-public information disclosed by Discloser, whether orally, visually, electronically, or in writing, and whether or not marked as confidential."
+    check:
+      kind: forbids_unless
+      patterns:
+        - marked.{0,30}confidential
+        - designated.{0,30}in writing
+        - only.{0,30}information.{0,20}marked
+      unless_any:
+        - orally
+        - verbally disclosed
+        - visually disclosed
+
+  - id: residuals-carve-out
+    title: Residual-knowledge carve-out guts the protection
+    severity: high
+    description: The recipient keeps the right to use anything "retained in unaided memory" or constituting general knowledge.
+    why: A residuals clause lets the recipient walk away with your playbook in their head and reuse it freely — the NDA protects documents, not the ideas that matter.
+    suggestion: Delete the residuals clause, or limit it to information that genuinely becomes general professional skill.
+    fallback: "No residuals, general-knowledge, or unaided-memory carve-out applies. Recipient shall not use Confidential Information retained in memory to circumvent this Agreement."
+    check:
+      kind: forbids_any
+      patterns:
+        - residual
+        - general knowledge
+        - unaided memory
+        - retained in.{0,20}memory
+
+  - id: license-grant
+    title: NDA grants the recipient a license to use your information
+    severity: medium
+    description: The agreement grants the recipient a license or unrestricted right to use your confidential information.
+    why: An NDA should limit use to evaluating the deal — a license grant turns a protective agreement into a permission slip.
+    suggestion: "Replace with a use-limitation: use solely to evaluate the proposed transaction, no license granted."
+    fallback: "No license under any intellectual property right is granted. Recipient shall use Confidential Information solely to evaluate the proposed transaction."
+    check:
+      kind: forbids_any
+      patterns:
+        - grants?.{0,40}license
+        - license.{0,30}to use
+        - may use.{0,70}without\srestriction
+
+  - id: unbounded-affiliates
+    title: Recipient may share with affiliates without limits
+    severity: medium
+    description: The recipient can disclose your information to affiliates and representatives with no need-to-know limit.
+    why: Every additional recipient multiplies leak risk. Market practice limits sharing to representatives with a need to know who are bound by confidentiality.
+    suggestion: Restrict sharing to representatives with a need to know, bound in writing to confidentiality terms at least as protective.
+    fallback: "Recipient may disclose Confidential Information only to its representatives with a need to know, who are informed of its confidential nature and bound by written confidentiality obligations at least as protective as this Agreement."
+    check:
+      kind: forbids_unless
+      patterns:
+        - affiliates
+        - representatives.{0,40}disclose
+        - disclose.{0,40}representatives
+      unless_any:
+        - need to know
+        - bound by.{0,40}confidentiality
+
+  - id: no-return-or-destroy
+    title: No return-or-destroy obligation when the relationship ends
+    severity: medium
+    description: Nothing requires the recipient to return or destroy your confidential materials.
+    why: Without it, your pitch decks, code, and customer lists live on the recipient's laptops indefinitely after talks end.
+    suggestion: Require return or certified destruction within 30 days of termination or request.
+    fallback: "Within thirty (30) days of termination or Discloser's request, Recipient shall return or destroy all Confidential Information and certify destruction in writing."
+    check:
+      kind: requires_any
+      patterns:
+        - return or destroy
+        - return all
+        - destroy all
+        - certif.{0,20}destruction
+
+  - id: survival-too-short
+    title: Confidentiality obligations expire after only one year
+    severity: medium
+    description: The duty of confidentiality ends one year after disclosure.
+    why: A one-year tail is far below the 2–5 year market standard — your information becomes freely usable just as the recipient might act on it.
+    suggestion: Extend survival to at least three years (trade secrets longer).
+    fallback: "Recipient's confidentiality obligations survive for three (3) years from each disclosure, and indefinitely for information qualifying as a trade secret."
+    check:
+      kind: forbids_any
+      patterns:
+        - surviv.{0,30}one.{0,10}year
+        - one.{0,10}year.{0,30}surviv
+        - 12.{0,10}months.{0,30}confiden
+
+  - id: no-injunctive-relief
+    title: No right to injunctive relief for breach
+    severity: low
+    description: The agreement does not acknowledge your right to seek an injunction against misuse.
+    why: Money damages are hard to prove for a leak; the practical remedy is a court order stopping further disclosure. Stating the right to injunctive relief is market standard for disclosers.
+    suggestion: Add an acknowledgment that breach may cause irreparable harm warranting injunctive relief.
+    fallback: "Recipient acknowledges that breach may cause irreparable harm for which money damages are inadequate, and Discloser is entitled to seek injunctive relief in addition to other remedies."
+    check:
+      kind: requires_any
+      patterns:
+        - injunctive relief
+        - irreparable harm
+
+  - id: vague-purpose
+    title: No defined purpose limiting how the recipient may use the information
+    severity: low
+    description: The NDA never states the purpose for which the recipient may use your information.
+    why: Without a stated purpose (e.g., evaluating a transaction), the use limitation has nothing to anchor to.
+    suggestion: Name the purpose explicitly, such as evaluating a potential business transaction.
+    fallback: "Recipient shall use Confidential Information solely for the purpose of evaluating a potential business transaction between the parties."
+    check:
+      kind: requires_any
+      patterns:
+        - purpose
+        - evaluat
+
+  - id: no-term
+    title: The agreement has no fixed term
+    severity: low
+    description: Nothing states how long the agreement itself remains in effect.
+    why: An open-ended term leaves ambiguity about when obligations start winding down and which disclosures are covered.
+    suggestion: Give the agreement a 1–2 year term for new disclosures, with survival handled separately.
+    fallback: "This Agreement remains in effect for two (2) years from the Effective Date for purposes of new disclosures; confidentiality obligations survive as stated in Section 5."
+    check:
+      kind: requires_any
+      patterns:
+        - term of
+        - for a period of
+        - shall remain in effect
+        - effective date.{0,40}two
+
+  - id: compelled-disclosure
+    title: No notice requirement before legally compelled disclosure
+    severity: low
+    description: The recipient can disclose your information under legal compulsion without telling you first.
+    why: Advance notice is your only chance to seek a protective order before a subpoena forces disclosure.
+    suggestion: Require prompt notice and cooperation in seeking protective treatment before any compelled disclosure.
+    fallback: "If Recipient becomes legally compelled to disclose Confidential Information, it shall give Discloser prompt notice and cooperate in seeking a protective order, disclosing only the minimum required."
+    check:
+      kind: requires_any
+      patterns:
+        - compelled
+        - required by law
+        - legal process
+        - court order
+
+  - id: no-obligation-clause
+    title: No clause stating that disclosure creates no business commitment
+    severity: low
+    description: The NDA does not state that sharing information creates no obligation to do a deal.
+    why: Without it, a failed negotiation can spawn claims that discussions created an implied partnership or commitment.
+    suggestion: "Add a no-obligation clause: neither party must proceed with any transaction."
+    fallback: "Nothing in this Agreement obligates either party to proceed with any transaction or business relationship."
+    check:
+      kind: requires_any
+      patterns:
+        - no obligation
+        - not obligat
+        - no commitment

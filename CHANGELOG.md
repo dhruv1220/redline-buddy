@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `nda-discloser` playbook: discloser-side review of NDAs (mirror of
+  `nda-recipient`) — 11 rules (marked-only definition excluding oral/visual
+  disclosures [high], residual-knowledge / unaided-memory carve-out [high],
+  license grant to recipient, unbounded affiliate sharing, no
+  return-or-destroy, one-year survival, no injunctive-relief
+  acknowledgment, undefined purpose, no fixed term, no compelled-disclosure
+  notice, no no-obligation clause), each with quotable fallback language;
+  sample (11/11 fire) + clean (0 fire) fixtures
 - `employment-agreement` playbook: employee-side review of employment
   agreements — 12 rules (post-employment non-compete [critical],
   overbroad invention assignment without a §2870 / own-time carve-out,
