@@ -25,6 +25,7 @@ PAIRS = [
     ("nda-discloser", "clean-nda-discloser.md"),
     ("advisor-agreement", "clean-advisor.md"),
     ("franchise-agreement", "clean-franchise-agreement.md"),
+    ("software-license", "clean-software-license.md"),
 ]
 
 

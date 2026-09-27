@@ -1,0 +1,140 @@
+name: software-license
+version: 1
+description: Licensee-side review of perpetual software license agreements.
+rules:
+  - id: vendor-audit-rights
+    title: Vendor can audit your usage
+    severity: high
+    description: The vendor reserves the right to audit your software deployment.
+    why: License audits routinely end with surprise true-up bills for
+      over-deployment — often calculated at full list price, years back.
+    suggestion: Limit audits to once per year with 30 days' notice, at the
+      vendor's expense, with results kept confidential.
+    fallback: "Vendor may audit Licensee's deployment no more than once per
+      calendar year, on thirty (30) days' written notice and at Vendor's
+      expense. Audit results are Confidential Information."
+    check:
+      kind: forbids_any
+      patterns:
+        - right to audit
+        - may audit.{0,40}(usage|deployment|compliance|license)
+
+  - id: license-true-up
+    title: Retroactive true-up fees for over-deployment
+    severity: high
+    description: Exceeding your seat count triggers retroactive true-up charges.
+    why: True-ups bill you backwards at list price for every seat you ever
+      exceeded — a compliance foot-fault becomes a six-figure invoice.
+    suggestion: Make overages prospective only (buy more seats going
+      forward), at your discounted rate, with no look-back period.
+    fallback: "Over-deployment is cured prospectively by purchasing
+      additional seats at Licensee's then-current discounted rate. No
+      retroactive true-up fees apply."
+    check:
+      kind: forbids_any
+      patterns:
+        - true.?up
+
+  - id: no-source-escrow
+    title: No source-code escrow
+    severity: medium
+    description: The agreement has no source-code escrow if the vendor fails.
+    why: If the vendor goes bankrupt or sunsets the product, you lose the
+      software your business runs on — with no code to maintain it yourself.
+    suggestion: Require source-code escrow with release on vendor
+      insolvency, discontinuation, or material support failure.
+    fallback: "Vendor shall deposit the Software source code with an
+      independent escrow agent. The code is released to Licensee if Vendor
+      becomes insolvent, discontinues the Software, or materially fails to
+      provide support."
+    check:
+      kind: requires_any
+      patterns:
+        - escrow
+
+  - id: transfer-restriction
+    title: License cannot transfer without consent — no M&A carve-out
+    severity: medium
+    description: You may not assign the license, with no exception for mergers or acquisitions.
+    why: Without an M&A carve-out, selling your company requires the
+      vendor's permission — the vendor can hold your acquisition hostage or
+      force a re-license at a higher price.
+    suggestion: Add a carve-out allowing assignment to a successor in a
+      merger, acquisition, or sale of substantially all assets.
+    fallback: "Licensee may assign this agreement to a successor in
+      connection with a merger, acquisition, or sale of all or substantially
+      all of its assets without Vendor's consent."
+    check:
+      kind: forbids_unless
+      patterns:
+        - may not (assign|transfer)
+      unless_any:
+        - change of control
+        - merger
+        - acquisition
+        - successor
+
+  - id: unilateral-discontinuation
+    title: Vendor can discontinue the software or support
+    severity: medium
+    description: The vendor may discontinue the software or end support unilaterally.
+    why: A perpetual license is worthless if the vendor can end-of-life the
+      product — you paid upfront for software with an expiration date.
+    suggestion: Require multi-year support commitments per version and
+      escrow release on discontinuation.
+    fallback: "Vendor shall support each major version for at least five
+      (5) years after release and shall not discontinue the Software during
+      the support period."
+    check:
+      kind: forbids_any
+      patterns:
+        - may (discontinue|deprecate).{0,30}(software|product|support)
+        - end.?of.?life
+
+  - id: seat-minimums
+    title: Minimum seat commitments you cannot reduce
+    severity: medium
+    description: You must maintain a minimum number of seats for the term.
+    why: Minimums turn a shrinking team into a growing per-person cost —
+      you pay for seats nobody sits in, with no way to true down.
+    suggestion: Allow seat reductions at each anniversary with pro-rata
+      fee adjustments.
+    fallback: "Licensee may reduce the seat count at each anniversary of
+      the Effective Date, with fees adjusted pro rata. No minimum seat
+      commitment applies."
+    check:
+      kind: forbids_any
+      patterns:
+        - minimum.{0,30}(seats?|licenses?|users?)
+
+  - id: mandatory-support-fees
+    title: Mandatory support fees
+    severity: low
+    description: Annual support fees are mandatory and non-cancellable.
+    why: Mandatory support (often ~22% of license cost yearly) means your
+      "perpetual" license has a forever subscription attached — declining
+      support usually means losing upgrade rights too.
+    suggestion: Make support optional, or cap annual support-fee increases.
+    fallback: "Support is optional. If elected, support fees shall not
+      increase by more than five percent (5%) per year."
+    check:
+      kind: forbids_any
+      patterns:
+        - support.{0,30}mandatory
+        - mandatory.{0,30}support
+        - support fees?.{0,30}required
+
+  - id: no-refund
+    title: No refund of prepaid fees
+    severity: low
+    description: The agreement never mentions refunds of prepaid fees.
+    why: If the vendor terminates for convenience or fails to deliver,
+      prepaid license and support fees are simply gone.
+    suggestion: Add pro-rata refunds when the vendor terminates without
+      cause or materially fails to perform.
+    fallback: "If Vendor terminates without cause, prepaid fees are
+      refunded pro rata for the remainder of the paid period."
+    check:
+      kind: requires_any
+      patterns:
+        - refund
