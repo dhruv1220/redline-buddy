@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `software-license` playbook: licensee-side review of perpetual software
+  license agreements — 8 rules (vendor audit rights, retroactive true-up
+  fees, no source-code escrow, transfer restriction without M&A carve-out,
+  unilateral discontinuation, seat minimums, mandatory support fees, no
+  refund), each with quotable fallback language; sample (8/8 fire) + clean
+  (0 fire) fixtures
 - `saas-vendor` playbook: 4 new rules for the flagship SaaS-buyer playbook —
   vendor AI-training on customer data [high], no data return/deletion on
   exit [high], no uptime SLA or service credits, unilateral terms changes
