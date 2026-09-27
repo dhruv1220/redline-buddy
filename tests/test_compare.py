@@ -41,17 +41,17 @@ def _finding(rule_id="r1", title="Some rule", severity="high", excerpt="flagged"
 
 
 def _cmp(**kw) -> Comparison:
-    base = dict(
-        old_name="v1.md",
-        new_name="v2.md",
-        playbook_name="saas-vendor",
-        changes=[TextChange("added", new="new paragraph")],
-        findings_old=[_finding("r1"), _finding("r2")],
-        findings_new=[_finding("r2"), _finding("r3")],
-        gained=[_finding("r3", title="New risk")],
-        resolved=[_finding("r1", title="Old risk")],
-        reworded=[],
-    )
+    base = {
+        "old_name": "v1.md",
+        "new_name": "v2.md",
+        "playbook_name": "saas-vendor",
+        "changes": [TextChange("added", new="new paragraph")],
+        "findings_old": [_finding("r1"), _finding("r2")],
+        "findings_new": [_finding("r2"), _finding("r3")],
+        "gained": [_finding("r3", title="New risk")],
+        "resolved": [_finding("r1", title="Old risk")],
+        "reworded": [],
+    }
     base.update(kw)
     return Comparison(**base)
 

@@ -21,6 +21,7 @@ PAIRS = [
     ("consulting-vendor", "clean-vendor-msa.md"),
     ("loan-borrower", "clean-loan.md"),
     ("commercial-landlord", "clean-commercial-lease.md"),
+    ("employment-agreement", "clean-employment.md"),
 ]
 
 

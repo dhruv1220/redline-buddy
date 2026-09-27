@@ -78,6 +78,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `consulting-vendor` | vendor (consultant/agency) side | IP assignment scope, liability cap, mutual indemnity, payment terms, late-payment remedy, kill fee, non-compete, one-sided non-solicitation, change-order process, client cooperation, insurance terms |
 | `loan-borrower` | borrower side | confession of judgment, prepayment penalty / yield maintenance, variable-rate cap, personal guarantee, blanket lien, default cure period, vague late fee, arbitration, lender assignment, rate disclosure, governing law |
 | `commercial-landlord` | landlord side | CAM cap / exclusions, base year, audit right, personal / good-guy guarantee, holdover premium, assignment consent, exclusivity, casualty termination, relocation limits, environmental indemnity, ADA allocation, subrogation waiver |
+| `employment-agreement` | employee side | post-employment non-compete, invention-assignment scope (§2870 carve-out), non-solicitation, perpetual confidentiality, mandatory arbitration, severance, signing-bonus clawback, equity acceleration, garden leave, moonlighting ban, termination notice period, prior-inventions exhibit |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema.
 
