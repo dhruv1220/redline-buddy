@@ -1,0 +1,146 @@
+name: severance-agreement
+version: 1
+description: Employee-side review of severance agreements.
+rules:
+  - id: general-release
+    title: Broad general release of all claims
+    severity: high
+    description: You release all claims against the employer, including ones you do not know about.
+    why: A general release waives everything — discrimination, wage, and
+      retaliation claims included, even claims you have not discovered yet.
+      Once signed, there is no second chance.
+    suggestion: Carve out vested benefits, workers' comp, and unemployment
+      rights; never sign without understanding exactly what you give up.
+    fallback: "This release excludes vested retirement benefits, workers'
+      compensation claims, unemployment insurance rights, and any claims
+      that cannot be released as a matter of law."
+    check:
+      kind: forbids_any
+      patterns:
+        - general release
+        - release.{0,40}all claims
+        - waive.{0,40}all claims
+
+  - id: no-consideration-period
+    title: No 21-day consideration period (ADEA)
+    severity: high
+    description: The agreement gives you no 21-day period to consider it before signing.
+    why: Workers 40 and older are entitled by federal law (OWBPA) to 21
+      days to consider a severance release plus 7 days to revoke. Its
+      absence suggests the release may be unenforceable — or that the
+      employer hopes you will not notice.
+    suggestion: Take the full 21 days, and use the 7-day revocation window
+      if you signed under pressure.
+    fallback: "You have twenty-one (21) days to consider this agreement
+      and seven (7) days after signing to revoke it in writing."
+    check:
+      kind: requires_any
+      patterns:
+        - 21 days
+        - consideration period
+        - revocation period
+
+  - id: one-sided-non-disparagement
+    title: One-sided non-disparagement clause
+    severity: medium
+    description: You may not disparage the company, but it makes no reciprocal promise.
+    why: One-sided non-disparagement gags you while the company stays free
+      to bad-mouth you to future employers — with no remedy if it does.
+    suggestion: Make it mutual, with liquidated damages if the company
+      breaches.
+    fallback: "Neither party shall disparage the other. If the Company
+      breaches this clause, Employee is entitled to liquidated damages of
+      $5,000 per occurrence."
+    check:
+      kind: forbids_unless
+      patterns:
+        - non.?disparagement
+        - not disparage
+      unless_any:
+        - mutual
+
+  - id: unpaid-cooperation-clause
+    title: Unpaid cooperation with future litigation
+    severity: medium
+    description: You must cooperate with the company's future lawsuits — unpaid, on their schedule.
+    why: Cooperation clauses can mean depositions and testimony for years,
+      on your own time, while the company that laid you off pays nothing.
+    suggestion: Limit cooperation to reasonable availability and require
+      hourly compensation plus expenses.
+    fallback: "Employee's cooperation is limited to reasonable availability
+      on 14 days' notice, compensated at $250 per hour plus expenses."
+    check:
+      kind: forbids_unless
+      patterns:
+        - cooperat.{0,40}(litigation|lawsuit|investigation|proceeding)
+      unless_any:
+        - compensat
+        - per hour
+        - expenses
+
+  - id: non-compete-in-severance
+    title: Non-compete smuggled into severance
+    severity: high
+    description: The severance agreement adds or extends a non-compete.
+    why: Severance is often the moment a non-compete appears or gets
+      worse — presented as standard paperwork when you have the least
+      leverage and the most stress.
+    suggestion: Strike it, or require the company to pay garden-leave
+      salary for the entire restricted period.
+    fallback: "No post-employment non-competition restriction applies. Any
+      prior non-compete is terminated as of the separation date."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.?compete
+        - not compete
+
+  - id: no-rehire
+    title: No-rehire / do-not-apply clause
+    severity: low
+    description: You agree never to apply for work with the company again.
+    why: A no-rehire clause closes the door permanently — including at
+      subsidiaries you might otherwise join years later.
+    suggestion: Limit it to 12 months, or carve out unsolicited applications.
+    fallback: "The no-rehire restriction expires twelve (12) months after
+      the separation date."
+    check:
+      kind: forbids_any
+      patterns:
+        - ineligible for rehire
+        - not.{0,25}(apply|seek).{0,25}employment.{0,25}(company|employer)
+        - no.?rehire
+
+  - id: cobra-unaddressed
+    title: Health coverage (COBRA) unaddressed
+    severity: medium
+    description: The agreement says nothing about continued health coverage.
+    why: Losing health coverage the day you lose your job is a double hit —
+      COBRA premiums are expensive, and employer-paid COBRA is a standard
+      severance term worth thousands.
+    suggestion: Ask for 3–6 months of employer-paid COBRA in the package.
+    fallback: "The Company shall pay Employee's COBRA premiums for six (6)
+      months following the separation date."
+    check:
+      kind: requires_any
+      patterns:
+        - cobra
+        - health.{0,25}continuation
+        - medical.{0,25}continuation
+
+  - id: tax-treatment-unaddressed
+    title: Tax treatment of severance pay unaddressed
+    severity: low
+    description: The agreement says nothing about how severance pay is taxed or withheld.
+    why: Lump-sum severance can push you into a higher bracket or trigger
+      underpayment penalties if withholding is wrong — a surprise bill in
+      April.
+    suggestion: Confirm withholding rates and consider asking for payment
+      split across tax years.
+    fallback: "Severance pay is subject to standard payroll withholding.
+      Employee is advised to consult a tax advisor regarding timing."
+    check:
+      kind: requires_any
+      patterns:
+        - tax
+        - withholding
