@@ -29,6 +29,7 @@ PAIRS = [
     ("distribution-agreement", "clean-distribution-agreement.md"),
     ("tos-user", "clean-tos-user.md"),
     ("privacy-policy", "clean-privacy-policy.md"),
+    ("severance-agreement", "clean-severance-agreement.md"),
 ]
 
 

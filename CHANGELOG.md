@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `severance-agreement` playbook: employee-side review of severance
+  agreements — 8 rules (broad general release, 21-day consideration
+  period, one-sided non-disparagement, unpaid cooperation clause,
+  non-compete in severance, no-rehire clause, COBRA unaddressed, tax
+  treatment unaddressed), each with quotable fallback language; sample
+  (8/8 fire) + clean (0 fire) fixtures
 - `privacy-policy` playbook: user-side review of privacy policies — 8
   rules (admitted data sale, no data-deletion right, no retention limit, no
   breach-notification commitment, biometric collection, marketing sharing,
