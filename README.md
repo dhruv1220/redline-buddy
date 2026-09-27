@@ -82,7 +82,11 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `nda-discloser` | discloser side | marked-only definition, residual-knowledge carve-out, license grant, unbounded affiliate sharing, return-or-destroy, one-year survival, injunctive relief, defined purpose, fixed term, compelled-disclosure notice, no-obligation clause |
 | `advisor-agreement` | advisor side | vesting schedule, stated compensation, background-IP carve-out, termination right, non-compete, confidentiality, expense reimbursement, term length |
 
-Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema.
+Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
+
+```bash
+redline new-playbook franchise-agreement --description "Franchisee-side review of franchise agreements."
+```
 
 ## Input formats
 
