@@ -92,3 +92,61 @@ rules:
       patterns:
         - confidential information
         - confidentiality
+
+  - id: ai-training-data
+    title: Vendor may train AI models on your data
+    severity: high
+    description: The agreement lets the vendor use customer data to train machine-learning models.
+    why: Your proprietary data, customer lists, and prompts can end up improving a model the vendor sells to your competitors — with no way to claw it back.
+    suggestion: Prohibit use of customer data for model training; allow only aggregated, de-identified usage statistics if you agree.
+    fallback: "Vendor shall not use Customer Data to train, retrain, or improve any machine-learning or AI model. Vendor may use only aggregated, de-identified usage statistics that do not identify Customer."
+    check:
+      kind: forbids_any
+      patterns:
+        - train.{0,40}(model|machine learning|\bai\b)
+        - use.{0,40}customer data.{0,40}train
+        - improve.{0,40}(model|service).{0,40}customer data
+
+  - id: data-return-deletion
+    title: No data return or deletion on exit
+    severity: high
+    description: The agreement says nothing about getting your data back or having it deleted when the contract ends.
+    why: Without an exit clause, the vendor can hold your data hostage for a renewal, or keep it indefinitely after you leave.
+    suggestion: Require data export in a standard format within 30 days of termination and deletion of all copies within 90 days.
+    fallback: "Within thirty (30) days after termination, Vendor shall make Customer Data available for export in a standard format, and within ninety (90) days shall delete all copies of Customer Data from its systems."
+    check:
+      kind: requires_any
+      patterns:
+        - delet
+        - return.{0,25}data
+        - data.{0,25}export
+        - data.{0,25}portab
+
+  - id: sla-credits
+    title: No uptime SLA or service credits
+    severity: medium
+    description: The agreement promises no uptime level and no credits if the service goes down.
+    why: Without an SLA, chronic outages cost you the same as perfect uptime — you pay full price for a broken service.
+    suggestion: Add a 99.9% monthly uptime commitment with service credits (e.g. 10% for each 1% below target).
+    fallback: "Vendor commits to 99.9% monthly uptime, excluding scheduled maintenance. If uptime falls below target, Customer receives service credits of ten percent (10%) of monthly fees for each one percent (1%) shortfall."
+    check:
+      kind: requires_any
+      patterns:
+        - service level
+        - \bsla\b
+        - uptime
+        - service credit
+
+  - id: unilateral-terms-change
+    title: Vendor can change the terms by posting to its website
+    severity: medium
+    description: The vendor may modify the agreement by posting new terms online.
+    why: Terms that change by website posting mean the contract you signed is not the contract you live under — pricing, data rights, and SLAs can all shift without your signature.
+    suggestion: Require amendments in a signed writing, or at minimum 30 days' emailed notice with a right to terminate if you object.
+    fallback: "This agreement may be amended only by a written instrument signed by both parties. Vendor website postings do not amend this agreement."
+    check:
+      kind: forbids_any
+      patterns:
+        - may (modify|change|update).{0,40}terms.{0,40}(website|posting|notice)
+        - terms.{0,30}updated by posting
+        - posting.{0,30}to (its|the) website.{0,30}(amend|modify|change)

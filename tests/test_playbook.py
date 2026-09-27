@@ -11,7 +11,7 @@ PLAYBOOK = bundled_playbook_path("saas-vendor")
 def test_bundled_playbook_loads():
     pb = load_playbook(PLAYBOOK)
     assert pb.name == "saas-vendor"
-    assert len(pb.rules) == 6
+    assert len(pb.rules) == 10
     assert {r.severity for r in pb.rules} <= {"critical", "high", "medium", "low"}
 
 

@@ -39,10 +39,48 @@ def test_clean_contract_passes():
         "This agreement does not renew. Either party may terminate for convenience on "
         "30 days written notice. Indemnification is mutual: vendor shall indemnify "
         "customer and customer shall indemnify vendor. Confidential information shall "
-        "be protected."
+        "be protected. Customer data is deleted within 30 days of termination. "
+        "The service carries a 99.9% uptime service level with service credits."
     )
     findings = review_contract(text, pb)
     assert findings == []
+
+
+def test_saas_data_and_ai_rules():
+    pb = load_playbook(PLAYBOOK)
+    def ids(text):
+        return {f.rule_id for f in review_contract(text, pb)}
+
+    # AI training on customer data
+    assert "ai-training-data" in ids(
+        "Vendor may use Customer Data to train its machine learning models "
+        "and improve the service."
+    )
+    assert "ai-training-data" not in ids(
+        "Vendor processes Customer Data solely to provide the service."
+    )
+
+    # Data return / deletion on exit
+    assert "data-return-deletion" in ids(
+        "This agreement ends on the anniversary. All licenses terminate."
+    )
+    assert "data-return-deletion" not in ids(
+        "Vendor deletes all Customer Data within 30 days of termination."
+    )
+
+    # Uptime SLA / service credits
+    assert "sla-credits" in ids("Vendor provides the service. Fees are due monthly.")
+    assert "sla-credits" not in ids(
+        "Vendor commits to 99.9% uptime with service credits for shortfalls."
+    )
+
+    # Unilateral terms changes by website posting
+    assert "unilateral-terms-change" in ids(
+        "Vendor may update these terms at any time by posting to its website."
+    )
+    assert "unilateral-terms-change" not in ids(
+        "This agreement may be amended only by a signed writing."
+    )
 
 
 def test_memo_renders_findings_and_disclaimer():

@@ -5,6 +5,10 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `saas-vendor` playbook: 4 new rules for the flagship SaaS-buyer playbook —
+  vendor AI-training on customer data [high], no data return/deletion on
+  exit [high], no uptime SLA or service credits, unilateral terms changes
+  by website posting — each with quotable fallback language (10 rules total)
 - `franchise-agreement` playbook: franchisee-side review of franchise
   agreements — 8 rules (no exclusive territory, unilateral fee increases,
   personal guarantee, post-term non-compete, sole-supplier pricing,
