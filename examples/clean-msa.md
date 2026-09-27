@@ -25,3 +25,13 @@ and Customer shall indemnify Vendor, against third-party IP claims.
 
 Each party shall protect the other's confidential information for three years
 using reasonable care.
+
+## 6. Data Return and Deletion
+
+Within thirty days after termination, Vendor shall make Customer data available
+for export in a standard format and delete all copies from its systems.
+
+## 7. Service Levels
+
+Vendor commits to 99.9% monthly uptime, excluding scheduled maintenance. If
+uptime falls below target, Customer receives service credits.

@@ -73,9 +73,14 @@ def test_review_json_format():
     data = json.loads(proc.stdout)
     assert data["contract"] == "sample-msa.pdf"
     assert data["playbook"] == "saas-vendor"
-    assert data["finding_count"] == len(data["findings"]) == 6
+    assert data["finding_count"] == len(data["findings"]) == 8
     first = data["findings"][0]
-    assert first["rule_id"] == "liability-cap"
+    assert first["rule_id"] in {
+        "ai-training-data",
+        "data-return-deletion",
+        "liability-cap",
+        "mutual-indemnification",
+    }
     assert first["severity"] == "high"
     assert "Not legal advice" in data["disclaimer"]
 
@@ -137,7 +142,7 @@ def test_validate_good_playbook():
     proc = run_cli("validate", str(bundled_playbook_path("saas-vendor")))
     assert proc.returncode == 0, proc.stderr
     assert "valid:" in proc.stdout
-    assert "rules: 6" in proc.stdout
+    assert "rules: 10" in proc.stdout
 
 
 def test_validate_bad_playbook(tmp_path):

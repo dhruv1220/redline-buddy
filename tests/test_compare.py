@@ -191,8 +191,8 @@ def test_compare_example_rounds_end_to_end():
         "termination-notice",
     ]
     assert cmp.reworded == []
-    assert len(cmp.findings_old) == 5
-    assert len(cmp.findings_new) == 2
+    assert len(cmp.findings_old) == 7
+    assert len(cmp.findings_new) == 4
     kinds = {c.kind for c in cmp.changes}
     assert kinds == {"added", "removed", "modified"}
 
