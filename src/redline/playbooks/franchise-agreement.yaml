@@ -1,0 +1,138 @@
+name: franchise-agreement
+version: 1
+description: Franchisee-side review of franchise agreements.
+rules:
+  - id: no-territory-exclusivity
+    title: No exclusive territory
+    severity: high
+    description: The agreement grants no exclusive or protected territory.
+    why: Without a protected territory, the franchisor can open or license a
+      competing outlet next door and cannibalize the business you built.
+    suggestion: Negotiate an exclusive territory with a defined radius or
+      address list, and a right of first refusal on nearby sites.
+    fallback: "Franchisor grants Franchisee the exclusive right to operate
+      within the territory described in Exhibit A, and shall not itself open,
+      nor license a third party to open, a competing outlet within that
+      territory during the term."
+    check:
+      kind: requires_any
+      patterns:
+        - exclusive territor
+        - protected territor
+        - designated territor
+
+  - id: unilateral-fee-increases
+    title: Franchisor can raise fees unilaterally
+    severity: high
+    description: The franchisor may increase royalties or fees without your consent.
+    why: Uncapped fee hikes let the franchisor rewrite your unit economics
+      mid-term — a profitable store can be turned marginal by decree.
+    suggestion: Cap increases (e.g. CPI-linked, or no more than once per
+      year and never above a stated percentage) and require written consent.
+    fallback: "Royalty and fund contribution rates are fixed for the term
+      and may be increased only by mutual written agreement, not more than
+      once per calendar year and never by more than the CPI increase."
+    check:
+      kind: forbids_any
+      patterns:
+        - may increase.{0,40}(royalt|fee|advertising fund)
+        - reserves the right to (increase|raise).{0,40}(royalt|fee)
+
+  - id: personal-guarantee
+    title: Personal guarantee required
+    severity: high
+    description: Individual owners must personally guarantee the franchise obligations.
+    why: A personal guarantee puts your house and savings behind the
+      business — the corporate veil you paid to create does not protect you.
+    suggestion: Limit the guarantee to a capped amount, a fraud/bad-acts
+      carve-in, or eliminate it once the unit hits performance milestones.
+    fallback: "No personal guarantee is required. Franchisee's obligations
+      are those of the entity only, except for liability arising from an
+      owner's fraud or willful misconduct."
+    check:
+      kind: forbids_any
+      patterns:
+        - personal guarant
+        - personally (guarantee|liable)
+
+  - id: post-term-non-compete
+    title: Post-term non-compete
+    severity: high
+    description: You may not compete for years after the agreement ends.
+    why: A multi-year post-term non-compete can lock you out of the only
+      industry you know, in the only market you know, after you have paid
+      years of royalties to learn it.
+    suggestion: Narrow it to the term only, or to a short radius and
+      duration (e.g. 1 year / 5 miles), with a buyout option.
+    fallback: "The non-competition covenant applies during the term only
+      and does not survive expiration or termination."
+    check:
+      kind: forbids_any
+      patterns:
+        - not compete.{0,120}(termination|expiration|expir)
+
+  - id: sole-supplier
+    title: Franchisor as sole supplier at its own prices
+    severity: medium
+    description: You must buy supplies exclusively from the franchisor at prices it sets.
+    why: A sole-supplier clause with franchisor-set pricing is a second,
+      hidden royalty — your cost of goods is whatever the franchisor says.
+    fallback: "Franchisee may purchase from any supplier meeting the quality
+      standards in the Manual. Goods supplied by Franchisor are priced at
+      Franchisor's cost plus a disclosed markup not exceeding ten percent."
+    check:
+      kind: forbids_any
+      patterns:
+        - sole.{0,25}supplier
+        - exclusively from.{0,40}franchisor
+        - must purchase.{0,60}only from
+
+  - id: transfer-fee
+    title: Transfer fee on sale of your business
+    severity: medium
+    description: Selling your franchise requires franchisor consent plus a transfer fee.
+    why: Transfer fees (often tens of thousands of dollars) come straight
+      out of your sale proceeds, and consent rights let the franchisor veto
+      your buyer — both depress what your business is worth.
+    suggestion: Cap the fee at actual administrative costs and require
+      consent not to be unreasonably withheld or delayed.
+    fallback: "Franchisor's consent to a transfer shall not be unreasonably
+      withheld, conditioned, or delayed, and any transfer charge is limited
+      to Franchisor's documented administrative costs."
+    check:
+      kind: forbids_any
+      patterns:
+        - transfer fee
+
+  - id: unilateral-amendment
+    title: Franchisor can rewrite the Operations Manual unilaterally
+    severity: high
+    description: The franchisor may amend the Operations Manual at any time without your agreement.
+    why: The manual contains most of your real obligations — hours,
+      suppliers, pricing, remodeling. Unilateral amendment lets the
+      franchisor rewrite the deal after you sign.
+    suggestion: "Require notice plus a materiality threshold, so changes that raise operating costs above a stated amount need franchisee consent."
+    fallback: "Amendments to the Operations Manual take effect 60 days after
+      notice. Amendments that increase Franchisee's operating costs by more
+      than five percent in any year require Franchisee's written consent."
+    check:
+      kind: forbids_any
+      patterns:
+        - may (unilaterally )?(modify|amend|change).{0,50}(operations manual|manual)
+        - operations manual.{0,40}may be (changed|modified|amended)
+
+  - id: no-renewal-right
+    title: No renewal right
+    severity: medium
+    description: The agreement has no renewal term — you build the business, then hand it back.
+    why: Without a renewal right, a decade of goodwill, staff, and local
+      reputation reverts to the franchisor (or a new franchisee) at term end.
+    suggestion: Add at least one renewal term on the same economics, with
+      conditions limited to being in good standing.
+    fallback: "Franchisee may renew for one additional term of five years on
+      the same royalty economics, provided Franchisee is not in material
+      breach beyond applicable cure periods."
+    check:
+      kind: requires_any
+      patterns:
+        - renew
