@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `tos-user` playbook: user-side review of website/app Terms of Service —
+  8 rules (mandatory arbitration, class-action waiver, unilateral term
+  changes, account termination at will, sale of personal data, no
+  data-deletion right, perpetual content license, no easy cancellation),
+  each with quotable fallback language; sample (8/8 fire) + clean (0 fire)
+  fixtures
 - `distribution-agreement` playbook: distributor-side review of product
   distribution agreements — 8 rules (post-term non-compete, no inventory
   buyback, unilateral wholesale price increases, termination without cause,

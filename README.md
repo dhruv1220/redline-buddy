@@ -84,6 +84,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `franchise-agreement` | franchisee side | exclusive territory, unilateral fee increases, personal guarantee, post-term non-compete, sole-supplier pricing, transfer fee, unilateral manual amendments, renewal right |
 | `software-license` | licensee side | vendor audit rights, retroactive true-up fees, source-code escrow, transfer restriction without M&A carve-out, unilateral discontinuation, seat minimums, mandatory support fees, refund of prepaid fees |
 | `distribution-agreement` | distributor side | post-term non-compete, inventory buyback on termination, unilateral wholesale price increases, termination without cause, MAP pricing, goodwill compensation, prepayment terms, marketing/co-op support |
+| `tos-user` | user side | mandatory arbitration, class-action waiver, unilateral term changes, account termination at will, sale of personal data, data-deletion right, perpetual content license, easy cancellation |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 
