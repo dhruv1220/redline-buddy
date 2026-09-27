@@ -1,0 +1,104 @@
+name: real-estate-purchase
+version: 1
+description: Buyer-side review of real estate purchase agreements.
+rules:
+  - id: nonrefundable-earnest-money
+    title: Non-refundable earnest money
+    severity: high
+    description: Your earnest-money deposit is non-refundable for any reason.
+    why: Non-refundable earnest money means you lose your deposit — often 1 to 3 percent of the price — even if the deal dies for reasons outside your control.
+    suggestion: Make the deposit refundable through the inspection and financing contingency periods.
+    fallback: "Earnest money is fully refundable until all contingencies are removed, and is forfeited only if Buyer defaults after contingency removal."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.?refundable.{0,30}earnest
+        - earnest.{0,30}non.?refundable
+
+  - id: no-inspection-contingency
+    title: No inspection contingency
+    severity: high
+    description: The agreement has no inspection contingency.
+    why: Without an inspection contingency you cannot walk away or renegotiate when the inspection finds foundation cracks, mold, or a failing roof.
+    suggestion: Add a 10 to 15 day inspection period with a right to cancel or request repairs.
+    fallback: "Buyer has fifteen (15) days from acceptance for inspections and may cancel for any inspection reason, with earnest money refunded."
+    check:
+      kind: requires_any
+      patterns:
+        - inspection
+
+  - id: no-financing-contingency
+    title: No financing contingency
+    severity: high
+    description: The agreement has no financing contingency.
+    why: If your mortgage falls through with no financing contingency, you are in breach — and your earnest money is gone.
+    suggestion: Add a financing contingency covering loan denial at the agreed rate and terms.
+    fallback: "This agreement is contingent on Buyer obtaining financing at the stated terms within thirty (30) days; if denied, Buyer may cancel with earnest money refunded."
+    check:
+      kind: requires_any
+      patterns:
+        - financing
+        - mortgage contingency
+
+  - id: as-is-sale
+    title: Property sold as-is
+    severity: medium
+    description: You are buying the property as-is with no warranties.
+    why: As-is means every defect found after closing is yours — and in many states it limits your recourse even for defects the seller knew about.
+    suggestion: Require seller disclosures and warranties of major systems, surviving closing.
+    fallback: "Seller warrants the roof, foundation, plumbing, electrical, and HVAC are in working order at closing; these warranties survive closing for one (1) year."
+    check:
+      kind: forbids_any
+      patterns:
+        - sold.{0,20}as.?is
+        - as.?is.{0,30}(basis|condition)
+
+  - id: seller-specific-performance
+    title: Seller can force you to close (specific performance)
+    severity: medium
+    description: The seller's remedy includes specific performance against you.
+    why: Specific performance lets the seller sue to force you to buy — a far harsher remedy than losing a deposit — while your own remedy is often capped.
+    suggestion: Limit the seller's remedy to retention of earnest money as liquidated damages.
+    fallback: "Seller's exclusive remedy for Buyer's default is retention of the earnest money as liquidated damages."
+    check:
+      kind: forbids_any
+      patterns:
+        - specific performance
+
+  - id: buyer-pays-all-closing-costs
+    title: Buyer pays all closing costs and transfer taxes
+    severity: low
+    description: You pay all closing costs, including the seller's transfer taxes.
+    why: Closing costs run 2 to 5 percent of the price; accepting the seller's share too can add tens of thousands with no negotiation.
+    suggestion: Split closing costs per local custom, with each party paying its own transfer taxes.
+    fallback: "Each party pays its own closing costs and transfer taxes as customary in the county where the Property is located."
+    check:
+      kind: forbids_any
+      patterns:
+        - buyer shall pay.{0,30}all.{0,20}(closing costs|transfer tax)
+
+  - id: uncapped-hoa-assessments
+    title: No cap on HOA special assessments
+    severity: low
+    description: You inherit uncapped exposure to HOA special assessments.
+    why: A pending special assessment for a new roof or elevator can be tens of thousands — and becomes your bill at closing.
+    suggestion: Require the seller to disclose pending assessments and pay or credit them at closing.
+    fallback: "Seller shall pay or credit at closing any HOA special assessment levied or noticed before closing."
+    check:
+      kind: forbids_any
+      patterns:
+        - special assessment
+
+  - id: no-closing-deadline
+    title: No firm closing deadline
+    severity: low
+    description: The agreement sets no firm closing date.
+    why: With no deadline the seller can delay indefinitely while your rate lock expires and your moving plans collapse.
+    suggestion: Set a closing date with time-of-the-essence language and a per-diem penalty for seller delay.
+    fallback: "Closing shall occur on or before the closing date, time being of the essence; Seller pays $200 per day for each day of Seller-caused delay."
+    check:
+      kind: requires_any
+      patterns:
+        - closing date
+        - close of escrow
+        - settlement date
