@@ -4,6 +4,15 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Fixed
+- Engine now collapses all whitespace runs to single spaces before running
+  rules (`review_contract`). PDF/DOCX extraction wraps phrases mid-line
+  ("signing\nbonus"), which silently defeated literal-space patterns — e.g.
+  `moonlighting-ban` missed on a line-wrapped contract (11/12 fired) and
+  now fires (12/12). Applies uniformly to CLI, web UI, batch, compare, and
+  `validate --sample`; excerpts were already single-line so output shape is
+  unchanged, and no clean fixture gains a false positive.
+
 ### Added
 - `nda-discloser` playbook: discloser-side review of NDAs (mirror of
   `nda-recipient`) — 11 rules (marked-only definition excluding oral/visual
