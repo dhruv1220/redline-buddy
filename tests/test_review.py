@@ -143,3 +143,37 @@ def test_excerpt_caps_runaway_sentences():
     excerpt = _excerpt(text, m)
     assert len(excerpt) <= 410
     assert excerpt.endswith("…")
+
+
+def test_wrapped_phrases_fire_across_line_breaks():
+    """PDF/DOCX extraction wraps phrases mid-line; rules must still fire."""
+    pb = load_playbook(bundled_playbook_path("employment-agreement"))
+    # "signing bonus, which must be repaid" wrapped across lines
+    text = (
+        "Employee shall receive a $25,000 signing\n"
+        "bonus, which must be repaid in full if employment ends."
+    )
+    ids = {f.rule_id for f in review_contract(text, pb)}
+    assert "bonus-clawback" in ids
+
+
+def test_unless_guards_work_across_line_breaks():
+    pb = load_playbook(bundled_playbook_path("employment-agreement"))
+    text = (
+        "Employee may engage in outside employment with the Company's prior\n"
+        "written consent, not to be unreasonably withheld."
+    )
+    ids = {f.rule_id for f in review_contract(text, pb)}
+    assert "moonlighting-ban" not in ids
+
+
+def test_normalization_does_not_fuse_distant_words():
+    pb = load_playbook(bundled_playbook_path("nda-recipient"))
+    # "return" and "destroy" separated by other words must not fuse into the
+    # phrase "return or destroy": the requires_any rule should still fire.
+    text = (
+        "Please return the signed copy tomorrow or destroy any drafts "
+        "you printed at home."
+    )
+    ids = {f.rule_id for f in review_contract(text, pb)}
+    assert "return-or-destroy" in ids

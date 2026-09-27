@@ -26,6 +26,20 @@ def _compile(patterns: list[str]) -> list[re.Pattern]:
 
 _SENTENCE_END = re.compile(r"[.!?](\s|$)")
 
+_WS_RUN = re.compile(r"\s+")
+
+
+def _normalize(text: str) -> str:
+    """Collapse every whitespace run to a single space.
+
+    PDF/DOCX extraction inserts newlines at arbitrary line-wrap points, so a
+    rule phrase like "signing bonus" routinely arrives as "signing\\nbonus"
+    and a literal-space pattern silently misses it. Normalizing once up front
+    makes every rule whitespace-tolerant; excerpts were already flattened to
+    a single line, so output shape is unchanged.
+    """
+    return _WS_RUN.sub(" ", text).strip()
+
 def _excerpt(text: str, match: re.Match, window: int = 120, max_len: int = 400) -> str:
     """Snippet around the match, snapped to sentence boundaries.
 
@@ -98,6 +112,7 @@ def _check_rule(text: str, rule: Rule) -> Finding | None:
 
 def review_contract(text: str, playbook: Playbook) -> list[Finding]:
     """Run every rule; return findings sorted by severity."""
+    text = _normalize(text)
     findings = [f for rule in playbook.rules if (f := _check_rule(text, rule)) is not None]
     findings.sort(key=lambda f: (SEVERITY_RANK.get(f.severity, 9), f.rule_id))
     return findings
