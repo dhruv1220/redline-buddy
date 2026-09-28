@@ -1,0 +1,150 @@
+name: partnership-agreement
+version: 1
+description: Partner-side review of business partnership agreements.
+rules:
+  - id: no-deadlock-resolution
+    title: No deadlock resolution for 50/50 votes
+    severity: high
+    description: Equal partners can deadlock with no tie-breaker.
+    why: In a 50/50 partnership, one disagreement on hiring, spending, or
+      strategy freezes the business — and with no tie-breaker the only exit
+      is a court-ordered dissolution.
+    suggestion: "Add a deadlock mechanism: mediation, then a shotgun
+      buy-sell or an independent tie-breaking vote."
+    fallback: "If the Partners cannot reach unanimous agreement on a Major
+      Decision within 30 days, the dispute shall be submitted to mediation,
+      and failing resolution, either Partner may trigger the buy-sell
+      procedure in Section X."
+    check:
+      kind: requires_any
+      patterns:
+        - deadlock
+        - tie.?break
+        - shotgun
+        - buy.?sell
+
+  - id: no-buyout-mechanism
+    title: No partner buyout or exit mechanism
+    severity: high
+    description: The agreement has no way to buy out a departing partner.
+    why: Without a buyout clause, a partner who quits, dies, or divorces is
+      still an owner — or their heirs are — and you have no contractual path
+      to remove them.
+    suggestion: Add a buy-sell triggered by death, disability, divorce, or
+      voluntary exit, with a stated valuation formula.
+    fallback: "Upon a Triggering Event, the Partnership shall purchase the
+      exiting Partner's interest at Fair Market Value determined by an
+      independent appraiser, payable over 24 months."
+    check:
+      kind: requires_any
+      patterns:
+        - buy.?sell
+        - buyout
+        - repurchase.{0,30}interest
+        - redemption.{0,30}interest
+
+  - id: no-vesting-schedule
+    title: Ownership vests immediately — no vesting schedule
+    severity: high
+    description: Partners own their full share from day one.
+    why: If a partner walks away after two months, they keep the entire
+      stake — vesting (typically 4 years with a 1-year cliff) protects the
+      partnership from early departures.
+    suggestion: Put ownership interests on a vesting schedule with a
+      1-year cliff, so departing partners forfeit unvested interests.
+    fallback: "Each Partner's interest shall vest over four (4) years with
+      a one-year cliff; unvested interests are forfeited upon departure."
+    check:
+      kind: requires_any
+      patterns:
+        - vest
+
+  - id: unlimited-capital-calls
+    title: Unlimited capital calls with dilution penalty
+    severity: high
+    description: Partners must contribute more cash on demand or be diluted.
+    why: An uncapped capital-call clause means a partner can be forced to
+      keep funding the business or watch their ownership shrink — an
+      open-ended personal liability.
+    suggestion: Cap total additional contributions per partner and require
+      unanimous consent for any call above the cap.
+    fallback: "No Partner shall be required to contribute additional
+      capital beyond the Initial Contribution without such Partner's
+      written consent."
+    check:
+      kind: forbids_any
+      patterns:
+        - additional.{0,20}capital.{0,30}contribution
+        - capital call
+        - further.{0,20}contributions.{0,30}required
+
+  - id: broad-post-exit-noncompete
+    title: Overbroad post-exit non-compete
+    severity: medium
+    description: A departing partner cannot compete anywhere for years.
+    why: A nationwide multi-year non-compete after exit can bar you from
+      your entire industry — many courts won't enforce them, but defending
+      one is expensive.
+    suggestion: Narrow it to the partnership's actual market and customers,
+      1 year max, and only if you receive buyout consideration.
+    fallback: "For twelve (12) months after departure, the exiting Partner
+      shall not solicit the Partnership's customers within the Territory
+      defined in Exhibit A."
+    check:
+      kind: forbids_any
+      patterns:
+        - non.?compete.{0,40}(years|year)
+        - covenant not to compete.{0,60}(united states|nationwide|worldwide)
+
+  - id: no-ip-contribution-terms
+    title: No terms for partner-contributed IP
+    severity: medium
+    description: Nothing says who owns IP a partner brings into the business.
+    why: If a partner built the core product before formation and never
+      assigns or licenses it to the partnership, they can walk away with
+      the company's technology.
+    suggestion: Require each partner to assign or exclusively license their
+      relevant pre-existing IP to the partnership.
+    fallback: "Each Partner hereby assigns to the Partnership all right,
+      title, and interest in the Intellectual Property listed on
+      Exhibit B, developed for the Partnership's business."
+    check:
+      kind: requires_any
+      patterns:
+        - intellectual property.{0,30}(assign|license)
+        - assign.{0,30}(intellectual property|inventions)
+        - ip.{0,20}contribution
+
+  - id: no-mandatory-distributions
+    title: No mandatory tax distributions
+    severity: medium
+    description: Profits can be retained while partners still owe tax on them.
+    why: Partnerships pass through income — you owe tax on your share of
+      profits even if the cash stays in the business. Without tax
+      distributions, you pay tax out of pocket on money you never received.
+    suggestion: Require annual distributions at least equal to each
+      partner's tax liability on allocated income.
+    fallback: "The Partnership shall distribute to each Partner, within 90
+      days of year end, an amount sufficient to cover such Partner's
+      estimated tax liability on allocated income."
+    check:
+      kind: requires_any
+      patterns:
+        - tax distribution
+        - distribution.{0,30}tax.{0,20}liabilit
+
+  - id: fiduciary-duty-waiver
+    title: Partners waive fiduciary duties to each other
+    severity: low
+    description: The agreement waives loyalty and care duties between partners.
+    why: Waiving fiduciary duties lets a partner pursue competing interests
+      or self-dealing transactions that the default rules would forbid.
+    suggestion: Keep at least the duty of loyalty; waive only specific
+      applications you both understand.
+    fallback: "Nothing herein waives any Partner's fiduciary duties of
+      loyalty and care to the Partnership and the other Partners."
+    check:
+      kind: forbids_any
+      patterns:
+        - waive.{0,30}fiduciary
+        - no.{0,20}fiduciary.{0,20}(duty|duties|obligation)
