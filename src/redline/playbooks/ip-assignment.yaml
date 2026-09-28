@@ -1,0 +1,143 @@
+name: ip-assignment
+version: 1
+description: Assignor-side review of intellectual property assignment agreements.
+rules:
+  - id: no-prior-inventions-exhibit
+    title: No prior-inventions exhibit or carve-out
+    severity: high
+    description: Your pre-existing IP is not listed or excluded.
+    why: Without a prior-inventions list, everything you created before this
+      agreement can be swept into the assignment — including side projects
+      and earlier work the company had nothing to do with.
+    suggestion: Attach an exhibit listing your prior inventions and exclude
+      them from the assignment in writing.
+    fallback: "The assignment in Section X excludes the inventions listed
+      on Exhibit A (Prior Inventions), which remain the sole property of
+      the Assignor."
+    check:
+      kind: requires_any
+      patterns:
+        - prior invention
+        - pre.?existing.{0,20}(invention|intellectual property)
+        - exhibit.{0,10}[ab].{0,30}invention
+
+  - id: unrelated-future-ip-capture
+    title: Assignment captures IP unrelated to the business
+    severity: high
+    description: You assign inventions made on your own time, outside the work.
+    why: An assignment that covers anything you invent — even unrelated side
+      projects built on weekends with your own equipment — hands over work
+      the company never paid for.
+    suggestion: Limit the assignment to inventions made within the scope of
+      your work, using company resources or relating to its business.
+    fallback: "This assignment covers only Inventions conceived within the
+      scope of Assignor's work for the Company, relating to the Company's
+      business, or developed using Company resources."
+    check:
+      kind: forbids_any
+      patterns:
+        - (all|any).{0,20}inventions.{0,30}(whether|regardless).{0,30}(scope|time|business)
+        - conceived.{0,30}(at any time|outside).{0,30}scope
+
+  - id: post-employment-trailer
+    title: Assignment survives months after you leave
+    severity: high
+    description: Inventions you create after departure are still assigned.
+    why: A trailer clause reaching 6-12 months past your last day lets the
+      company claim your next venture's IP — the classic way founders lose
+      their follow-on company.
+    suggestion: End the assignment at your last day, with no trailing period.
+    fallback: "The assignment obligations end on the Assignor's last day of
+      service; Inventions conceived thereafter are not assigned."
+    check:
+      kind: forbids_any
+      patterns:
+        - (six|6|twelve|12).{0,10}months.{0,30}(after|following).{0,20}(termination|departure|last day)
+        - trailer
+
+  - id: moral-rights-waiver
+    title: Blanket waiver of moral rights and attribution
+    severity: medium
+    description: You waive attribution and integrity rights worldwide.
+    why: A worldwide moral-rights waiver lets the company alter your work,
+      remove your name, or use it in contexts you would object to, with no
+      recourse in jurisdictions that recognize those rights.
+    suggestion: Limit the waiver to what the business actually needs, or
+      require attribution on published works.
+    fallback: "Assignor retains the right of attribution on published works;
+      any waiver of moral rights is limited to uses within the Company's
+      ordinary business."
+    check:
+      kind: forbids_any
+      patterns:
+        - waive.{0,30}moral right
+        - moral rights.{0,30}waiv
+
+  - id: no-consideration
+    title: No stated consideration for the assignment
+    severity: medium
+    description: The agreement names no payment or consideration for your IP.
+    why: An assignment with no stated consideration can be attacked as
+      unsupported — and practically, it means you signed away IP for nothing
+      beyond what you already had.
+    suggestion: Name real consideration — a payment, equity, or continued
+      engagement tied to the assignment.
+    fallback: "In consideration of $X (and other good and valuable
+      consideration), Assignor hereby assigns the Inventions."
+    check:
+      kind: requires_any
+      patterns:
+        - consideration
+        - in exchange for
+        - payment.{0,20}for.{0,20}assignment
+
+  - id: no-license-back
+    title: No license-back to keep using your own work
+    severity: medium
+    description: After assigning, you cannot use the IP yourself.
+    why: Without a license-back, you can't reuse techniques, code, or
+      designs you created — even in unrelated future work.
+    suggestion: Add a perpetual, royalty-free license-back for uses outside
+      the company's business.
+    fallback: "The Company grants Assignor a perpetual, royalty-free,
+      non-exclusive license to use the assigned Inventions outside the
+      Company's field of business."
+    check:
+      kind: requires_any
+      patterns:
+        - license.?back
+        - grants.{0,20}assignor.{0,30}license
+
+  - id: blanket-disclosure-duty
+    title: Must disclose all inventions, even unrelated ones
+    severity: low
+    description: You must report every invention you conceive, period.
+    why: A blanket disclosure duty forces you to hand over a list of
+      everything you think about — including unrelated ideas — so the
+      company can decide what to claim.
+    suggestion: Limit disclosure to inventions within the assignment's scope.
+    fallback: "Assignor shall disclose only Inventions within the scope of
+      the assignment in Section X."
+    check:
+      kind: forbids_any
+      patterns:
+        - disclose.{0,30}all.{0,20}inventions
+        - promptly disclose.{0,40}(any|every).{0,20}invention
+
+  - id: no-open-source-carveout
+    title: No carve-out for open-source contributions
+    severity: low
+    description: Contributing to open source may breach the assignment.
+    why: If your open-source contributions relate to the company's field,
+      the assignment can claim them — putting your public work and the
+      project's license in conflict.
+    suggestion: Carve out contributions to open-source projects made on
+      your own time.
+    fallback: "This assignment does not cover Assignor's contributions to
+      open-source projects made on Assignor's own time with Assignor's own
+      resources."
+    check:
+      kind: requires_any
+      patterns:
+        - open.?source.{0,30}(carve|exclu|except)
+        - open.?source.{0,20}contributions.{0,20}(not|excluded)
