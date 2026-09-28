@@ -91,6 +91,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `real-estate-purchase` | buyer side | non-refundable earnest money, no inspection contingency, no financing contingency, as-is sale, seller specific performance, buyer pays all closing costs, uncapped HOA assessments, no closing deadline |
 | `partnership-agreement` | partner side | no deadlock resolution, no buyout mechanism, no vesting schedule, unlimited capital calls, overbroad post-exit non-compete, no IP contribution terms, no mandatory tax distributions, fiduciary duty waiver |
 | `ip-assignment` | assignor side | no prior-inventions exhibit, unrelated future IP capture, post-employment trailer, moral-rights waiver, no stated consideration, no license-back, blanket disclosure duty, no open-source carve-out |
+| `website-development` | client side | no IP ownership of deliverables, no source-code delivery, no acceptance testing, no warranty/bug-fix period, uncapped change fees, site-hostage takedown right, no third-party license terms, no launch deadline |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 

@@ -1,0 +1,138 @@
+name: website-development
+version: 1
+description: Client-side review of website development agreements.
+rules:
+  - id: no-ip-ownership
+    title: You don't own the website or its code
+    severity: high
+    description: The developer keeps ownership of the deliverables.
+    why: If the developer retains the IP, you are renting your own website —
+      you can't move it, sell it, or hire someone else to maintain it.
+    suggestion: Take full ownership of all deliverables on final payment,
+      including source code.
+    fallback: "Upon final payment, Developer assigns to Client all right,
+      title, and interest in the Deliverables, including all source code."
+    check:
+      kind: requires_any
+      patterns:
+        - assign.{0,30}(deliverables|work product|website)
+        - ownership.{0,20}(deliverables|website|source code)
+        - work.{0,10}made.{0,10}for.{0,10}hire
+
+  - id: no-source-code-delivery
+    title: No source-code delivery obligation
+    severity: high
+    description: The developer only delivers the compiled/live site.
+    why: Without source code you can't switch developers or fix the site
+      yourself — you're locked to the original developer forever.
+    suggestion: Require delivery of complete, documented source code with
+      each milestone.
+    fallback: "Developer shall deliver complete source code, build
+      scripts, and documentation for each Deliverable upon acceptance."
+    check:
+      kind: requires_any
+      patterns:
+        - source code
+        - source files
+
+  - id: no-acceptance-testing
+    title: No acceptance testing or rejection right
+    severity: high
+    description: You must pay even if the site doesn't work.
+    why: Without acceptance criteria, "done" is whatever the developer says
+      — you pay in full for a site that may not meet your requirements.
+    suggestion: Define acceptance criteria and a cure period; payment of the
+      final milestone follows written acceptance.
+    fallback: "Client has 15 days to test each Deliverable against the
+      Specifications; Developer shall cure defects within 15 days, and the
+      final milestone is due upon written acceptance."
+    check:
+      kind: requires_any
+      patterns:
+        - acceptance.{0,20}(test|criteria|period)
+        - right to reject
+        - cure.{0,20}defect
+
+  - id: no-maintenance-warranty
+    title: No warranty or bug-fix period
+    severity: medium
+    description: Bugs after launch are billable, not the developer's problem.
+    why: Every new site ships with bugs. Without a warranty window you pay
+      hourly for fixes to work you already paid for.
+    suggestion: Require a 60–90 day warranty period covering defects at no
+      charge.
+    fallback: "Developer warrants the Deliverables against defects for 90
+      days after acceptance and shall fix defects at no additional charge."
+    check:
+      kind: requires_any
+      patterns:
+        - warrant.{0,30}(defect|bug|deliverable)
+        - bug.?fix.{0,20}(period|window|days)
+        - warranty.{0,20}period
+
+  - id: uncapped-change-fees
+    title: Change requests billed at uncapped rates
+    severity: medium
+    description: Any change is billed hourly with no cap or estimate.
+    why: '"Minor tweak" billing at uncapped hourly rates is the classic
+      budget blowout — a $10K project becomes $40K one change order at a
+      time.'
+    suggestion: Require written estimates and a cap per change order, with
+      your sign-off before work starts.
+    fallback: "Change Orders require Client's written approval of a fixed
+      fee; hourly change work is capped at $X per month."
+    check:
+      kind: forbids_any
+      patterns:
+        - change.{0,20}(order|request).{0,30}hourly
+        - billed.{0,20}hourly.{0,20}change
+
+  - id: developer-lien-hostage
+    title: Developer can hold the site hostage for disputed fees
+    severity: medium
+    description: The developer may take down or withhold the site over a
+      billing dispute.
+    why: A takedown right turns any invoice disagreement into a ransom —
+      your business goes offline until you pay.
+    suggestion: Remove the takedown right; fee disputes go to mediation
+      while the site stays live.
+    fallback: "Developer shall not disable, take down, or withhold any
+      Deliverable over a fee dispute; disputes are resolved per Section X."
+    check:
+      kind: forbids_any
+      patterns:
+        - (take down|disable|withhold|suspend).{0,30}(site|website|deliverable)
+        - \blien\b.{0,20}(website|deliverable|site)
+
+  - id: no-third-party-license-terms
+    title: No terms for third-party licenses and plugins
+    severity: low
+    description: Nothing says who pays for or owns third-party components.
+    why: Premium themes, plugins, and stock assets carry their own licenses
+      and renewal fees — without terms, you inherit surprise bills or an
+      infringing site.
+    suggestion: Require the developer to list all third-party components,
+      assign transferable licenses, and disclose recurring fees.
+    fallback: "Developer shall list all third-party components, transfer
+      all licenses to Client, and disclose any recurring license fees
+      before acceptance."
+    check:
+      kind: requires_any
+      patterns:
+        - third.?party.{0,20}(license|component|plugin)
+        - plugin.{0,20}license
+
+  - id: no-launch-deadline
+    title: No launch deadline or delay remedy
+    severity: low
+    description: The agreement has no delivery date.
+    why: Without a deadline, a late project has no remedy — your launch
+      slips while you keep paying retainers.
+    suggestion: Set milestone dates with a per-week delay credit.
+    fallback: "Developer shall deliver the beta by DATE and launch by DATE;
+      delays accrue a 5% per-week credit against fees."
+    check:
+      kind: requires_any
+      patterns:
+        - (delivery|launch|completion).{0,20}(date|deadline|schedule)
+        - milestone.{0,20}date

@@ -34,6 +34,7 @@ PAIRS = [
     ("real-estate-purchase", "clean-real-estate-purchase.md"),
     ("partnership-agreement", "clean-partnership-agreement.md"),
     ("ip-assignment", "clean-ip-assignment.md"),
+    ("website-development", "clean-website-development.md"),
 ]
 
 
