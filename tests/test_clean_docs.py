@@ -32,6 +32,7 @@ PAIRS = [
     ("severance-agreement", "clean-severance-agreement.md"),
     ("equipment-lease", "clean-equipment-lease.md"),
     ("real-estate-purchase", "clean-real-estate-purchase.md"),
+    ("partnership-agreement", "clean-partnership-agreement.md"),
 ]
 
 
