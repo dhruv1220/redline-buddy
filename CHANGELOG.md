@@ -13,6 +13,9 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   summaries, as a grade-colored banner in `redline serve`, and as a
   risk delta (`Risk: C (63) → B (78) — improved`) in `redline compare`
   memo and JSON
+- `redline review --fail-below <grade>`: CI gate on the headline score —
+  exit 1 when the review's letter grade is worse than the given grade
+  (e.g. `--fail-below B` fails on C, D, F)
 - `settlement-agreement` playbook: claimant/individual-side review of
   settlement agreements — 8 rules (broad release incl. unknown claims /
   §1542 waiver [high], no firm payment deadline [high], dismissal with
