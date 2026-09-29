@@ -6,6 +6,7 @@ from dataclasses import asdict
 
 from .compare import Comparison
 from .review import Finding
+from .score import risk_grade, risk_label, risk_score, severity_counts
 
 DISCLAIMER = (
     "> **Not legal advice.** redline-buddy runs deterministic heuristic checks, "
@@ -21,9 +22,28 @@ _SEVERITY_BADGE = {
 }
 
 
-def render_memo(contract_name: str, playbook_name: str, findings: list[Finding]) -> str:
+def _risk_headline(findings: list[Finding], rule_count: int | None = None) -> str:
+    """Glanceable risk line for memo headers, e.g.
+
+    ``Risk score: **63/100** · Grade C — 1 critical, 2 high, 3 medium finding(s) (12 rules checked).``
+    """
+    counts = severity_counts(findings)
+    parts = [f"{n} {sev}" for sev, n in counts.items() if n]
+    breakdown = ", ".join(parts) if parts else "no findings"
+    suffix = f" ({rule_count} rules checked)" if rule_count else ""
+    return f"Risk score: **{risk_label(findings)}** — {breakdown}{suffix}."
+
+
+def render_memo(
+    contract_name: str,
+    playbook_name: str,
+    findings: list[Finding],
+    rule_count: int | None = None,
+) -> str:
     lines = [
         f"# Red-flag memo: {contract_name}",
+        "",
+        _risk_headline(findings, rule_count),
         "",
         f"Playbook: `{playbook_name}` — {len(findings)} finding(s).",
         "",
@@ -46,7 +66,12 @@ def render_memo(contract_name: str, playbook_name: str, findings: list[Finding])
     return "\n".join(lines)
 
 
-def render_diff(contract_name: str, playbook_name: str, findings: list[Finding]) -> str:
+def render_diff(
+    contract_name: str,
+    playbook_name: str,
+    findings: list[Finding],
+    rule_count: int | None = None,
+) -> str:
     """Redline-style diff view: each finding as a unified-diff hunk.
 
     `-` lines show the flagged contract language; `+` lines show the
@@ -55,6 +80,8 @@ def render_diff(contract_name: str, playbook_name: str, findings: list[Finding])
     """
     lines = [
         f"# Redline: {contract_name}",
+        "",
+        _risk_headline(findings, rule_count),
         "",
         f"Playbook: `{playbook_name}` — {len(findings)} finding(s).",
         "",
@@ -85,13 +112,22 @@ def render_diff(contract_name: str, playbook_name: str, findings: list[Finding])
     return "\n".join(lines)
 
 
-def render_json(contract_name: str, playbook_name: str, findings: list[Finding]) -> str:
+def render_json(
+    contract_name: str,
+    playbook_name: str,
+    findings: list[Finding],
+    rule_count: int | None = None,
+) -> str:
     """Machine-readable findings, e.g. for CI gates: fail the build on findings."""
+    score = risk_score(findings)
     return json.dumps(
         {
             "contract": contract_name,
             "playbook": playbook_name,
             "finding_count": len(findings),
+            "risk_score": score,
+            "risk_grade": risk_grade(score),
+            "by_severity": severity_counts(findings),
             "disclaimer": "Not legal advice. Heuristic checks only — draft for attorney review.",
             "findings": [asdict(f) for f in findings],
         },
@@ -107,7 +143,9 @@ def _severity_counts(findings: list[Finding]) -> dict[str, int]:
 
 
 def render_batch_memo(
-    results: list[tuple[str, list[Finding], str | None]], playbook_name: str
+    results: list[tuple[str, list[Finding], str | None]],
+    playbook_name: str,
+    rule_count: int | None = None,
 ) -> str:
     """Summary table plus per-file memos for a directory review.
 
@@ -122,24 +160,25 @@ def render_batch_memo(
         "",
         "## Summary",
         "",
-        "| File | 🔴 Crit | 🟠 High | 🟡 Med | 🟢 Low | Total |",
-        "|---|---|---|---|---|---|",
+        "| File | Risk | 🔴 Crit | 🟠 High | 🟡 Med | 🟢 Low | Total |",
+        "|---|---|---|---|---|---|---|",
     ]
     for name, findings, error in results:
         if error:
-            lines.append(f"| {name} | — | — | — | — | ⚠️ {error} |")
+            lines.append(f"| {name} | — | — | — | — | — | ⚠️ {error} |")
         else:
             c = _severity_counts(findings)
+            _score = risk_score(findings)
             lines.append(
-                f"| {name} | {c['critical']} | {c['high']} | {c['medium']} "
-                f"| {c['low']} | {len(findings)} |"
+                f"| {name} | {_score} ({risk_grade(_score)}) | {c['critical']} | "
+                f"{c['high']} | {c['medium']} | {c['low']} | {len(findings)} |"
             )
     lines += ["", "---", ""]
     for name, findings, error in results:
         if error:
             lines += [f"# {name}", "", f"⚠️ Skipped: {error}", "", "---", ""]
         else:
-            lines += [render_memo(name, playbook_name, findings), "---", ""]
+            lines += [render_memo(name, playbook_name, findings, rule_count), "---", ""]
     lines += [DISCLAIMER, ""]
     return "\n".join(lines)
 
@@ -155,6 +194,9 @@ def render_batch_json(
         if error:
             entry["error"] = error
         else:
+            _score = risk_score(findings)
+            entry["risk_score"] = _score
+            entry["risk_grade"] = risk_grade(_score)
             entry["findings"] = [asdict(f) for f in findings]
             for f in findings:
                 total[f.severity] = total.get(f.severity, 0) + 1
@@ -184,11 +226,21 @@ def _finding_block(f: Finding, num: int) -> list[str]:
     return lines
 
 
+def _risk_trend(old_score: int, new_score: int) -> str:
+    if new_score > old_score:
+        return "improved"
+    if new_score < old_score:
+        return "worsened"
+    return "unchanged"
+
+
 def render_compare_memo(cmp: Comparison) -> str:
     """Markdown memo for a two-draft comparison: what changed, what risk changed."""
     added = sum(1 for c in cmp.changes if c.kind == "added")
     removed = sum(1 for c in cmp.changes if c.kind == "removed")
     modified = sum(1 for c in cmp.changes if c.kind == "modified")
+    old_score = risk_score(cmp.findings_old)
+    new_score = risk_score(cmp.findings_new)
     lines = [
         f"# Contract comparison: {cmp.old_name} → {cmp.new_name}",
         "",
@@ -207,6 +259,11 @@ def render_compare_memo(cmp: Comparison) -> str:
             f"🚨 {len(cmp.gained)} new red flag(s), "
             f"✅ {len(cmp.resolved)} resolved, "
             f"🔁 {len(cmp.reworded)} reworded but still flagged"
+        ),
+        (
+            f"- Risk: **{risk_grade(old_score)} ({old_score})** \u2192 "
+            f"**{risk_grade(new_score)} ({new_score})** \u2014 "
+            f"{_risk_trend(old_score, new_score)}"
         ),
         "",
     ]
@@ -268,6 +325,10 @@ def render_compare_json(cmp: Comparison) -> str:
             "new": cmp.new_name,
             "playbook": cmp.playbook_name,
             "summary": {
+                "risk_old": {"score": risk_score(cmp.findings_old),
+                             "grade": risk_grade(risk_score(cmp.findings_old))},
+                "risk_new": {"score": risk_score(cmp.findings_new),
+                             "grade": risk_grade(risk_score(cmp.findings_new))},
                 "changes": {
                     "total": len(cmp.changes),
                     "added": sum(1 for c in cmp.changes if c.kind == "added"),

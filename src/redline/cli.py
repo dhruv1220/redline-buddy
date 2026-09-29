@@ -81,11 +81,11 @@ def cmd_review(args: argparse.Namespace) -> int:
         return 2
     findings = review_contract(text, playbook)
     if args.format == "json":
-        print(render_json(contract_path.name, playbook.name, findings))
+        print(render_json(contract_path.name, playbook.name, findings, len(playbook.rules)))
     elif args.format == "diff":
-        print(render_diff(contract_path.name, playbook.name, findings))
+        print(render_diff(contract_path.name, playbook.name, findings, len(playbook.rules)))
     else:
-        print(render_memo(contract_path.name, playbook.name, findings))
+        print(render_memo(contract_path.name, playbook.name, findings, len(playbook.rules)))
     if args.fail_on:
         threshold = SEVERITY_RANK[args.fail_on]
         if any(SEVERITY_RANK.get(f.severity, 9) <= threshold for f in findings):
@@ -107,7 +107,7 @@ def _cmd_review_batch(contract_dir: Path, playbook, args: argparse.Namespace) ->
             else:
                 print(render_diff(name, playbook.name, findings))
     else:
-        print(render_batch_memo(results, playbook.name))
+        print(render_batch_memo(results, playbook.name, len(playbook.rules)))
     if args.fail_on:
         threshold = SEVERITY_RANK[args.fail_on]
         if any(
