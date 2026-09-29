@@ -19,6 +19,8 @@ redline review ./contracts/ --playbook lease-tenant
 redline review contract.pdf --format json | jq '.finding_count'
 # fail CI when a high-or-worse finding appears:
 redline review contract.pdf --fail-on high || echo "contract gate failed"
+# fail CI when the risk grade drops below B:
+redline review contract.pdf --fail-below B || echo "risk gate failed"
 # minimal local web UI (paste text, pick a playbook, get the memo):
 redline serve
 # the web UI now shows playbook descriptions in the picker, one-click

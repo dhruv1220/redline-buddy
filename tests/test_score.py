@@ -12,7 +12,13 @@ from redline.memo import (
     render_memo,
 )
 from redline.review import Finding
-from redline.score import risk_grade, risk_label, risk_score, severity_counts
+from redline.score import (
+    grade_worse_than,
+    risk_grade,
+    risk_label,
+    risk_score,
+    severity_counts,
+)
 
 
 def _finding(severity="high", rule_id="r1", title="Some rule"):
@@ -154,3 +160,37 @@ def test_compare_json_has_risk_summary():
     data = json.loads(render_compare_json(cmp))
     assert data["summary"]["risk_old"] == {"score": 70, "grade": "C"}
     assert data["summary"]["risk_new"] == {"score": 100, "grade": "A"}
+
+
+# --- --fail-below gate ---
+
+def test_grade_worse_than():
+    assert grade_worse_than("C", "B")
+    assert grade_worse_than("F", "A")
+    assert not grade_worse_than("B", "B")
+    assert not grade_worse_than("A", "C")
+    assert not grade_worse_than("F", "F")
+
+
+def test_cli_fail_below_gate():
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    env = dict(os.environ, PYTHONPATH=str(root / "src"))
+    sample = root / "examples" / "sample-settlement-agreement.md"  # Grade F
+    clean = root / "examples" / "clean-settlement-agreement.md"    # Grade A
+
+    def run(*args):
+        return subprocess.run(
+            [sys.executable, "-m", "redline.cli", "review", *args],
+            check=False, capture_output=True, text=True, env=env, timeout=30)
+
+    r = run(str(sample), "--playbook", "settlement-agreement", "--fail-below", "F")
+    assert r.returncode == 0, r.stderr  # F is not worse than F
+    r = run(str(sample), "--playbook", "settlement-agreement", "--fail-below", "D")
+    assert r.returncode == 1  # F is worse than D
+    r = run(str(clean), "--playbook", "settlement-agreement", "--fail-below", "A")
+    assert r.returncode == 0, r.stderr

@@ -21,6 +21,7 @@ from .memo import (
 )
 from .playbook import PlaybookError, bundled_playbook_path, load_playbook
 from .review import SEVERITY_RANK, review_contract
+from .score import grade_worse_than, risk_grade, risk_score
 from .scaffold import NEXT_STEPS, scaffold_playbook
 from .serve import cmd_serve
 
@@ -90,6 +91,9 @@ def cmd_review(args: argparse.Namespace) -> int:
         threshold = SEVERITY_RANK[args.fail_on]
         if any(SEVERITY_RANK.get(f.severity, 9) <= threshold for f in findings):
             return 1
+    if args.fail_below:
+        if grade_worse_than(risk_grade(risk_score(findings)), args.fail_below):
+            return 1
     return 0
 
 
@@ -114,6 +118,12 @@ def _cmd_review_batch(contract_dir: Path, playbook, args: argparse.Namespace) ->
             SEVERITY_RANK.get(f.severity, 9) <= threshold
             for _, findings, _ in results
             for f in findings
+        ):
+            return 1
+    if args.fail_below:
+        if any(
+            not error and grade_worse_than(risk_grade(risk_score(findings)), args.fail_below)
+            for _, findings, error in results
         ):
             return 1
     return 0
@@ -237,6 +247,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="exit 1 (fail) when any finding is at or above this severity — "
         "for CI gates (default: never fail)",
+    )
+    review.add_argument(
+        "--fail-below",
+        choices=("A", "B", "C", "D", "F"),
+        default=None,
+        help="exit 1 (fail) when the risk grade is worse than this letter — "
+        "for CI gates on the headline score (default: never fail)",
     )
     review.set_defaults(func=cmd_review)
 

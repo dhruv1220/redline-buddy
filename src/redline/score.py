@@ -50,3 +50,15 @@ def severity_counts(findings: list[Finding]) -> dict[str, int]:
     for f in findings:
         counts[f.severity] = counts.get(f.severity, 0) + 1
     return counts
+
+
+GRADE_RANK = {"A": 0, "B": 1, "C": 2, "D": 3, "F": 4}
+
+
+def grade_worse_than(grade: str, threshold: str) -> bool:
+    """True when ``grade`` is a worse letter than ``threshold``.
+
+    Used by the ``--fail-below`` CI gate: ``--fail-below B`` fails the run
+    when the review grades out at C, D, or F.
+    """
+    return GRADE_RANK.get(grade, 4) > GRADE_RANK.get(threshold, 0)
