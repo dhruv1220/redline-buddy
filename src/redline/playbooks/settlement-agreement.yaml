@@ -1,0 +1,153 @@
+name: settlement-agreement
+version: 1
+description: Individual/claimant-side review of settlement agreements.
+rules:
+  - id: broad-release-unknown-claims
+    title: Broad general release including unknown claims
+    severity: high
+    description: You release all claims against the other party, including claims you do not know about yet.
+    why: A release of unknown claims (a Section 1542 waiver in California)
+      means you can never come back, even if you later discover the dispute
+      cost you far more than the settlement pays. Most claimants should not
+      release what they cannot see.
+    suggestion: Limit the release to known claims arising from the specific
+      dispute; expressly exclude unknown claims and any California Civil
+      Code Section 1542 waiver.
+    fallback: "This release covers only claims known to Claimant as of the
+      Effective Date arising from the dispute described in Section 1, and
+      expressly excludes unknown or unsuspected claims."
+    check:
+      kind: forbids_any
+      patterns:
+        - general release
+        - release.{0,40}all claims
+        - unknown.{0,20}claims
+        - section 1542
+
+  - id: no-payment-deadline
+    title: No firm payment deadline
+    severity: high
+    description: The agreement does not state a concrete date or window for the settlement payment.
+    why: A settlement without a payment deadline is a promise with no
+      teeth — the other side can stall for months while your dismissal or
+      release is already signed and filed.
+    suggestion: Require payment within a fixed window (e.g., 10 business
+      days) of execution, before any dismissal is filed.
+    fallback: "The Settlement Amount shall be paid in full no later than
+      ten (10) business days after the Effective Date."
+    check:
+      kind: requires_any
+      patterns:
+        - within \d+ (business )?days of
+        - no later than \d+ (business )?days
+        - payment due
+
+  - id: dismissal-before-payment
+    title: Dismissal required before payment is received
+    severity: high
+    description: You must dismiss your case with prejudice before the settlement money arrives.
+    why: Once a dismissal with prejudice is filed, your leverage is gone —
+      if the check never comes, your only remedy is a brand-new lawsuit to
+      enforce the settlement.
+    suggestion: "Sequence it the other way: payment (or escrow) first, then
+      the dismissal with prejudice within days of funds clearing." 
+    fallback: "Claimant shall file the dismissal with prejudice within five
+      (5) business days after the Settlement Amount clears Claimant's account."
+    check:
+      kind: forbids_any
+      patterns:
+        - dismiss.{0,60}(prior to|before).{0,40}payment
+        - payment.{0,80}(after|following).{0,40}dismissal
+        - file.{0,40}dismissal.{0,60}within.{0,20}days.{0,60}execution
+
+  - id: one-sided-non-disparagement
+    title: One-sided non-disparagement clause
+    severity: medium
+    description: You may not disparage the other party, but it makes no reciprocal promise.
+    why: One-sided non-disparagement gags you while the other side stays
+      free to tell its version of the dispute — with no remedy if it does.
+    suggestion: Make it mutual, with liquidated damages if either side breaches.
+    fallback: "Neither party shall disparage the other. A breaching party
+      shall pay liquidated damages of $5,000 per occurrence."
+    check:
+      kind: forbids_unless
+      patterns:
+        - non.?disparagement
+        - not disparage
+      unless_any:
+        - mutual
+
+  - id: one-sided-confidentiality
+    title: One-sided confidentiality of settlement terms
+    severity: medium
+    description: The confidentiality obligation binds only you, not the other party.
+    why: When only you are gagged, the other side can leak the settlement
+      (or its existence) selectively while you face penalties for any slip —
+      including defending yourself publicly.
+    suggestion: Make confidentiality mutual, with a carve-out for legal,
+      tax, and immediate-family disclosures.
+    fallback: "Both parties shall keep the settlement terms confidential,
+      except for disclosures to legal and tax advisors or as required by law."
+    check:
+      kind: forbids_unless
+      patterns:
+        - keep.{0,40}confidential
+        - confidentiality.{0,40}obligation
+      unless_any:
+        - mutual
+        - both parties
+
+  - id: no-tax-allocation
+    title: No tax allocation or reporting clause
+    severity: medium
+    description: The agreement says nothing about how the payment is taxed or reported.
+    why: Settlement payments are usually taxable, and the IRS decides the
+      character (wages vs. other income) regardless of what the agreement
+      omits. Silence here means a surprise 1099 and a possible underpayment
+      penalty — or wages treatment with no withholding.
+    suggestion: State the tax character the parties intend and who issues
+      any 1099, and consult a tax advisor before signing.
+    fallback: "The parties agree the Settlement Amount is reported on Form
+      1099-MISC as other income, with no withholding; each party is
+      responsible for its own taxes."
+    check:
+      kind: requires_any
+      patterns:
+        - 1099
+        - tax.{0,40}(allocation|treatment|reporting|responsib)
+        - withhold.{0,20}tax
+
+  - id: no-late-payment-remedy
+    title: No remedy for late payment
+    severity: medium
+    description: Nothing happens to the other side if the settlement payment arrives late.
+    why: Without interest or a penalty, delay is free for the payer — and
+      expensive for you if you counted on the money.
+    suggestion: Add per-annum interest on late amounts plus a cure-and-
+      acceleration right.
+    fallback: "Amounts unpaid when due bear interest at 1.5% per month
+      from the due date until paid."
+    check:
+      kind: requires_any
+      patterns:
+        - late payment
+        - interest.{0,40}(per (month|annum)|%)
+        - liquidated damages
+
+  - id: no-enforcement-fees
+    title: No attorneys' fees if you must enforce the settlement
+    severity: low
+    description: If the other side breaches and you must sue to enforce the settlement, you pay your own lawyers.
+    why: Fee-shifting is the only cheap deterrent against a breaching
+      payer. Without it, enforcing a modest settlement can cost more than
+      the settlement itself.
+    suggestion: Add a prevailing-party attorneys'-fees clause limited to
+      enforcement of this agreement.
+    fallback: "The prevailing party in any action to enforce this agreement
+      is entitled to recover reasonable attorneys' fees and costs."
+    check:
+      kind: requires_any
+      patterns:
+        - attorneys.{0,20}fees
+        - prevailing party
+        - costs of enforcement

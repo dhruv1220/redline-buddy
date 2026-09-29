@@ -63,6 +63,16 @@ redline compare examples/compare-round1.md examples/compare-round2.md
 
 Every rule carries a `fallback:` field: concrete, quotable clause language — not just advice — so the diff view gives you something you can actually propose back.
 
+## Risk score
+
+Every memo opens with a headline: **Risk score: 63/100 · Grade C** — a
+deterministic 0–100 score (critical findings cost 30 points, high 15,
+medium 7, low 3) mapped to ToS;DR-style letter grades (A ≥ 90, B ≥ 75,
+C ≥ 60, D ≥ 40, else F). It also appears in JSON output (`risk_score`,
+`risk_grade`), in the batch summary table, in the web UI banner, and —
+most usefully — in `redline compare`, which reports the risk delta between
+negotiation rounds (`Risk: C (63) → B (78) — improved`).
+
 ## Playbooks
 
 | Playbook | Reviews from | Checks |
@@ -92,6 +102,7 @@ Every rule carries a `fallback:` field: concrete, quotable clause language — n
 | `partnership-agreement` | partner side | no deadlock resolution, no buyout mechanism, no vesting schedule, unlimited capital calls, overbroad post-exit non-compete, no IP contribution terms, no mandatory tax distributions, fiduciary duty waiver |
 | `ip-assignment` | assignor side | no prior-inventions exhibit, unrelated future IP capture, post-employment trailer, moral-rights waiver, no stated consideration, no license-back, blanket disclosure duty, no open-source carve-out |
 | `website-development` | client side | no IP ownership of deliverables, no source-code delivery, no acceptance testing, no warranty/bug-fix period, uncapped change fees, site-hostage takedown right, no third-party license terms, no launch deadline |
+| `settlement-agreement` | claimant / individual side | broad release incl. unknown claims (§1542 waiver), no firm payment deadline, dismissal required before payment, one-sided non-disparagement, one-sided confidentiality, no tax allocation, no late-payment remedy, no enforcement fee-shifting |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 

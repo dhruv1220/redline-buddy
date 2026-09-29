@@ -5,6 +5,21 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- Risk score + letter grade on every review: deterministic 0–100 score
+  (critical −30, high −15, medium −7, low −3, floored at 0) with
+  ToS;DR-style grades (A ≥ 90, B ≥ 75, C ≥ 60, D ≥ 40, else F) —
+  shown as a headline in memo/diff output, as `risk_score`/`risk_grade`
+  in JSON (plus per-severity `by_severity`), as a Risk column in batch
+  summaries, as a grade-colored banner in `redline serve`, and as a
+  risk delta (`Risk: C (63) → B (78) — improved`) in `redline compare`
+  memo and JSON
+- `settlement-agreement` playbook: claimant/individual-side review of
+  settlement agreements — 8 rules (broad release incl. unknown claims /
+  §1542 waiver [high], no firm payment deadline [high], dismissal with
+  prejudice required before payment [high], one-sided non-disparagement,
+  one-sided confidentiality, no tax allocation/reporting, no late-payment
+  remedy, no enforcement fee-shifting [low]), each with quotable fallback
+  language; sample (8/8 fire) + clean (0 fire) fixtures
 - `real-estate-purchase` playbook: buyer-side review of purchase
   agreements — 8 rules (non-refundable earnest money, no inspection
   contingency, no financing contingency, as-is sale, seller specific

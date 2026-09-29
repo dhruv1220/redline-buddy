@@ -16,6 +16,7 @@ from .ingest import IngestionError, extract_text
 from .memo import render_diff
 from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
 from .review import review_contract
+from .score import risk_grade, risk_label, risk_score, severity_counts
 
 PLAYBOOKS_DIR = bundled_playbooks_dir()
 
@@ -28,6 +29,13 @@ pre.diff{{background:#f6f8fa;padding:1rem;overflow-x:auto;font-size:0.8rem}}
 pre.diff .del{{color:#b42318}} pre.diff .add{{color:#067647}}
 .finding{{border:1px solid #ddd;border-radius:8px;padding:1rem;margin:1rem 0}}
 .sevfilter{{margin:1rem 0}}.sevfilter label{{margin-right:1rem}}
+.risk{{border-radius:8px;padding:0.75rem 1rem;margin:1rem 0;border:1px solid #ddd;border-left:6px solid #999;font-size:1.05rem}}
+.risk .gA{{color:#067647;font-weight:bold}} .risk .gB{{color:#3d7a2e;font-weight:bold}}
+.risk .gC{{color:#b7791f;font-weight:bold}} .risk .gD{{color:#b42318;font-weight:bold}}
+.risk .gF{{color:#7a1f1f;font-weight:bold}}
+.risk.rA{{border-left-color:#067647}} .risk.rB{{border-left-color:#3d7a2e}}
+.risk.rC{{border-left-color:#b7791f}} .risk.rD{{border-left-color:#b42318}}
+.risk.rF{{border-left-color:#7a1f1f}}
 button{{cursor:pointer}}
 .badge{{font-weight:bold}} .warn{{background:#fff8e1;border:1px solid #e6c200;border-radius:8px;padding:1rem}}
 footer{{color:#666;font-size:0.8rem;margin-top:2rem}}
@@ -76,9 +84,10 @@ el.style.display=cb.checked?'':'none';});});});
 </script>"""
 
 
-def _render_result_html(contract_name: str, playbook: str, findings, fmt: str) -> str:
+def _render_result_html(contract_name: str, playbook: str, findings, fmt: str,
+                          rule_count: int | None = None) -> str:
     if fmt == "diff":
-        md = render_diff(contract_name, playbook, findings)
+        md = render_diff(contract_name, playbook, findings, rule_count)
         out = []
         for line in md.splitlines():
             esc = html.escape(line)
@@ -99,8 +108,20 @@ def _render_result_html(contract_name: str, playbook: str, findings, fmt: str) -
             elif esc.strip():
                 out.append(f"<p>{esc}</p>")
         return '<pre class="diff">' + "\n".join(out) + "</pre>"
+    score = risk_score(findings)
+    grade = risk_grade(score)
+    counts = severity_counts(findings)
+    breakdown = ", ".join(
+        f"{n} {sev}" for sev, n in counts.items() if n
+    ) or "no findings"
+    banner = (
+        f'<div class="risk r{grade}">Risk score: <b>{score}/100</b> &middot; '
+        f'<span class="g{grade}">Grade {grade}</span> &mdash; '
+        f"{html.escape(breakdown)}</div>"
+    )
     blocks = [(f"<h2>Red-flag memo: {html.escape(contract_name)} "
-               f"— {len(findings)} finding(s) ({html.escape(playbook)})</h2>")]
+               f"— {len(findings)} finding(s) ({html.escape(playbook)})</h2>"),
+              banner]
     if not findings:
         blocks.append('<div class="finding">✅ <b>No red flags.</b></div>')
     else:
@@ -149,7 +170,8 @@ def review_to_html(
     if not text.strip():
         raise ValueError("paste some contract text or upload a file first")
     findings = review_contract(text, playbook)
-    return _render_result_html(contract_name, playbook.name, findings, fmt)
+    return _render_result_html(contract_name, playbook.name, findings, fmt,
+                             len(playbook.rules))
 
 
 def _parse_multipart(body: bytes, content_type: str):
