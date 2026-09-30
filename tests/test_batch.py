@@ -92,6 +92,71 @@ def test_batch_empty_dir_errors():
         shutil.rmtree(d, ignore_errors=True)
 
 
+def _make_mixed_dir() -> Path:
+    d = Path(tempfile.mkdtemp(prefix="redline-mixed-"))
+    shutil.copy(ROOT / "examples" / "sample-dpa.md", d / "dpa.md")
+    shutil.copy(
+        ROOT / "examples" / "sample-dpa-processor.md", d / "dpa-processor.md"
+    )
+    shutil.copy(
+        ROOT / "examples" / "sample-homeowners-insurance.md", d / "ho3.md"
+    )
+    return d
+
+
+def test_batch_auto_detects_playbook_per_file():
+    d = _make_mixed_dir()
+    try:
+        proc = _run("review", str(d))
+        assert proc.returncode == 0, proc.stderr
+        out = proc.stdout
+        assert "Playbooks auto-selected per file" in out
+        assert "| File | Playbook |" in out
+        assert "| dpa.md | dpa |" in out
+        assert "| dpa-processor.md | dpa-processor |" in out
+        assert "| ho3.md | homeowners-insurance |" in out
+        # per-file stderr notes explain each pick
+        assert "dpa.md: auto-selected playbook 'dpa'" in proc.stderr
+        assert "dpa-processor.md: auto-selected playbook 'dpa-processor'" in proc.stderr
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_batch_auto_detect_json_per_file_playbooks():
+    d = _make_mixed_dir()
+    try:
+        proc = _run("review", str(d), "--format", "json")
+        assert proc.returncode == 0, proc.stderr
+        data = json.loads(proc.stdout)
+        assert "playbook" not in data
+        assert sorted(data["playbooks"]) == [
+            "dpa", "dpa-processor", "homeowners-insurance",
+        ]
+        by_name = {c["contract"]: c for c in data["contracts"]}
+        assert by_name["dpa.md"]["playbook"] == "dpa"
+        assert by_name["dpa.md"]["finding_count"] == 6
+        assert by_name["dpa-processor.md"]["playbook"] == "dpa-processor"
+        assert by_name["dpa-processor.md"]["finding_count"] == 8
+        assert by_name["ho3.md"]["playbook"] == "homeowners-insurance"
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_batch_explicit_playbook_keeps_single_playbook_report():
+    d = _make_mixed_dir()
+    try:
+        proc = _run("review", str(d), "--playbook", "dpa")
+        assert proc.returncode == 0, proc.stderr
+        assert "Playbook: `dpa`" in proc.stdout
+        assert "| File | Playbook |" not in proc.stdout
+        proc2 = _run("review", str(d), "--playbook", "dpa", "--format", "json")
+        data = json.loads(proc2.stdout)
+        assert data["playbook"] == "dpa"
+        assert "playbooks" not in data
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def test_batch_diff_concatenates_files():
     d = _make_dir()
     try:

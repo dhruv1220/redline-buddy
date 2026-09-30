@@ -18,6 +18,8 @@ redline review contract.pdf --playbook saas-vendor
 # see the playbook ranking without reviewing:
 redline suggest contract.pdf
 # batch review: point at a directory of contracts, get a summary table + per-file memos
+# (omit --playbook and each file is auto-detected independently)
+redline review ./contracts/
 redline review ./contracts/ --playbook lease-tenant
 # machine-readable output for CI gates:
 redline review contract.pdf --format json | jq '.finding_count'
