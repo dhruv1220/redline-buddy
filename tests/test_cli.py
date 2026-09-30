@@ -222,18 +222,19 @@ def test_playbook_unknown_name_errors_clearly():
 def test_playbooks_lists_all_bundled():
     import json
 
+    expected = len(list((ROOT / "src" / "redline" / "playbooks").glob("*.yaml")))
     proc = run_cli("playbooks")
     assert proc.returncode == 0, proc.stderr
-    assert "31 bundled playbooks" in proc.stdout
+    assert f"{expected} bundled playbooks" in proc.stdout
     for name in ("dpa", "dpa-processor", "homeowners-insurance",
                  "reseller-agreement", "software-escrow",
-                 "data-license-agreement"):
+                 "data-license-agreement", "event-venue"):
         assert name in proc.stdout
 
     proc = run_cli("playbooks", "--format", "json")
     assert proc.returncode == 0, proc.stderr
     data = json.loads(proc.stdout)
-    assert len(data) == 31
+    assert len(data) == expected
     by_name = {p["name"]: p for p in data}
     assert by_name["dpa-processor"]["rules"] == 8
     assert by_name["software-escrow"]["description"].startswith("Beneficiary")

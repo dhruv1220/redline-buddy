@@ -1,0 +1,157 @@
+name: event-venue
+version: 1
+description: Event-organizer-side review of venue rental agreements.
+rules:
+  - id: narrow-force-majeure
+    title: Narrow or missing force majeure clause
+    severity: high
+    description: No force majeure clause, or one that excludes pandemic, government restrictions, or artist/performer illness.
+    why: Events die for boring reasons — a COVID wave, a permit pulled
+      by the city, your headliner losing their voice. Without a real
+      force majeure clause you owe the full venue fee for an event that
+      legally cannot happen.
+    suggestion: Cover pandemic, epidemic, government orders, natural
+      disaster, and performer illness, with a right to reschedule once
+      before cancellation fees apply.
+    fallback: "Force majeure includes pandemic, epidemic, government
+      orders, natural disaster, and performer illness; Organizer may
+      reschedule once without fee before cancellation terms apply."
+    check:
+      kind: requires_any
+      patterns:
+        - force majeure.{0,40}pande?mic
+        - government (orders?|restrictions?)
+        - performer illness
+
+  - id: fnb-minimum-no-attrition
+    title: F&B minimum with no attrition allowance
+    severity: high
+    description: You guarantee a food-and-beverage minimum with no attrition allowance for lower attendance.
+    why: Attendance forecasts are guesses. A $50k F&B minimum with zero
+      attrition means 300 guests instead of 500 costs you the same as a
+      sellout — you pay for phantom dinners.
+    suggestion: Require a 20–25% attrition allowance and a final
+      guarantee deadline 72 hours before the event.
+    fallback: "The F&B minimum carries a twenty-five percent (25%)
+      attrition allowance; the final guarantee is due seventy-two (72)
+      hours before the event."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (food|f&b|food and beverage).{0,30}minimum
+        - minimum.{0,30}(covers|guests|heads)
+      unless_any:
+        - (\d+|twenty|thirty).{0,20}percent.{0,25}attrition
+
+  - id: front-loaded-cancellation
+    title: Cancellation fees heavily front-loaded
+    severity: medium
+    description: Cancellation 6+ months out still forfeits 75–100% of fees.
+    why: Venue cancellation scales exist to cover rebooking risk, which
+      is near zero a year out. Paying 90% for a cancellation 9 months
+      early is a penalty, not damages — and it kills your negotiating
+      leverage if the event needs to move.
+    suggestion: Cap early cancellation (12+ months) at the deposit, with
+      a sliding scale rising only inside 6 months.
+    fallback: "Cancellation twelve (12) or more months out forfeits only
+      the deposit; the sliding scale applies inside six (6) months."
+    check:
+      kind: forbids_any
+      patterns:
+        - cancel.{0,40}(75|80|90|100).{0,10}%(.*(six|6)|twelve|12).{0,20}months
+        - forfeit.{0,30}(75|80|90|100).{0,10}%
+
+  - id: exclusive-inhouse-vendors
+    title: Exclusive in-house vendors at venue pricing
+    severity: medium
+    description: You must use the venue's exclusive caterer, AV, or security vendors with no price caps.
+    why: Exclusivity without pricing turns vendors into a margin stack —
+      in-house AV at 2–3x market with no competitive bid. Your production
+      budget bleeds through line items you never negotiated.
+    suggestion: Allow outside vendors with insurance certificates, or cap
+      in-house vendor pricing at documented market rates.
+    fallback: "Organizer may use outside vendors providing certificates
+      of insurance; in-house vendor pricing is capped at market rates."
+    check:
+      kind: forbids_unless
+      patterns:
+        - exclusive.{0,30}(caterer|vendor|av|audiovisual)
+        - must use.{0,30}in.?house
+      unless_any:
+        - outside vendors
+        - market rates
+
+  - id: uncapped-damage-liability
+    title: Uncapped liability for venue damage
+    severity: medium
+    description: You are liable for any damage to the venue without a cap and without excluding normal wear and tear.
+    why: A 500-person event scuffs floors — that is what venues are for.
+      Uncapped damage liability with no wear-and-tear exclusion turns a
+      scuffed baseboard into a five-figure invoice with no ceiling.
+    suggestion: Cap damage liability and exclude reasonable wear and tear,
+      with a joint pre/post-event walkthrough.
+    fallback: "Damage liability is capped and excludes reasonable wear
+      and tear; condition is documented in a joint walkthrough before
+      and after the event."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (liable|responsible).{0,40}(any|all).{0,20}damage
+        - damage.{0,30}venue.{0,30}(repair|restore)
+      unless_any:
+        - wear and tear
+        - walkthrough
+
+  - id: venue-date-change-right
+    title: Venue can move or bump your date
+    severity: medium
+    description: The venue may relocate your event to another room or date for its own bookings.
+    why: Being bumped for a higher-paying client — or moved from the
+      ballroom to a basement room — destroys months of attendee
+      communications. Date/room certainty is the product you are buying.
+    suggestion: Prohibit relocation without your written consent, with a
+      full refund plus rebooking costs if the venue cancels.
+    fallback: "Venue shall not relocate or reschedule the event without
+      Organizer's written consent; venue-initiated cancellation refunds
+      all fees plus documented rebooking costs."
+    check:
+      kind: forbids_any
+      patterns:
+        - venue may (relocate|reschedule|move).{0,40}event
+        - bump.{0,30}(event|booking)
+
+  - id: no-setup-time-included
+    title: No setup/teardown time included
+    severity: low
+    description: The rental period covers event hours only — load-in, rehearsal, and teardown bill extra.
+    why: A "one-day rental" that starts at doors-open means your crew
+      pays venue rates for the 6 AM load-in and midnight load-out. That
+      is often a second day's rental hiding in the fine print.
+    suggestion: Include reasonable setup and teardown windows (e.g., 4
+      hours each) in the base rental period.
+    fallback: "The rental period includes four (4) hours of setup and
+      four (4) hours of teardown at no additional charge."
+    check:
+      kind: requires_any
+      patterns:
+        - includ.{0,25}setup
+        - setup.{0,30}includ
+        - includ.{0,25}teardown
+        - (setup|teardown).{0,25}no additional charge
+
+  - id: sound-curfew
+    title: Restrictive noise curfew or sound limits
+    severity: low
+    description: Amplified sound must end early (e.g., 9–10 PM) or stay under limits that rule out live music.
+    why: For a gala dinner this is fine; for a concert or DJ event it is
+      the whole show. Curfews are usually non-negotiable once neighbors
+      are involved — discover it now, not at 9:45 PM mid-headliner.
+    suggestion: Confirm the curfew and dB limits in writing against your
+      program before signing; negotiate a later cutoff if needed.
+    fallback: "Amplified sound is permitted until 11:00 PM at up to 95
+      dB, as confirmed for the event program."
+    check:
+      kind: forbids_any
+      patterns:
+        - (sound|music|amplified).{0,30}(end|cease|curfew).{0,20}(9|10).{0,5}pm
+        - noise curfew
