@@ -13,6 +13,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   additional-living-expense cap, insurer's right to repair with its own
   contractors, no ordinance-or-law coverage [low]), each with quotable
   fallback language; sample fixture fires 8/8, clean fixture fires 0
+- `reseller-agreement` playbook: reseller/channel-partner-side review of
+  vendor reseller agreements — 8 rules (vendor termination for
+  convenience on 30 days [high], exclusivity/non-compete lock-in [high],
+  no price protection, quotas without marketing support, no
+  deal-registration protection, reseller indemnifying vendor's IP, unilateral
+  program changes, no transition assistance [low]), each with quotable
+  fallback language; sample fixture fires 8/8, clean fixture fires 0
 - `dpa-processor` playbook: processor/vendor-side review of DPAs — 8 rules
   (uncapped breach liability [high], unlimited audit rights at your
   expense, impossible deletion timeline, full flow-down sub-processor

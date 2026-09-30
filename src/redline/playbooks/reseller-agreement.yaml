@@ -1,0 +1,162 @@
+name: reseller-agreement
+version: 1
+description: Reseller-side review of vendor reseller / channel-partner agreements.
+rules:
+  - id: vendor-termination-for-convenience
+    title: Vendor can terminate for convenience on short notice
+    severity: high
+    description: The vendor may terminate the agreement for convenience on 30 days' notice (or less).
+    why: Your pipeline, headcount, and marketing spend are built on this
+      vendor's product. A 30-day termination right means the vendor can
+      wipe out your channel business on a month's notice — often right
+      after you hit the quota that made the territory valuable.
+    suggestion: Require 180 days' notice for termination for convenience,
+      with a sell-through period for inventory and in-flight deals.
+    fallback: "Termination for convenience requires one hundred eighty
+      (180) days' written notice, plus a ninety (90) day sell-through
+      period for existing inventory and registered deals."
+    check:
+      kind: forbids_any
+      patterns:
+        - terminat.{0,60}for convenience.{0,40}(thirty|30).{0,10}days
+        - vendor may terminat.{0,40}(thirty|30).{0,10}days.{0,20}notice
+
+  - id: exclusivity-noncompete
+    title: Exclusivity or non-compete locking you to one vendor
+    severity: high
+    description: You may not sell competing products for the agreement's term (and sometimes beyond).
+    why: Exclusivity hands the vendor a veto over your product strategy.
+      If their roadmap stalls or their pricing goes uncompetitive, you
+      cannot pivot — you just bleed. Vendors earn exclusivity with
+      guaranteed margin and marketing investment, not with a clause.
+    suggestion: Reject exclusivity, or trade it for committed margins,
+      MDF, and a performance-based term with an exit if the vendor
+      misses its commitments.
+    fallback: "Reseller's obligations are non-exclusive; Reseller may
+      market and sell competing products at its discretion."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (exclusive|exclusivity).{0,40}reseller
+        - reseller shall not.{0,40}competing products
+        - non.?compete.{0,40}reseller
+      unless_any:
+        - non-exclusive
+
+  - id: no-price-protection
+    title: No price protection against vendor price increases
+    severity: medium
+    description: The vendor can raise prices (or cut your discount) at any time with no cap and no notice period.
+    why: You quote customers on 12-month deals against today's price
+      list. A mid-year 15% increase comes straight out of your margin —
+      you cannot re-price signed customer contracts.
+    suggestion: Cap annual price increases (e.g., 5%) with 90 days'
+      notice, and lock pricing for already-quoted deals.
+    fallback: "Price increases are capped at five percent (5%) per twelve
+      (12) months on ninety (90) days' notice; quoted deals keep the
+      quoted price through acceptance."
+    check:
+      kind: requires_any
+      patterns:
+        - price.{0,40}(capped|cap).{0,20}(five|5)%
+        - (ninety|90) days.{0,20}notice.{0,20}price
+        - price protection
+
+  - id: quotas-without-support
+    title: Purchase quotas with no vendor marketing support
+    severity: medium
+    description: You commit to minimum purchase or revenue quotas, but the vendor commits to no marketing development funds, leads, or co-selling.
+    why: Quotas without MDF, deal registration, or lead sharing make you
+      the vendor's unpaid demand-generation team — and missing quota
+      usually triggers the vendor's termination-for-convenience right,
+      which compounds rule 1.
+    suggestion: Pair any quota with committed MDF, lead-sharing, and a
+      cure period before quota-miss becomes a termination trigger.
+    fallback: "Quotas apply only while Vendor funds the agreed MDF
+      program; a missed quota triggers a ninety (90) day cure period,
+      not termination."
+    check:
+      kind: forbids_unless
+      patterns:
+        - minimum.{0,30}(purchase|revenue).{0,20}(quota|commitment)
+        - quota.{0,40}reseller.{0,20}(achieve|meet)
+      unless_any:
+        - marketing development funds
+        - MDF
+        - cure period
+
+  - id: no-deal-registration
+    title: No deal-registration or channel-conflict protection
+    severity: medium
+    description: Nothing stops the vendor (or another reseller) from undercutting a deal you sourced and registered.
+    why: Enterprise deals take months of your pre-sales work. Without
+      deal registration, the vendor's direct team can swoop the
+      shortlisted deal at a lower price — you did the selling, they took
+      the booking.
+    suggestion: Require deal registration with 180-day protection and
+      a most-favored pricing commitment on registered deals.
+    fallback: "Registered deals are protected for one hundred eighty
+      (180) days; Vendor shall not sell direct into a registered account
+      below Reseller's quoted price."
+    check:
+      kind: requires_any
+      patterns:
+        - deal registration
+        - registered deals?.{0,40}protect
+
+  - id: reseller-ip-indemnity-flowdown
+    title: You indemnify the vendor for its own IP infringement
+    severity: medium
+    description: You indemnify the vendor against third-party IP claims arising from the products you resell.
+    why: You did not build the product and cannot audit its IP pedigree —
+      yet this clause makes you the insurer for the vendor's infringement.
+      IP indemnity should flow downhill from the vendor, not uphill from
+      the reseller.
+    suggestion: Flip it — the vendor indemnifies you for IP claims in
+      the products, and your indemnity is limited to your own marketing
+      materials and modifications.
+    fallback: "Vendor indemnifies Reseller against IP claims relating to
+      the products as delivered; Reseller's indemnity covers only its
+      own marketing materials and modifications."
+    check:
+      kind: forbids_any
+      patterns:
+        - reseller.{0,40}indemnif.{0,80}intellectual property
+        - reseller.{0,40}indemnif.{0,80}(infringement|IP claims)
+
+  - id: unilateral-agreement-changes
+    title: Vendor can change the agreement unilaterally
+    severity: medium
+    description: The vendor may modify pricing, discounts, or program terms on notice, with your continued selling deemed acceptance.
+    why: Treating continued selling as acceptance lets the vendor rewrite
+      economics mid-stream — discount cuts, new fees, territory changes —
+      while you are mid-quarter on quota. You never meaningfully consent.
+    suggestion: Require bilateral written amendments; program changes
+      need 90 days' notice and cannot apply to in-flight quotas or
+      registered deals.
+    fallback: "Amendments require both parties' written agreement;
+      program changes take effect on ninety (90) days' notice and do
+      not apply to in-flight quotas or registered deals."
+    check:
+      kind: forbids_any
+      patterns:
+        - vendor may (modify|amend|change).{0,60}(notice|website|portal)
+        - continued.{0,30}(selling|performance|participation).{0,30}acceptance
+
+  - id: no-transition-assistance
+    title: No transition assistance at termination
+    severity: low
+    description: At termination, the vendor owes you no transition help — no customer handover, no license continuity, no support wind-down.
+    why: Your customers bought through you and call you when things
+      break. Without a transition clause, termination strands them (and
+      your reputation) overnight while the vendor onboards them direct.
+    suggestion: Require a 90-day transition period with continued
+      support and orderly customer handover.
+    fallback: "For ninety (90) days after termination, Vendor shall
+      provide transition assistance including support continuity and
+      orderly customer handover."
+    check:
+      kind: requires_any
+      patterns:
+        - transition assistance
+        - transition.{0,40}(ninety|90) days
