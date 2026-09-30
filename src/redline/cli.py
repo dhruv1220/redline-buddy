@@ -109,32 +109,59 @@ def cmd_review(args: argparse.Namespace) -> int:
 
 
 def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
-    texts: list[str] = []
-    for path in _contract_files(contract_dir):
-        try:
-            texts.append(extract_text(path, ocr=args.ocr))
-        except IngestionError:
-            continue
-    if not texts and not _contract_files(contract_dir):
+    files = _contract_files(contract_dir)
+    if not files:
         print(f"error: no supported contract files under {contract_dir}", file=sys.stderr)
         return 2
-    playbook, err = _load_or_suggest_playbook(args, "\n".join(texts))
-    if err is not None:
-        return err
-    results = _review_batch(contract_dir, playbook, ocr=args.ocr)
-    if not results:
-        print(f"error: no supported contract files under {contract_dir}", file=sys.stderr)
-        return 2
+    per_file_playbooks: dict[str, str] = {}
+    if args.playbook:
+        # One playbook for the whole batch (explicit --playbook).
+        texts: list[str] = []
+        for path in files:
+            try:
+                texts.append(extract_text(path, ocr=args.ocr))
+            except IngestionError:
+                continue
+        playbook, err = _load_or_suggest_playbook(args, "\n".join(texts))
+        if err is not None:
+            return err
+        results = _review_batch(contract_dir, playbook, ocr=args.ocr)
+        header_playbook: str | None = playbook.name
+        rule_count: int | None = len(playbook.rules)
+    else:
+        # Per-file auto-detection: each contract gets its own playbook,
+        # so a mixed folder (MSA + DPA + NDA) is reviewed correctly.
+        from .suggest import auto_select_playbook
+
+        results = []
+        playbooks: dict[str, object] = {}
+        for path in files:
+            try:
+                text = extract_text(path, ocr=args.ocr)
+            except IngestionError as exc:
+                results.append((path.name, [], str(exc)))
+                continue
+            name, note = auto_select_playbook(text)
+            print(f"note: {path.name}: {note}", file=sys.stderr)
+            per_file_playbooks[path.name] = name
+            if name not in playbooks:
+                playbooks[name] = load_playbook(bundled_playbook_path(name))
+            results.append((path.name, review_contract(text, playbooks[name]), None))
+        header_playbook = None
+        rule_count = None
     if args.format == "json":
-        print(render_batch_json(results, playbook.name))
+        print(render_batch_json(results, header_playbook,
+                                per_file_playbooks=per_file_playbooks or None))
     elif args.format == "diff":
         for name, findings, error in results:
+            pb_name = per_file_playbooks.get(name, header_playbook)
             if error:
                 print(f"# {name}\n\n⚠️ Skipped: {error}\n")
             else:
-                print(render_diff(name, playbook.name, findings))
+                print(render_diff(name, pb_name, findings))
     else:
-        print(render_batch_memo(results, playbook.name, len(playbook.rules)))
+        print(render_batch_memo(results, header_playbook, rule_count,
+                                per_file_playbooks=per_file_playbooks or None))
     if args.fail_on:
         threshold = SEVERITY_RANK[args.fail_on]
         if any(
@@ -285,7 +312,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--playbook",
         default=None,
         help="playbook YAML file or bundled playbook name "
-        "(e.g. offer-letter; omit to auto-detect from the contract text)",
+        "(e.g. offer-letter; omit to auto-detect from the contract text — "
+        "in batch mode each file is auto-detected independently)",
     )
     review.add_argument(
         "--ocr",

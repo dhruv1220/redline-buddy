@@ -144,53 +144,89 @@ def _severity_counts(findings: list[Finding]) -> dict[str, int]:
 
 def render_batch_memo(
     results: list[tuple[str, list[Finding], str | None]],
-    playbook_name: str,
+    playbook_name: str | None,
     rule_count: int | None = None,
+    per_file_playbooks: dict[str, str] | None = None,
 ) -> str:
     """Summary table plus per-file memos for a directory review.
 
     Each result is (contract_name, findings, error); error is None on success.
+    When ``per_file_playbooks`` maps contract names to the playbook each was
+    reviewed with (batch auto-detection), the summary table gains a Playbook
+    column; otherwise a single ``playbook_name`` heads the report.
     """
+    if per_file_playbooks:
+        header = (
+            "Playbooks auto-selected per file — "
+            f"{len(results)} file(s), "
+            f"{len(set(per_file_playbooks.values()))} playbook(s)."
+        )
+        table_head = "| File | Playbook | Risk | 🔴 Crit | 🟠 High | 🟡 Med | 🟢 Low | Total |"
+        table_sep = "|---|---|---|---|---|---|---|---|"
+    else:
+        header = f"Playbook: `{playbook_name}` — {len(results)} file(s)."
+        table_head = "| File | Risk | 🔴 Crit | 🟠 High | 🟡 Med | 🟢 Low | Total |"
+        table_sep = "|---|---|---|---|---|---|---|"
     lines = [
         "# Batch red-flag review",
         "",
-        f"Playbook: `{playbook_name}` — {len(results)} file(s).",
+        header,
         "",
         DISCLAIMER,
         "",
         "## Summary",
         "",
-        "| File | Risk | 🔴 Crit | 🟠 High | 🟡 Med | 🟢 Low | Total |",
-        "|---|---|---|---|---|---|---|",
+        table_head,
+        table_sep,
     ]
     for name, findings, error in results:
         if error:
-            lines.append(f"| {name} | — | — | — | — | — | ⚠️ {error} |")
+            row = f"| {name} | — | — | — | — | — | ⚠️ {error} |"
+            if per_file_playbooks:
+                row = f"| {name} | — | — | — | — | — | — | ⚠️ {error} |"
+            lines.append(row)
         else:
             c = _severity_counts(findings)
             _score = risk_score(findings)
-            lines.append(
-                f"| {name} | {_score} ({risk_grade(_score)}) | {c['critical']} | "
-                f"{c['high']} | {c['medium']} | {c['low']} | {len(findings)} |"
-            )
+            cells = [
+                name,
+                *( [per_file_playbooks.get(name, "—")] if per_file_playbooks else [] ),
+                f"{_score} ({risk_grade(_score)})",
+                str(c['critical']),
+                str(c['high']),
+                str(c['medium']),
+                str(c['low']),
+                str(len(findings)),
+            ]
+            lines.append("| " + " | ".join(cells) + " |")
     lines += ["", "---", ""]
     for name, findings, error in results:
+        pb = per_file_playbooks.get(name) if per_file_playbooks else playbook_name
         if error:
             lines += [f"# {name}", "", f"⚠️ Skipped: {error}", "", "---", ""]
         else:
-            lines += [render_memo(name, playbook_name, findings, rule_count), "---", ""]
+            lines += [render_memo(name, pb, findings, rule_count), "---", ""]
     lines += [DISCLAIMER, ""]
     return "\n".join(lines)
 
 
 def render_batch_json(
-    results: list[tuple[str, list[Finding], str | None]], playbook_name: str
+    results: list[tuple[str, list[Finding], str | None]],
+    playbook_name: str | None,
+    per_file_playbooks: dict[str, str] | None = None,
 ) -> str:
-    """Machine-readable batch results with a per-severity summary."""
+    """Machine-readable batch results with a per-severity summary.
+
+    In per-file auto-detection mode (``playbook_name`` None), each contract
+    entry carries its own ``playbook`` and the top level reports the set of
+    playbooks used.
+    """
     total = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     contracts = []
     for name, findings, error in results:
         entry: dict = {"contract": name, "finding_count": len(findings)}
+        if per_file_playbooks and name in per_file_playbooks:
+            entry["playbook"] = per_file_playbooks[name]
         if error:
             entry["error"] = error
         else:
@@ -201,17 +237,18 @@ def render_batch_json(
             for f in findings:
                 total[f.severity] = total.get(f.severity, 0) + 1
         contracts.append(entry)
-    return json.dumps(
-        {
-            "playbook": playbook_name,
-            "file_count": len(results),
-            "total_findings": sum(total.values()),
-            "by_severity": total,
-            "disclaimer": "Not legal advice. Heuristic checks only — draft for attorney review.",
-            "contracts": contracts,
-        },
-        indent=2,
-    )
+    top: dict = {
+        "file_count": len(results),
+        "total_findings": sum(total.values()),
+        "by_severity": total,
+        "disclaimer": "Not legal advice. Heuristic checks only — draft for attorney review.",
+        "contracts": contracts,
+    }
+    if per_file_playbooks:
+        top["playbooks"] = sorted(set(per_file_playbooks.values()))
+    else:
+        top["playbook"] = playbook_name
+    return json.dumps(top, indent=2)
 
 
 def _finding_block(f: Finding, num: int) -> list[str]:

@@ -20,6 +20,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   deal-registration protection, reseller indemnifying vendor's IP, unilateral
   program changes, no transition assistance [low]), each with quotable
   fallback language; sample fixture fires 8/8, clean fixture fires 0
+- Batch review auto-detects per file: `redline review <directory>` without
+  `--playbook` now selects the best playbook for each contract
+  independently (a mixed folder of MSA + DPA + HO-3 gets the right
+  playbook per file instead of one playbook for the concatenated blob);
+  the summary table gains a Playbook column and each file's pick is
+  noted on stderr. Explicit `--playbook` keeps the old single-playbook
+  report unchanged
 - `dpa-processor` playbook: processor/vendor-side review of DPAs — 8 rules
   (uncapped breach liability [high], unlimited audit rights at your
   expense, impossible deletion timeline, full flow-down sub-processor
