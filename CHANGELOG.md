@@ -20,6 +20,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   deal-registration protection, reseller indemnifying vendor's IP, unilateral
   program changes, no transition assistance [low]), each with quotable
   fallback language; sample fixture fires 8/8, clean fixture fires 0
+- `software-escrow` playbook: beneficiary/licensee-side review of software
+  escrow agreements — 8 rules (narrow release conditions [high], no
+  deposit verification [high], no update deposits, beneficiary pays all
+  fees, no build instructions, vendor can stall release with objections,
+  no post-release support [low], escrow-agent liability capped at fees
+  [low]), each with quotable fallback language; sample fixture fires
+  8/8, clean fixture fires 0
 - Batch review auto-detects per file: `redline review <directory>` without
   `--playbook` now selects the best playbook for each contract
   independently (a mixed folder of MSA + DPA + HO-3 gets the right
