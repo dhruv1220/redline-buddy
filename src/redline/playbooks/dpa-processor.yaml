@@ -1,0 +1,170 @@
+name: dpa-processor
+version: 1
+description: Processor/vendor-side review of Data Processing Agreements (DPAs).
+rules:
+  - id: uncapped-breach-liability
+    title: Uncapped liability for data incidents
+    severity: high
+    description: Your liability for data protection failures is uncapped or excluded from the agreement's liability cap.
+    why: A single breach can trigger regulatory fines, notification costs,
+      and customer claims far beyond the contract's value. Processors that
+      accept uncapped breach liability are betting the company on every
+      incident — and enterprise customers will ask, because their own
+      exposure is uncapped too.
+    suggestion: Cap aggregate liability at a multiple of fees paid (e.g.,
+      12 months), with a separate, negotiated super-cap for data incidents
+      if you must concede one — never uncapped.
+    fallback: "Each party's aggregate liability under this DPA shall not
+      exceed the fees paid in the twelve (12) months preceding the claim,
+      including for data incidents."
+    check:
+      kind: forbids_any
+      patterns:
+        - (liability|responsibility).{0,90}(uncapped|unlimited)
+        - (excluded|carve.{0,10}out).{0,40}liability cap.{0,40}(data|breach|privacy)
+        - liability cap.{0,40}shall not apply.{0,40}(data|breach|privacy)
+
+  - id: unlimited-audit-rights
+    title: Unlimited audit rights at your expense
+    severity: medium
+    description: The controller can audit your facilities, systems, and subprocessors at any time, as often as it likes, at your cost.
+    why: Unbounded audits are a standing invitation to disruption — each
+      one pulls your security team off real work for days. Industry norm is
+      one audit per year, on reasonable notice, at the controller's
+      expense (or reliance on your SOC 2 / ISO 27001 reports instead).
+    suggestion: Limit to one audit per 12 months on 30 days' notice, at
+      the controller's cost, and let current SOC 2 Type II or ISO 27001
+      reports satisfy the obligation.
+    fallback: "Audits are limited to once per twelve (12) months on thirty
+      (30) days' written notice, at Controller's expense; Processor's
+      current SOC 2 Type II report satisfies this requirement."
+    check:
+      kind: forbids_unless
+      patterns:
+        - audit.{0,60}(facilities|systems|premises|records)
+        - right to audit
+      unless_any:
+        - once per (twelve|12) months
+        - annual audit
+        - SOC 2
+
+  - id: impossible-deletion-timeline
+    title: Data deletion on an impossible timeline
+    severity: medium
+    description: You must delete or return all personal data within an unreasonably short window (e.g., 7 days) of termination, including from backups.
+    why: Real deletion across production, replicas, logs, and backups
+      takes weeks — backup rotation alone is typically 30–90 days. A
+      7-day clause is a breach waiting to happen on day one, and the
+      controller gets a termination-for-cause trigger for free.
+    suggestion: Require deletion within 90 days, expressly excluding
+      data retained in backups until the normal rotation cycle completes.
+    fallback: "Processor shall delete personal data within ninety (90)
+      days of termination, excluding copies in backups retained until
+      the normal rotation cycle completes."
+    check:
+      kind: forbids_any
+      patterns:
+        - delet.{0,40}within (seven|7|ten|10|fourteen|14)[^.]{0,12}days
+        - return.{0,40}all.{0,20}(personal )?data.{0,40}within (seven|7|ten|10|fourteen|14)[^.]{0,12}days
+
+  - id: flow-down-subprocessor-liability
+    title: Full flow-down liability for sub-processors
+    severity: medium
+    description: You are liable for your sub-processors' failures as if they were your own, with no cap or fault requirement.
+    why: You do not operate your sub-processors' infrastructure, yet this
+      clause makes their outage your breach. Combined with an uncapped
+      liability clause it is an existential risk multiplier.
+    suggestion: Limit sub-processor liability to failures caused by your
+      own negligence in selecting or supervising them, within the
+      agreement's liability cap.
+    fallback: "Processor's liability for sub-processor acts is limited to
+      failures resulting from Processor's negligence in their selection
+      or supervision, within the liability cap."
+    check:
+      kind: forbids_any
+      patterns:
+        - (liable|responsib).{0,40}sub.?processor.{0,40}as.{0,20}(its|their) own
+        - sub.?processor.{0,40}failures?.{0,40}(processor|you).{0,20}(liable|responsib)
+
+  - id: short-breach-notification
+    title: Breach notification window under 48 hours
+    severity: medium
+    description: You must notify the controller of a suspected personal data breach within less than 48 hours.
+    why: Confirming a real breach — scoping what was accessed, ruling out
+      false positives from your detection tooling — routinely takes several
+      days. A sub-48-hour clock forces you to report noise as breaches,
+      which then triggers the controller's own 72-hour regulator clock on
+      incomplete facts.
+    suggestion: Require notification "without undue delay" and in no event
+      later than 72 hours after confirmation of a breach.
+    fallback: "Processor shall notify Controller without undue delay, and
+      no later than seventy-two (72) hours after confirming a personal
+      data breach."
+    check:
+      kind: forbids_any
+      patterns:
+        - notify.{0,70}breach.{0,40}within (twenty.?four|24)[^.]{0,12}hours
+        - breach notification.{0,40}(twenty.?four|24)[^.]{0,12}hours
+
+  - id: unilateral-instruction-rights
+    title: Controller can unilaterally expand processing scope
+    severity: medium
+    description: The controller may issue new processing instructions at any time, and you must follow them or be in breach.
+    why: Follow-all-instructions with no change-control turns every new
+      controller request — new purposes, new data categories, new regions —
+      into a mandatory scope expansion at your cost, with no right to
+      object or renegotiate fees.
+    suggestion: New instructions outside the agreed scope require a
+      written change order with fee and timeline adjustments, and you may
+      decline instructions that would violate applicable law.
+    fallback: "Instructions outside the agreed processing scope require a
+      written change order; Processor may decline instructions that would
+      violate applicable data protection law."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (follow|comply with|obey).{0,30}all instructions
+        - instructions.{0,40}from time to time
+      unless_any:
+        - change order
+        - may decline
+
+  - id: free-dsar-handling
+    title: Unlimited data-subject-request handling at your cost
+    severity: low
+    description: You must handle all data subject requests (access, deletion, portability) forwarded by the controller, at your own expense and on the controller's timeline.
+    why: DSAR fulfillment is manual, interrupt-driven work — identity
+      verification, cross-system search, redaction. At enterprise data
+      volumes this becomes an unpaid support team, and the controller has
+      no incentive to triage before forwarding.
+    suggestion: Cap free DSAR assistance (e.g., a reasonable monthly
+      volume) and charge time-and-materials beyond it.
+    fallback: "DSAR assistance beyond ten (10) requests per month is billed
+      at Processor's standard time-and-materials rates."
+    check:
+      kind: forbids_unless
+      patterns:
+        - data subject requests?.{0,60}(assist|handle|fulfil)
+        - dsar.{0,40}(assist|handle)
+      unless_any:
+        - time.and.materials
+        - additional fees
+        - per month is billed
+
+  - id: suspension-on-allegation
+    title: Service or payment suspension on mere allegation of non-compliance
+    severity: medium
+    description: The controller may suspend the services or withhold payment on a mere allegation that you are not complying with the DPA.
+    why: Suspension is the nuclear option — your revenue stops while you
+      are still burning infrastructure cost to hold the controller's data.
+      Tied to an allegation rather than a confirmed breach, it hands the
+      controller unilateral leverage in any commercial dispute.
+    suggestion: Allow suspension only after written notice, a 30-day cure
+      period, and a confirmed material breach — never on allegation alone.
+    fallback: "Suspension requires prior written notice, a thirty (30)
+      day cure period, and a confirmed material breach of this DPA."
+    check:
+      kind: forbids_any
+      patterns:
+        - suspend.{0,60}(alleged|allegation|suspected).{0,20}(breach|non.?compliance|violation)
+        - withhold.{0,40}payment.{0,40}(alleged|suspected).{0,20}(breach|non.?compliance)

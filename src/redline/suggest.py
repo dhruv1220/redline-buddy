@@ -39,6 +39,13 @@ _ID_W = 2
 _DESC_W = 1
 _PATTERN_W = 2
 
+# Findings signal: a playbook whose rules actually fire on the document is
+# more likely the right perspective (e.g. dpa vs dpa-processor share almost
+# all vocabulary, but only one side's rules fire). Capped so a broad
+# playbook can't win on finding volume alone.
+_FINDINGS_W = 10
+_FINDINGS_CAP = 6
+
 
 @dataclass(frozen=True)
 class PlaybookMatch:
@@ -46,6 +53,7 @@ class PlaybookMatch:
     description: str
     score: int
     matched_terms: tuple[str, ...]
+    findings: int = 0
 
 
 def _tokens(text: str, min_len: int = 3) -> set[str]:
@@ -77,19 +85,23 @@ def _playbook_vocab(playbook: Playbook) -> dict[str, int]:
 def suggest_playbooks(text: str, limit: int = 3) -> list[PlaybookMatch]:
     """Rank bundled playbooks against contract text, best first.
 
-    Score is the sum over vocabulary hits of ``weight * idf``: tokens that
-    appear in many playbooks (``termination``, ``payment``, ``notice``)
-    contribute little, while distinctive tokens (``subprocessor``,
-    ``disparagement``, ``deductible``) dominate. Each token counts once per
-    playbook; ties break alphabetically for determinism.
+    Score = tf-idf keyword overlap + ``_FINDINGS_W`` per rule that fires
+    (capped at ``_FINDINGS_CAP`` findings). The keyword part matches the
+    document's domain; the findings part detects the document's
+    perspective — mirror playbooks (``dpa`` vs ``dpa-processor``) share
+    nearly all vocabulary, but only the right side's rules fire. Each
+    token counts once per playbook; ties break alphabetically for
+    determinism.
     """
+    from .review import review_contract
+
     doc_tokens = _tokens(text)
+    playbooks: list[Playbook] = []
     vocabs: dict[str, dict[str, int]] = {}
-    descriptions: dict[str, str] = {}
     for path in sorted(bundled_playbooks_dir().glob("*.yaml")):
         playbook = load_playbook(path)
+        playbooks.append(playbook)
         vocabs[playbook.name] = _playbook_vocab(playbook)
-        descriptions[playbook.name] = playbook.description
     doc_freq: dict[str, int] = {}
     for vocab in vocabs.values():
         for t in vocab:
@@ -97,15 +109,23 @@ def suggest_playbooks(text: str, limit: int = 3) -> list[PlaybookMatch]:
     n = len(vocabs)
     idf = {t: math.log(n / df) + 1.0 for t, df in doc_freq.items()}
     matches: list[PlaybookMatch] = []
-    for name, vocab in vocabs.items():
+    for playbook in playbooks:
+        vocab = vocabs[playbook.name]
         hits = {t: w for t, w in vocab.items() if t in doc_tokens}
-        score = sum(w * idf[t] for t, w in hits.items())
+        keyword_score = sum(w * idf[t] for t, w in hits.items())
+        findings = len(review_contract(text, playbook))
+        # The findings signal only refines playbooks that already match the
+        # document's domain: without any keyword overlap, requires_any rules
+        # would otherwise conjure confidence out of nothing.
+        findings_bonus = _FINDINGS_W * min(findings, _FINDINGS_CAP) if keyword_score > 0 else 0
+        score = keyword_score + findings_bonus
         matches.append(
             PlaybookMatch(
-                name=name,
-                description=descriptions[name],
+                name=playbook.name,
+                description=playbook.description,
                 score=int(round(score)),
                 matched_terms=tuple(sorted(hits, key=lambda t: (-hits[t] * idf[t], t))[:8]),
+                findings=findings,
             )
         )
     matches.sort(key=lambda m: (-m.score, m.name))
@@ -116,25 +136,34 @@ def auto_select_playbook(text: str) -> tuple[str, str]:
     """Pick the playbook for a contract reviewed without ``--playbook``.
 
     Returns ``(playbook_name, note)``. A clear winner (top score at or above
-    ``MIN_SCORE`` and the runner-up below ``AMBIGUITY_RATIO`` of it) is used
-    directly; otherwise the historic ``saas-vendor`` default is kept and the
-    note explains why, so an ambiguous document never gets a silently
-    wrong playbook.
+    ``MIN_SCORE`` and no serious rival) is used directly; otherwise the
+    historic ``saas-vendor`` default is kept and the note explains why, so
+    an ambiguous document never gets a silently wrong playbook. A rival
+    only counts as serious if its own rules also fire on the document —
+    a mirror playbook with vocabulary overlap but zero findings is not
+    a real contender.
     """
     matches = suggest_playbooks(text)
     top = matches[0]
     note: str
+    rival = matches[1] if len(matches) > 1 else None
+    ambiguous = (
+        rival is not None
+        and rival.findings > 0
+        and rival.score >= AMBIGUITY_RATIO * top.score
+    )
     if top.score < MIN_SCORE:
         name = FALLBACK_PLAYBOOK
         note = (
             f"no confident playbook match (best: {top.name}, score {top.score}); "
             f"defaulting to {FALLBACK_PLAYBOOK}"
         )
-    elif len(matches) > 1 and matches[1].score >= AMBIGUITY_RATIO * top.score:
+    elif ambiguous:
+        assert rival is not None
         name = FALLBACK_PLAYBOOK
         note = (
             f"ambiguous match ({top.name} {top.score} vs "
-            f"{matches[1].name} {matches[1].score}); defaulting to "
+            f"{rival.name} {rival.score}); defaulting to "
             f"{FALLBACK_PLAYBOOK} — pass --playbook to choose, or run "
             f"`redline suggest` to see the ranking"
         )
