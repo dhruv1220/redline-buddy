@@ -1,0 +1,165 @@
+name: data-license-agreement
+version: 1
+description: Licensee-side review of commercial data license agreements.
+rules:
+  - id: no-data-accuracy-warranty
+    title: No warranty on data accuracy or completeness
+    severity: high
+    description: The licensor disclaims all warranties on the data's accuracy, completeness, and fitness — "as-is".
+    why: You are building products, models, or decisions on this data.
+      "As-is" means when the feed is 30% duplicates or the fields are
+      silently redefined, you have no remedy — but your customers still
+      hold you to your SLAs.
+    suggestion: Require a warranty of reasonable accuracy/completeness
+      against the published spec, with service credits or termination
+      rights for sustained data-quality failure.
+    fallback: "Licensor warrants the Data will materially conform to the
+      published specification; sustained non-conformance is a material
+      breach with service-credit remedies."
+    check:
+      kind: forbids_unless
+      patterns:
+        - data.{0,30}as.?is
+        - disclaim.{0,60}(accuracy|completeness)
+        - no warrant.{0,40}(accuracy|data)
+      unless_any:
+        - warrants the data will
+        - warranty.{0,30}conform
+
+  - id: no-refresh-obligation
+    title: No obligation to refresh or update the data
+    severity: high
+    description: One-time delivery with no duty to provide updates, corrections, or refreshes.
+    why: Stale data decays fast — people change jobs, companies die,
+      prices move. A one-time dump you pay annually for becomes a
+      liability the moment your competitor licenses the live feed.
+    suggestion: Require refresh on the schedule you were sold (daily,
+      weekly), with corrections applied retroactively where feasible.
+    fallback: "Licensor shall refresh the Data on the agreed schedule
+      and apply corrections to subsequent deliveries."
+    check:
+      kind: requires_any
+      patterns:
+        - refresh.{0,40}(daily|weekly|monthly|schedule)
+        - updat.{0,30}deliver
+        - corrections?.{0,20}subsequent
+
+  - id: derived-data-kill-switch
+    title: Termination wipes your derived data and models
+    severity: high
+    description: On termination you must delete not just the data but all derived data, models, and enrichments built from it.
+    why: This turns a subscription into a hostage situation — leaving
+      means destroying the models and analytics your business runs on.
+      Deletion of raw data is reasonable; deletion of your derived work
+      product hands the licensor permanent leverage over renewal pricing.
+    suggestion: Limit post-termination deletion to the raw licensed data;
+      derived data and models trained on it survive termination.
+    fallback: "Upon termination Licensee deletes the licensed Data as
+      delivered; derived data, models, and enrichments created by
+      Licensee are Licensee's property and survive termination."
+    check:
+      kind: forbids_any
+      patterns:
+        - delet.{0,20}(all )?derived
+        - derived data.{0,25}(must be|shall be|will be|are to be) delet
+        - delet.{0,40}models trained
+
+  - id: unilateral-use-restriction-changes
+    title: Licensor can tighten use restrictions unilaterally
+    severity: medium
+    description: The licensor may change permitted uses, rate limits, or the data spec on notice.
+    why: Your product roadmap is built on today's permitted uses. A
+      mid-term notice that "AI training is no longer permitted" or a
+      spec change that drops the fields you depend on can strand a
+      shipped feature with no recourse.
+    suggestion: Lock permitted uses and the spec for the term; changes
+      require your consent and can't apply retroactively to shipped uses.
+    fallback: "Permitted uses and the data specification are fixed for
+      the term; changes require Licensee's written consent."
+    check:
+      kind: forbids_any
+      patterns:
+        - licensor may (modify|change|update).{0,40}(permitted uses|use restrictions|specification)
+        - (permitted uses|specification).{0,30}subject to change
+
+  - id: licensor-resells-derived-insights
+    title: Licensor can reuse your derived insights
+    severity: medium
+    description: The licensor claims rights to use, aggregate, or resell insights derived from your usage of the data.
+    why: Your queries reveal your strategy — which markets you score,
+      which entities you investigate, what your models learn. Letting the
+      licensor productize that (possibly to your competitors) means you
+      pay to train their next offering.
+    suggestion: Restrict the licensor to aggregate, anonymized usage
+      statistics for service operation only — no resale of derived insights.
+    fallback: "Licensor may use Licensee's usage data only in aggregated,
+      anonymized form for service operation; Licensor shall not resell
+      or commercialize derived insights."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (resell|commercialize|monetize).{0,40}derived
+        - derived insights.{0,40}licensor
+      unless_any:
+        - aggregated, anonymized
+        - anonymized form
+
+  - id: broad-usage-audit
+    title: Broad audit rights over your systems
+    severity: medium
+    description: The licensor may audit your systems, logs, and premises on short notice to verify compliance.
+    why: Verifying the data isn't misused quietly becomes inspecting your
+      infrastructure whenever the licensor wants. Unbounded audits are
+      disruptive and a fishing-expedition vector during renewal
+      negotiations.
+    suggestion: Limit audits to once per year, 30 days' notice, by an
+      independent auditor under NDA, scoped to data-usage records.
+    fallback: "Audits are limited to once per twelve (12) months on
+      thirty (30) days' notice, conducted by an independent auditor
+      under NDA and scoped to data-usage records."
+    check:
+      kind: forbids_unless
+      patterns:
+        - audit.{0,40}(systems|premises|infrastructure)
+        - inspect.{0,30}(books|systems|records).{0,20}licensor
+      unless_any:
+        - once per twelve
+        - independent auditor
+
+  - id: no-feed-uptime-sla
+    title: No uptime SLA on the data feed
+    severity: medium
+    description: No committed availability for API or feed delivery — outages have no remedy.
+    why: If your production pipeline pulls this feed hourly, an
+      undocumented "best effort" feed is a 3 AM page with no escalation
+      path and no credits. Even a modest 99.5% SLA with credits changes
+      the licensor's operational incentives.
+    suggestion: Require a 99.5% monthly availability SLA with service
+      credits, excluding scheduled maintenance.
+    fallback: "Licensor commits to 99.5% monthly feed availability;
+      shortfalls earn service credits per the SLA schedule."
+    check:
+      kind: requires_any
+      patterns:
+        - (99|uptime|availability).{0,20}sla
+        - service credits
+        - monthly.{0,20}availability
+
+  - id: uncapped-overage-fees
+    title: Uncapped API overage fees
+    severity: low
+    description: Overage fees apply per call/record with no cap and no usage alerts.
+    why: A runaway job or a traffic spike can turn a $2k/month license
+      into a $40k invoice. Caps and alerts are table stakes for metered
+      pricing.
+    suggestion: Cap monthly overages (e.g., 2x base fee) and require
+      usage alerts at 80% and 100% of included volume.
+    fallback: "Monthly overage fees are capped at two times (2x) the
+      base fee; Licensor provides usage alerts at 80% and 100% of
+      included volume."
+    check:
+      kind: requires_any
+      patterns:
+        - overage.{0,40}capped
+        - usage alerts?
+        - overage.{0,20}(2x|two times)
