@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -19,7 +20,12 @@ from .memo import (
     render_json,
     render_memo,
 )
-from .playbook import PlaybookError, bundled_playbook_path, load_playbook
+from .playbook import (
+    PlaybookError,
+    bundled_playbook_path,
+    bundled_playbooks_dir,
+    load_playbook,
+)
 from .review import SEVERITY_RANK, review_contract
 from .score import grade_worse_than, risk_grade, risk_score
 from .scaffold import NEXT_STEPS, scaffold_playbook
@@ -244,6 +250,25 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_playbooks(args: argparse.Namespace) -> int:
+    """List bundled playbooks with rule counts and descriptions."""
+    rows = []
+    for path in sorted(bundled_playbooks_dir().glob("*.yaml")):
+        pb = load_playbook(path)
+        rows.append((pb.name, len(pb.rules), pb.description))
+    if args.format == "json":
+        print(json.dumps(
+            [{"name": n, "rules": c, "description": d} for n, c, d in rows],
+            indent=2,
+        ))
+    else:
+        width = max(len(n) for n, _, _ in rows)
+        print(f"{len(rows)} bundled playbooks:\n")
+        for name, count, desc in rows:
+            print(f"  {name:<{width}}  {count:>2} rules  {desc}")
+    return 0
+
+
 def cmd_validate(args: argparse.Namespace) -> int:
     try:
         playbook = load_playbook(args.playbook)
@@ -404,6 +429,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="sample contract to test the playbook against; reports per-rule hit/miss",
     )
     validate.set_defaults(func=cmd_validate)
+
+    playbooks = sub.add_parser(
+        "playbooks", help="list bundled playbooks with rule counts and descriptions"
+    )
+    playbooks.add_argument(
+        "--format", choices=["text", "json"], default="text",
+        help="output format (default: text)",
+    )
+    playbooks.set_defaults(func=cmd_playbooks)
 
     serve = sub.add_parser("serve", help="start a minimal local web UI (127.0.0.1 only)")
     serve.add_argument("--port", type=int, default=8000, help="port to listen on (default: 8000)")

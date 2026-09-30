@@ -20,6 +20,8 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   deal-registration protection, reseller indemnifying vendor's IP, unilateral
   program changes, no transition assistance [low]), each with quotable
   fallback language; sample fixture fires 8/8, clean fixture fires 0
+- `redline playbooks` command: lists all bundled playbooks with rule
+  counts and descriptions (text or `--format json`) for discoverability
 - `data-license-agreement` playbook: licensee-side review of commercial
   data licenses — 8 rules (no data-accuracy warranty [high], no refresh
   obligation [high], termination kill-switch on derived data/models
