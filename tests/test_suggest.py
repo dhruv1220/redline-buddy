@@ -41,6 +41,7 @@ STRICT_PAIRS = [
     ("sample-real-estate-purchase.md", "real-estate-purchase"),
     ("sample-reseller-agreement.md", "reseller-agreement"),
     ("sample-software-escrow.md", "software-escrow"),
+    ("sample-data-license-agreement.md", "data-license-agreement"),
     ("sample-settlement-agreement.md", "settlement-agreement"),
     ("sample-severance-agreement.md", "severance-agreement"),
     ("sample-software-license.md", "software-license"),

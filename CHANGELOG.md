@@ -20,6 +20,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   deal-registration protection, reseller indemnifying vendor's IP, unilateral
   program changes, no transition assistance [low]), each with quotable
   fallback language; sample fixture fires 8/8, clean fixture fires 0
+- `data-license-agreement` playbook: licensee-side review of commercial
+  data licenses — 8 rules (no data-accuracy warranty [high], no refresh
+  obligation [high], termination kill-switch on derived data/models
+  [high], unilateral use-restriction changes, licensor reselling derived
+  insights, broad usage audits, no feed uptime SLA, uncapped overage fees
+  [low]), each with quotable fallback language; sample fixture fires 8/8,
+  clean fixture fires 0
 - `software-escrow` playbook: beneficiary/licensee-side review of software
   escrow agreements — 8 rules (narrow release conditions [high], no
   deposit verification [high], no update deposits, beneficiary pays all
