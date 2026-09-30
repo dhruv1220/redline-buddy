@@ -39,6 +39,7 @@ PAIRS = [
     ("homeowners-insurance", "clean-homeowners-insurance.md"),
     ("dpa-processor", "clean-dpa-processor.md"),
     ("reseller-agreement", "clean-reseller-agreement.md"),
+    ("software-escrow", "clean-software-escrow.md"),
 ]
 
 

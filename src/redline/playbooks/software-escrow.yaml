@@ -1,0 +1,163 @@
+name: software-escrow
+version: 1
+description: Beneficiary (licensee) side review of software escrow agreements.
+rules:
+  - id: narrow-release-conditions
+    title: Release conditions too narrow
+    severity: high
+    description: Escrow releases only on the vendor's bankruptcy or insolvency — not on support failure, acquisition, or material breach.
+    why: Bankruptcy is the rarest way a vendor relationship dies. Far
+      more common are degraded support, a sunset product, an acquisition
+      that orphans your contract, or a material breach the vendor walks
+      away from. If none of those trigger release, your escrow is a very
+      expensive placebo.
+    suggestion: Add release triggers for sustained support failure,
+      product discontinuation, change of control, and uncured material
+      breach.
+    fallback: "Release events include: (a) Vendor's insolvency; (b)
+      Vendor's failure to provide support for ninety (90) days; (c)
+      discontinuation of the Software; (d) change of control of Vendor;
+      (e) Vendor's uncured material breach."
+    check:
+      kind: requires_any
+      patterns:
+        - failure to (provide )?support
+        - support.{0,30}fail
+        - discontinu
+        - change of control
+        - material breach
+
+  - id: no-deposit-verification
+    title: No verification of deposited materials
+    severity: high
+    description: The escrow agent never verifies that deposits are complete, current, or buildable.
+    why: Unverified deposits are Schrodinger's source code — you find
+      out at release time, in a crisis, that the deposit is a three-year-old
+      zip of partial sources that won't compile. Verification at deposit
+      time is the entire point of paying for escrow.
+    suggestion: Require technical verification (completeness + build
+      test) on initial deposit and annually, at the vendor's expense.
+    fallback: "Escrow Agent shall technically verify each deposit for
+      completeness and buildability within thirty (30) days of deposit
+      and annually thereafter, at Depositor's expense."
+    check:
+      kind: forbids_any
+      patterns:
+        - no (duty|obligation).{0,20}to verif
+        - deposits? as-is
+        - without (technical )?verif
+
+  - id: no-update-deposits
+    title: No obligation to deposit updates
+    severity: medium
+    description: The vendor deposits the initial version but has no duty to deposit updates, patches, or new releases.
+    why: Software you escrowed at v1.0 while running v4.2 in production
+      is archaeology, not insurance. Without a deposit-each-release
+      duty, the escrow quietly rots while you keep paying fees.
+    suggestion: Require deposit of each generally-available release
+      within 30 days, with verification.
+    fallback: "Depositor shall deposit each generally available release,
+      update, and patch within thirty (30) days of its release to
+      Beneficiary."
+    check:
+      kind: requires_any
+      patterns:
+        - deposit.{0,40}(each|every).{0,20}(release|update)
+        - updates?.{0,20}deposit.{0,20}(thirty|30) days
+
+  - id: beneficiary-pays-all-fees
+    title: Beneficiary pays all escrow fees
+    severity: medium
+    description: You (the beneficiary) pay 100% of escrow setup, annual, and verification fees.
+    why: Escrow exists because the vendor wants you to trust them with a
+      mission-critical dependency — it is their sale to close. Vendors
+      routinely split or absorb fees; paying all of them unchallenged
+      leaves money on the table.
+    suggestion: Split fees 50/50, or have the vendor pay setup and
+      annual fees while you pay only release-event costs.
+    fallback: "Escrow fees are shared equally; Depositor pays setup and
+      annual fees, Beneficiary pays only fees arising from a release event."
+    check:
+      kind: forbids_unless
+      patterns:
+        - beneficiary.{0,40}(pay|bear|responsible).{0,40}(all|100%).{0,20}fees
+        - all.{0,20}fees.{0,20}beneficiary
+      unless_any:
+        - shared equally
+        - split
+        - 50/50
+
+  - id: no-build-instructions
+    title: No build instructions or technical contacts deposited
+    severity: medium
+    description: Deposits need not include build instructions, environment specs, or third-party dependency details.
+    why: Source code without build instructions is a puzzle box. In a
+      release scenario you are already in crisis — reverse-engineering
+      the build while production is down turns escrow into a second
+      disaster.
+    suggestion: Require build/run documentation, dependency lists with
+      license terms, and a named technical contact for release support.
+    fallback: "Each deposit includes build instructions, environment
+      specifications, third-party dependency details, and a named
+      technical contact available for release support."
+    check:
+      kind: requires_any
+      patterns:
+        - build instructions
+        - build.{0,20}documentation
+
+  - id: vendor-blocks-release
+    title: Vendor can stall release with objections
+    severity: medium
+    description: The vendor can block or indefinitely delay release by objecting, with no time-boxed dispute process.
+    why: A release objection right without a clock lets the vendor run
+      out the clock — object, negotiate, re-object — while you have no
+      source and no leverage. Release disputes need a 30-day fuse, then
+      arbitration or automatic release.
+    suggestion: Cap the objection window at 15 days and route disputes
+      to expedited arbitration with release on arbitrator order.
+    fallback: "Depositor may object within fifteen (15) days; unresolved
+      objections go to expedited arbitration, and Escrow Agent releases
+      on the arbitrator's order."
+    check:
+      kind: forbids_unless
+      patterns:
+        - object.{0,60}release
+        - disput.{0,40}release.{0,40}object
+      unless_any:
+        - fifteen (15) days
+        - expedited arbitration
+
+  - id: no-release-support
+    title: No vendor support after release
+    severity: low
+    description: After a release event, the vendor owes no transition or technical support for the released materials.
+    why: Released source you cannot operate is only half a rescue. A
+      short paid support tail (60–90 days) after release is cheap for the
+      vendor to promise now and invaluable when the trigger event hits.
+    suggestion: Require 90 days of paid technical support following any
+      release, at pre-release rates.
+    fallback: "Following release, Depositor provides ninety (90) days of
+      technical support for the released materials at pre-release rates."
+    check:
+      kind: requires_any
+      patterns:
+        - support.{0,40}following release
+        - (ninety|90) days.{0,20}support.{0,20}release
+
+  - id: escrow-agent-liability-cap
+    title: Escrow agent liability capped at fees paid
+    severity: low
+    description: The escrow agent's liability is capped at the fees you paid it — even for losing your deposit.
+    why: If the agent loses or corrupts the only copy of your insurance
+      policy, "here's your $2,000 annual fee back" is not a remedy. Push
+      for a higher cap or a negligence carve-out.
+    suggestion: Carve gross negligence and loss of materials out of the
+      cap, or raise the cap to a meaningful multiple of annual fees.
+    fallback: "The liability cap does not apply to loss of or damage to
+      deposited materials caused by Escrow Agent's negligence."
+    check:
+      kind: forbids_any
+      patterns:
+        - liability.{0,40}(capped|limited).{0,40}fees paid
+        - liability.{0,40}not exceed.{0,40}fees
