@@ -17,6 +17,8 @@ redline review examples/sample-msa.md
 redline review contract.pdf --playbook saas-vendor
 # see the playbook ranking without reviewing:
 redline suggest contract.pdf
+# list all bundled playbooks:
+redline playbooks
 # batch review: point at a directory of contracts, get a summary table + per-file memos
 # (omit --playbook and each file is auto-detected independently)
 redline review ./contracts/
