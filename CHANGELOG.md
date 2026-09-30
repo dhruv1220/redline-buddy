@@ -13,12 +13,23 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   additional-living-expense cap, insurer's right to repair with its own
   contractors, no ordinance-or-law coverage [low]), each with quotable
   fallback language; sample fixture fires 8/8, clean fixture fires 0
+- `dpa-processor` playbook: processor/vendor-side review of DPAs — 8 rules
+  (uncapped breach liability [high], unlimited audit rights at your
+  expense, impossible deletion timeline, full flow-down sub-processor
+  liability, sub-48-hour breach notification, unilateral instruction
+  rights, unlimited free DSAR handling [low], suspension on mere
+  allegation), each with quotable fallback language; sample fixture
+  fires 8/8, clean fixture fires 0
 - Auto playbook suggestion: `redline review` and `redline compare` now
   auto-detect the best bundled playbook when `--playbook` is omitted —
-  deterministic local TF-IDF keyword scoring, no LLM or network calls.
-  A clear winner is used directly (stderr notes the pick); ambiguous or
-  low-confidence documents keep the historic `saas-vendor` default with
-  an explanatory note, so no document ever gets a silently wrong playbook
+  deterministic local TF-IDF keyword scoring plus a capped bonus for
+  rules that actually fire (which detects document perspective: mirror
+  playbooks like `dpa` vs `dpa-processor` share vocabulary, but only the
+  right side's rules fire). No LLM or network calls. A clear winner is
+  used directly; ambiguous or low-confidence documents keep the historic
+  `saas-vendor` default with an explanatory stderr note, so no document
+  ever gets a silently wrong playbook. Calibrated on all 28 sample
+  fixtures: 24/28 top-1 correct, the other 4 fall back honestly
 - `redline suggest <contract>`: rank bundled playbooks against a contract
   without reviewing it — prints scores, matched terms, and the
   `redline review --playbook <name>` command to run

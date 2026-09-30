@@ -27,6 +27,7 @@ STRICT_PAIRS = [
     ("sample-contractor.md", "contractor"),
     ("sample-distribution-agreement.md", "distribution-agreement"),
     ("sample-dpa.md", "dpa"),
+    ("sample-dpa-processor.md", "dpa-processor"),
     ("sample-employment.md", "employment-agreement"),
     ("sample-equipment-lease.md", "equipment-lease"),
     ("sample-franchise-agreement.md", "franchise-agreement"),
@@ -81,10 +82,24 @@ def test_auto_select_clear_winner():
 def test_auto_select_ambiguous_falls_back_to_default():
     text = (ROOT / "examples" / "sample-msa.md").read_text(encoding="utf-8")
     matches = suggest_playbooks(text, limit=2)
-    assert matches[1].score >= AMBIGUITY_RATIO * matches[0].score  # test setup: genuinely close
+    assert matches[1].findings > 0  # test setup: rival is a real contender
+    assert matches[1].score >= AMBIGUITY_RATIO * matches[0].score  # ...and close
     name, note = auto_select_playbook(text)
     assert name == FALLBACK_PLAYBOOK == "saas-vendor"
     assert "ambiguous" in note
+
+
+def test_auto_select_mirror_rival_without_findings_is_not_ambiguous():
+    # dpa-processor shares dpa's vocabulary and scores close, but its rules
+    # don't fire on a controller-side DPA — so dpa is selected, not the
+    # saas-vendor fallback.
+    text = (ROOT / "examples" / "sample-dpa.md").read_text(encoding="utf-8")
+    matches = suggest_playbooks(text, limit=2)
+    assert matches[0].name == "dpa"
+    assert matches[1].name == "dpa-processor"
+    assert matches[1].findings == 0
+    name, _ = auto_select_playbook(text)
+    assert name == "dpa"
 
 
 def test_auto_select_gibberish_falls_back_to_default():
