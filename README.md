@@ -11,8 +11,12 @@ Existing contract AI tools send your documents to someone else's LLM. redline-bu
 ```bash
 pip install -e .
 redline review examples/sample-msa.md
+# no --playbook? redline auto-detects the best bundled playbook (clear winner
+# only — ambiguous docs fall back to saas-vendor and say so on stderr)
 # or with your own playbook:
 redline review contract.pdf --playbook saas-vendor
+# see the playbook ranking without reviewing:
+redline suggest contract.pdf
 # batch review: point at a directory of contracts, get a summary table + per-file memos
 redline review ./contracts/ --playbook lease-tenant
 # machine-readable output for CI gates:
