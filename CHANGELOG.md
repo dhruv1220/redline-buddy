@@ -20,6 +20,10 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   deal-registration protection, reseller indemnifying vendor's IP, unilateral
   program changes, no transition assistance [low]), each with quotable
   fallback language; sample fixture fires 8/8, clean fixture fires 0
+- `redline suggest` ranks per file for directories: `suggest <dir>` now
+  shows an independent playbook ranking per contract (consistent with
+  batch review's per-file auto-detection) instead of one ranking for the
+  concatenated blob
 - `event-venue` playbook: organizer-side review of venue rental agreements
   — 8 rules (narrow force majeure [high], F&B minimum with no attrition
   [high], front-loaded cancellation fees, exclusive in-house vendors,

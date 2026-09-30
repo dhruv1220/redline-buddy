@@ -186,33 +186,46 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
 
 
 def cmd_suggest(args: argparse.Namespace) -> int:
-    """Rank bundled playbooks against a contract (or directory) without reviewing."""
+    """Rank bundled playbooks against a contract without reviewing.
+
+    For a directory, each file is ranked independently.
+    """
     contract_path = Path(args.contract)
     if contract_path.is_dir():
         files = _contract_files(contract_path)
         if not files:
             print(f"error: no supported contract files under {contract_path}", file=sys.stderr)
             return 2
-        texts = []
+        targets = []
         for path in files:
             try:
-                texts.append(extract_text(path, ocr=args.ocr))
+                targets.append((path, extract_text(path, ocr=args.ocr)))
             except IngestionError:
                 continue
-        text = "\n".join(texts)
+        if not targets:
+            print(f"error: no supported contract files under {contract_path}", file=sys.stderr)
+            return 2
     else:
         try:
             text = extract_text(contract_path, ocr=args.ocr)
         except IngestionError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
-    matches = suggest_playbooks(text, limit=args.limit)
-    for m in matches:
-        print(f"{m.name}  (score {m.score})")
-        if m.description:
-            print(f"  {m.description}")
-        print(f"  matched: {', '.join(m.matched_terms)}")
-        print(f"  run: redline review {args.contract} --playbook {m.name}")
+        targets = [(contract_path, text)]
+    first = True
+    for path, text in targets:
+        matches = suggest_playbooks(text, limit=args.limit)
+        if not first:
+            print()
+        first = False
+        if len(targets) > 1:
+            print(f"# {path.name}")
+        for m in matches:
+            print(f"{m.name}  (score {m.score})")
+            if m.description:
+                print(f"  {m.description}")
+            print(f"  matched: {', '.join(m.matched_terms)}")
+            print(f"  run: redline review {path} --playbook {m.name}")
     return 0
 
 
