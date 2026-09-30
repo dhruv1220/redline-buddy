@@ -5,6 +5,23 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `homeowners-insurance` playbook: policyholder-side review of HO-3 style
+  homeowners policies — 8 rules (anti-concurrent causation exclusion
+  [high], dwelling settled at actual cash value instead of replacement
+  cost [high], percentage-based windstorm/hurricane deductible [high],
+  mold/fungi sublimit, sewer/drain water-backup exclusion, low
+  additional-living-expense cap, insurer's right to repair with its own
+  contractors, no ordinance-or-law coverage [low]), each with quotable
+  fallback language; sample fixture fires 8/8, clean fixture fires 0
+- Auto playbook suggestion: `redline review` and `redline compare` now
+  auto-detect the best bundled playbook when `--playbook` is omitted —
+  deterministic local TF-IDF keyword scoring, no LLM or network calls.
+  A clear winner is used directly (stderr notes the pick); ambiguous or
+  low-confidence documents keep the historic `saas-vendor` default with
+  an explanatory note, so no document ever gets a silently wrong playbook
+- `redline suggest <contract>`: rank bundled playbooks against a contract
+  without reviewing it — prints scores, matched terms, and the
+  `redline review --playbook <name>` command to run
 - Risk score + letter grade on every review: deterministic 0–100 score
   (critical −30, high −15, medium −7, low −3, floored at 0) with
   ToS;DR-style grades (A ≥ 90, B ≥ 75, C ≥ 60, D ≥ 40, else F) —

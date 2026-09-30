@@ -24,6 +24,7 @@ from .review import SEVERITY_RANK, review_contract
 from .score import grade_worse_than, risk_grade, risk_score
 from .scaffold import NEXT_STEPS, scaffold_playbook
 from .serve import cmd_serve
+from .suggest import FALLBACK_PLAYBOOK, auto_select_playbook, suggest_playbooks
 
 VERSION = "0.1.0"
 
@@ -50,8 +51,20 @@ def _review_batch(
     return results
 
 
-def _default_playbook() -> Path:
-    return bundled_playbook_path("saas-vendor")
+def _load_or_suggest_playbook(args: argparse.Namespace, text: str):
+    """Resolve ``--playbook``, or auto-select when it was omitted.
+
+    Returns ``(playbook, exit_code)``; exit_code is None on success.
+    """
+    if args.playbook:
+        try:
+            return load_playbook(_resolve_playbook(args.playbook)), None
+        except PlaybookError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return None, 2
+    name, note = auto_select_playbook(text)
+    print(f"note: {note}", file=sys.stderr)
+    return load_playbook(bundled_playbook_path(name)), None
 
 
 def _resolve_playbook(name_or_path: str) -> Path:
@@ -68,18 +81,16 @@ def _resolve_playbook(name_or_path: str) -> Path:
 
 def cmd_review(args: argparse.Namespace) -> int:
     contract_path = Path(args.contract)
-    try:
-        playbook = load_playbook(_resolve_playbook(args.playbook))
-    except PlaybookError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
     if contract_path.is_dir():
-        return _cmd_review_batch(contract_path, playbook, args)
+        return _cmd_review_batch(contract_path, args)
     try:
         text = extract_text(contract_path, ocr=args.ocr)
     except IngestionError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    playbook, err = _load_or_suggest_playbook(args, text)
+    if err is not None:
+        return err
     findings = review_contract(text, playbook)
     if args.format == "json":
         print(render_json(contract_path.name, playbook.name, findings, len(playbook.rules)))
@@ -97,7 +108,19 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_review_batch(contract_dir: Path, playbook, args: argparse.Namespace) -> int:
+def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
+    texts: list[str] = []
+    for path in _contract_files(contract_dir):
+        try:
+            texts.append(extract_text(path, ocr=args.ocr))
+        except IngestionError:
+            continue
+    if not texts and not _contract_files(contract_dir):
+        print(f"error: no supported contract files under {contract_dir}", file=sys.stderr)
+        return 2
+    playbook, err = _load_or_suggest_playbook(args, "\n".join(texts))
+    if err is not None:
+        return err
     results = _review_batch(contract_dir, playbook, ocr=args.ocr)
     if not results:
         print(f"error: no supported contract files under {contract_dir}", file=sys.stderr)
@@ -129,6 +152,37 @@ def _cmd_review_batch(contract_dir: Path, playbook, args: argparse.Namespace) ->
     return 0
 
 
+def cmd_suggest(args: argparse.Namespace) -> int:
+    """Rank bundled playbooks against a contract (or directory) without reviewing."""
+    contract_path = Path(args.contract)
+    if contract_path.is_dir():
+        files = _contract_files(contract_path)
+        if not files:
+            print(f"error: no supported contract files under {contract_path}", file=sys.stderr)
+            return 2
+        texts = []
+        for path in files:
+            try:
+                texts.append(extract_text(path, ocr=args.ocr))
+            except IngestionError:
+                continue
+        text = "\n".join(texts)
+    else:
+        try:
+            text = extract_text(contract_path, ocr=args.ocr)
+        except IngestionError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+    matches = suggest_playbooks(text, limit=args.limit)
+    for m in matches:
+        print(f"{m.name}  (score {m.score})")
+        if m.description:
+            print(f"  {m.description}")
+        print(f"  matched: {', '.join(m.matched_terms)}")
+        print(f"  run: redline review {args.contract} --playbook {m.name}")
+    return 0
+
+
 def cmd_compare(args: argparse.Namespace) -> int:
     old_path = Path(args.old)
     new_path = Path(args.new)
@@ -136,16 +190,21 @@ def cmd_compare(args: argparse.Namespace) -> int:
         print("error: compare takes two files, not directories", file=sys.stderr)
         return 2
     try:
-        playbook = load_playbook(_resolve_playbook(args.playbook))
-    except PlaybookError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
-    try:
         old_text = extract_text(old_path, ocr=args.ocr)
         new_text = extract_text(new_path, ocr=args.ocr)
     except IngestionError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    if args.playbook:
+        try:
+            playbook = load_playbook(_resolve_playbook(args.playbook))
+        except PlaybookError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+    else:
+        name, note = auto_select_playbook(old_text)
+        print(f"note: {note}", file=sys.stderr)
+        playbook = load_playbook(bundled_playbook_path(name))
     cmp = compare_contracts(old_path.name, new_path.name, old_text, new_text, playbook)
     if args.format == "json":
         print(render_compare_json(cmp))
@@ -224,9 +283,9 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("contract", help="path to a contract file (markdown, text, .docx, or .pdf) or a directory of contracts for batch review")
     review.add_argument(
         "--playbook",
-        default=str(_default_playbook()),
+        default=None,
         help="playbook YAML file or bundled playbook name "
-        "(e.g. offer-letter; default: bundled saas-vendor)",
+        "(e.g. offer-letter; omit to auto-detect from the contract text)",
     )
     review.add_argument(
         "--ocr",
@@ -257,6 +316,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     review.set_defaults(func=cmd_review)
 
+    suggest = sub.add_parser(
+        "suggest",
+        help="rank bundled playbooks against a contract without reviewing it",
+    )
+    suggest.add_argument("contract", help="path to a contract file or a directory of contracts")
+    suggest.add_argument(
+        "--limit",
+        type=int,
+        default=3,
+        help="how many playbooks to rank (default: 3)",
+    )
+    suggest.add_argument(
+        "--ocr",
+        action="store_true",
+        help="run scanned/image-only PDF pages through Tesseract OCR",
+    )
+    suggest.set_defaults(func=cmd_suggest)
+
     compare = sub.add_parser(
         "compare",
         help="compare two drafts of a contract: text changes plus "
@@ -266,9 +343,9 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("new", help="path to the newer draft")
     compare.add_argument(
         "--playbook",
-        default=str(_default_playbook()),
+        default=None,
         help="playbook YAML file or bundled playbook name "
-        "(e.g. offer-letter; default: bundled saas-vendor)",
+        "(e.g. offer-letter; omit to auto-detect from the earlier draft)",
     )
     compare.add_argument(
         "--ocr",
