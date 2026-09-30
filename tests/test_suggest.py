@@ -142,6 +142,22 @@ def test_cli_suggest_limit():
     assert proc.stdout.count("(score ") == 1
 
 
+def test_cli_suggest_directory_ranks_per_file(tmp_path):
+    import shutil
+
+    d = tmp_path / "mixed"
+    d.mkdir()
+    shutil.copy(ROOT / "examples" / "sample-dpa.md", d / "dpa.md")
+    shutil.copy(ROOT / "examples" / "sample-event-venue.md", d / "venue.md")
+    proc = _run_cli("suggest", str(d), "--limit", "1")
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert "# dpa.md" in out and "# venue.md" in out
+    dpa_section = out.split("# venue.md")[0]
+    assert "dpa  (score" in dpa_section
+    assert "event-venue  (score" in out.split("# venue.md")[1]
+
+
 def test_cli_review_without_playbook_auto_selects_clear_winner():
     proc = _run_cli(
         "review", str(ROOT / "examples" / "sample-settlement-agreement.md"), "--format", "json",
