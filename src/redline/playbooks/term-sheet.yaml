@@ -1,0 +1,166 @@
+name: term-sheet
+version: 1
+description: Founder-side review of startup financing term sheets (SAFE, convertible note, priced seed/Series A).
+rules:
+  - id: no-valuation-cap
+    title: Discount with no valuation cap
+    severity: high
+    description: The SAFE/note offers a discount on the next round but sets no valuation cap.
+    why: A discount without a cap is a blank check on price — if the next
+      round prices far higher than you expect, the discount barely moves the
+      needle and you gave away an uncapped option. A cap is the founder's
+      real price protection; push for one even when a discount is on the table.
+    suggestion: Add a post-money valuation cap that reflects a realistic
+      ceiling for the next priced round, alongside (not instead of) the discount.
+    fallback: "The SAFE converts at a twenty percent (20%) discount to the
+      price of the next equity financing, subject to a post-money valuation
+      cap of $[___]."
+    check:
+      kind: forbids_unless
+      patterns:
+        - discount
+      unless_any:
+        - valuation cap
+
+  - id: full-ratchet-antidilution
+    title: Full-ratchet anti-dilution
+    severity: high
+    description: Anti-dilution protection is full ratchet rather than broad-based weighted average.
+    why: Full ratchet reprices ALL of an investor's shares to the down-round
+      price — one small down round can transfer a shocking amount of the
+      company to earlier investors and crush founder/common ownership.
+      Broad-based weighted average is the market standard; full ratchet is
+      a distress signal.
+    suggestion: Replace with broad-based weighted average anti-dilution,
+      the standard for venture financings.
+    fallback: "Anti-dilution protection shall be broad-based weighted
+      average, and shall not be full ratchet."
+    check:
+      kind: forbids_any
+      patterns:
+        - full[ -]?ratchet
+
+  - id: participating-preferred
+    title: Participating preferred (double dip)
+    severity: high
+    description: The preferred stock participates with common on liquidation — investors get paid twice.
+    why: Participating preferred means investors first take their
+      liquidation preference AND then share pro rata in whatever remains
+      with common. In a modest exit this can leave founders with far less
+      than the headline numbers suggest. Non-participating (investors pick
+      the better of preference or as-converted) is the venture standard.
+    suggestion: Make the preferred non-participating — investors choose
+      either their preference or conversion to common, not both.
+    fallback: "The Series [__] Preferred shall be non-participating;
+      holders receive the greater of (a) the liquidation preference or
+      (b) the as-converted common proceeds."
+    check:
+      kind: forbids_unless
+      patterns:
+        - participat
+      unless_any:
+        - non-?participating
+
+  - id: mfn-no-carveouts
+    title: MFN clause with no carveouts
+    severity: medium
+    description: A most-favored-nation clause gives this investor any better terms you later offer anyone — with no carveouts.
+    why: >-
+      An uncarved MFN turns every future negotiation into a retroactive
+      renegotiation: strategic investors, bridge notes with different
+      economics, and employee-adjacent rounds can all trigger a cascade
+      of "me too" amendments. Carveouts for strategic rounds and
+      different security types are standard.
+    suggestion: Carve out strategic investors, employee/consultant
+      issuances, and different security types from the MFN.
+    fallback: "The MFN shall not apply to (a) strategic investor rounds,
+      (b) a different class of securities, or (c) issuances to employees
+      and consultants."
+    check:
+      kind: forbids_unless
+      patterns:
+        - most[ -]favored[ -]nation
+        - \bmfn\b
+      unless_any:
+        - carve.?out
+        - except for
+
+  - id: super-prorata
+    title: Super pro-rata rights
+    severity: medium
+    description: The investor demands pro-rata rights beyond their ownership percentage ("super" pro-rata).
+    why: Standard pro-rata lets investors maintain their percentage —
+      fair. Super pro-rata lets a small early investor take an outsized
+      bite of future rounds, crowding out new lead investors and
+      complicating every future raise. Future leads notice and price it in.
+    suggestion: Limit pro-rata to the investor's as-converted ownership
+      percentage; oversubscription only on a pro-rata basis among
+      participating holders.
+    fallback: "Each Major Investor may purchase up to its pro-rata share
+      (based on as-converted ownership) of future equity financings."
+    check:
+      kind: forbids_any
+      patterns:
+        - super pro-?rata
+
+  - id: overbroad-protective-provisions
+    title: Investor veto over operating decisions
+    severity: medium
+    description: Protective provisions give investors veto rights over day-to-day operating decisions like budgets, hiring, or compensation.
+    why: Vetoes on charter changes, debt, and liquidation are standard
+      investor protection. Vetoes on the operating budget, executive
+      hiring, or compensation turn investors into co-CEOs — every
+      operational call becomes a negotiation, and a blocked budget can
+      starve the company mid-year.
+    suggestion: Limit protective provisions to fundamental corporate
+      actions (charter amendments, debt above a threshold, liquidation,
+      dividends); keep operating decisions with the board.
+    fallback: "Protective provisions are limited to fundamental corporate
+      actions and do not extend to operating budgets, hiring, or
+      compensation decisions."
+    check:
+      kind: forbids_any
+      patterns:
+        - protective provisions.{0,120}(budget|hiring|compensation|business plan)
+        - investor.{0,30}consent.{0,50}(operating budget|hiring|compensation)
+
+  - id: no-founder-acceleration
+    title: Founder vesting with no acceleration
+    severity: medium
+    description: Founder shares vest over time but nothing accelerates vesting on acquisition or termination.
+    why: If the company is acquired in year two of a four-year founder
+      vest, unaccelerated founders can walk away from most of their equity
+      — or be forced to stay under an acquirer to earn it. Double-trigger
+      acceleration (acquisition + termination without cause) is the
+      founder-friendly standard and costs investors nothing in the normal case.
+    suggestion: Add double-trigger acceleration so that, on acquisition
+      followed by termination without cause (or resignation for good
+      reason), unvested founder shares accelerate in full.
+    fallback: "Upon a change of control followed within twelve (12)
+      months by termination without cause or resignation for good reason,
+      all unvested Founder shares accelerate in full."
+    check:
+      kind: requires_any
+      patterns:
+        - single.?trigger
+        - double.?trigger
+        - accelerat
+
+  - id: long-exclusivity
+    title: Exclusivity / no-shop period over 30 days
+    severity: low
+    description: The no-shop/exclusivity period runs longer than 30 days.
+    why: A short exclusivity window while diligence closes is normal.
+      Beyond 30 days you are locked out of the market with no leverage —
+      if this investor slow-walks or reprices, you have lost a month of
+      fundraising momentum and every other conversation has gone cold.
+    suggestion: Cap exclusivity at 30 days, with automatic expiry if the
+      investor has not delivered a definitive agreement.
+    fallback: "Exclusivity expires thirty (30) days after signing, or
+      upon termination of diligence, whichever is earlier."
+    check:
+      kind: max_value
+      group: value
+      max: 30
+      patterns:
+        - (no.?shop|exclusivity).{0,50}(?<!\d)(?P<value>\d{1,3}).{0,10}days

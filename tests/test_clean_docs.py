@@ -42,6 +42,7 @@ PAIRS = [
     ("software-escrow", "clean-software-escrow.md"),
     ("data-license-agreement", "clean-data-license-agreement.md"),
     ("event-venue", "clean-event-venue.md"),
+    ("term-sheet", "clean-term-sheet.md"),
 ]
 
 

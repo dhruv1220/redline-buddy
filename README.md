@@ -113,6 +113,7 @@ negotiation rounds (`Risk: C (63) → B (78) — improved`).
 | `ip-assignment` | assignor side | no prior-inventions exhibit, unrelated future IP capture, post-employment trailer, moral-rights waiver, no stated consideration, no license-back, blanket disclosure duty, no open-source carve-out |
 | `website-development` | client side | no IP ownership of deliverables, no source-code delivery, no acceptance testing, no warranty/bug-fix period, uncapped change fees, site-hostage takedown right, no third-party license terms, no launch deadline |
 | `settlement-agreement` | claimant / individual side | broad release incl. unknown claims (§1542 waiver), no firm payment deadline, dismissal required before payment, one-sided non-disparagement, one-sided confidentiality, no tax allocation, no late-payment remedy, no enforcement fee-shifting |
+| `term-sheet` | founder side | discount with no valuation cap, full-ratchet anti-dilution, participating preferred, MFN without carveouts, super pro-rata, investor veto over operating decisions, founder vesting with no acceleration, exclusivity > 30 days |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 
