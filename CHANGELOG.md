@@ -5,6 +5,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `term-sheet` playbook: founder-side review of startup financing term
+  sheets (SAFE, convertible note, priced seed) — 8 rules (discount with
+  no valuation cap [high], full-ratchet anti-dilution [high],
+  participating preferred [high], MFN without carveouts, super pro-rata,
+  investor veto over operating decisions, founder vesting with no
+  acceleration, exclusivity over 30 days [low]), each with quotable
+  fallback language; sample fixture fires 8/8, clean fixture fires 0
 - `homeowners-insurance` playbook: policyholder-side review of HO-3 style
   homeowners policies — 8 rules (anti-concurrent causation exclusion
   [high], dwelling settled at actual cash value instead of replacement

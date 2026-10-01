@@ -47,6 +47,7 @@ STRICT_PAIRS = [
     ("sample-severance-agreement.md", "severance-agreement"),
     ("sample-software-license.md", "software-license"),
     ("sample-sow.md", "client-sow"),
+    ("sample-term-sheet.md", "term-sheet"),
     ("sample-tos-user.md", "tos-user"),
     ("sample-website-development.md", "website-development"),
 ]
