@@ -5,6 +5,20 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline review --format html`: self-contained HTML memo export for a
+  single review or a whole directory (batch summary table plus per-file
+  memos). One file, inline CSS, zero JavaScript, zero network — built to
+  be emailed to a human attorney or saved as PDF from the browser, with a
+  print stylesheet and grade-colored risk banners. All contract-derived
+  text is HTML-escaped at render time.
+- `convertible-note` playbook: founder-side review of SAFE and
+  convertible-note instruments — 8 rules (cash repayment at maturity
+  [high], change-of-control payout multiple [high], shadow-series
+  liquidation preference [high], compounding interest, no pro-rata
+  rights for noteholders, discount+cap with no "greater of" language,
+  qualified-financing threshold set too high, noteholder consent veto
+  over operations [low]), each with quotable fallback language; sample
+  fixture fires 8/8, clean fixture fires 0
 - `term-sheet` playbook: founder-side review of startup financing term
   sheets (SAFE, convertible note, priced seed) — 8 rules (discount with
   no valuation cap [high], full-ratchet anti-dilution [high],

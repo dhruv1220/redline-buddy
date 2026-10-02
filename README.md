@@ -69,7 +69,7 @@ redline compare examples/compare-round1.md examples/compare-round2.md
 
 1. A **playbook** (`src/redline/playbooks/saas-vendor.yaml`) declares rules: severity, plain-language explanation, and checks (`requires_any`, `forbids_any`, `forbids_unless`, `max_value`).
 2. The **review engine** runs every rule against the contract text and collects findings with excerpts.
-3. Findings render three ways: a **markdown memo** (default), **JSON** (`--format json`) for CI gates, or a **redline diff** (`--format diff`) — each finding as a unified-diff hunk with the flagged contract language as `-` lines and quotable fallback clause language as `+` lines, ready to paste into your counter-draft.
+3. Findings render four ways: a **markdown memo** (default), **JSON** (`--format json`) for CI gates, a **redline diff** (`--format diff`) — each finding as a unified-diff hunk with the flagged contract language as `-` lines and quotable fallback clause language as `+` lines, ready to paste into your counter-draft — or a **self-contained HTML memo** (`--format html`), a single file with inline CSS (no JS, no network) you can email to your attorney or save as a PDF from the browser.
 
 Every rule carries a `fallback:` field: concrete, quotable clause language — not just advice — so the diff view gives you something you can actually propose back.
 
@@ -114,6 +114,7 @@ negotiation rounds (`Risk: C (63) → B (78) — improved`).
 | `website-development` | client side | no IP ownership of deliverables, no source-code delivery, no acceptance testing, no warranty/bug-fix period, uncapped change fees, site-hostage takedown right, no third-party license terms, no launch deadline |
 | `settlement-agreement` | claimant / individual side | broad release incl. unknown claims (§1542 waiver), no firm payment deadline, dismissal required before payment, one-sided non-disparagement, one-sided confidentiality, no tax allocation, no late-payment remedy, no enforcement fee-shifting |
 | `term-sheet` | founder side | discount with no valuation cap, full-ratchet anti-dilution, participating preferred, MFN without carveouts, super pro-rata, investor veto over operating decisions, founder vesting with no acceleration, exclusivity > 30 days |
+| `convertible-note` | founder side | cash repayment at maturity, change-of-control payout multiple, shadow-series liquidation preference, compounding interest, no pro-rata rights for noteholders, discount+cap with no "greater of" language, qualified-financing threshold too high, noteholder consent veto over operations |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 

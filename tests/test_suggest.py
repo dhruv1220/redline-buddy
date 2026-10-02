@@ -48,6 +48,7 @@ STRICT_PAIRS = [
     ("sample-software-license.md", "software-license"),
     ("sample-sow.md", "client-sow"),
     ("sample-term-sheet.md", "term-sheet"),
+    ("sample-convertible-note.md", "convertible-note"),
     ("sample-tos-user.md", "tos-user"),
     ("sample-website-development.md", "website-development"),
 ]
