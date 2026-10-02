@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from .compare import compare_contracts
+from .html import render_batch_html_memo, render_html_memo
 from .ingest import SUPPORTED_SUFFIXES, IngestionError, extract_text
 from .memo import (
     render_batch_json,
@@ -27,10 +28,10 @@ from .playbook import (
     load_playbook,
 )
 from .review import SEVERITY_RANK, review_contract
-from .score import grade_worse_than, risk_grade, risk_score
 from .scaffold import NEXT_STEPS, scaffold_playbook
+from .score import grade_worse_than, risk_grade, risk_score
 from .serve import cmd_serve
-from .suggest import FALLBACK_PLAYBOOK, auto_select_playbook, suggest_playbooks
+from .suggest import auto_select_playbook, suggest_playbooks
 
 VERSION = "0.1.0"
 
@@ -102,6 +103,8 @@ def cmd_review(args: argparse.Namespace) -> int:
         print(render_json(contract_path.name, playbook.name, findings, len(playbook.rules)))
     elif args.format == "diff":
         print(render_diff(contract_path.name, playbook.name, findings, len(playbook.rules)))
+    elif args.format == "html":
+        print(render_html_memo(contract_path.name, playbook.name, findings, len(playbook.rules)))
     else:
         print(render_memo(contract_path.name, playbook.name, findings, len(playbook.rules)))
     if args.fail_on:
@@ -158,6 +161,9 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
     if args.format == "json":
         print(render_batch_json(results, header_playbook,
                                 per_file_playbooks=per_file_playbooks or None))
+    elif args.format == "html":
+        print(render_batch_html_memo(results, header_playbook, rule_count,
+                                     per_file_playbooks=per_file_playbooks or None))
     elif args.format == "diff":
         for name, findings, error in results:
             pb_name = per_file_playbooks.get(name, header_playbook)
@@ -361,10 +367,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     review.add_argument(
         "--format",
-        choices=("memo", "json", "diff"),
+        choices=("memo", "json", "diff", "html"),
         default="memo",
         help="output format: human-readable memo (default), machine-readable JSON, "
-        "or redline diff view (their language vs. your fallback)",
+        "redline diff view (their language vs. your fallback), or self-contained "
+        "HTML memo for sharing with a human reviewer",
     )
     review.add_argument(
         "--fail-on",

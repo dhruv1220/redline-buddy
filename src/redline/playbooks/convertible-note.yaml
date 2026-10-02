@@ -1,0 +1,185 @@
+name: convertible-note
+version: 1
+description: Founder-side review of SAFE and convertible-note instruments (maturity, interest, change-of-control payouts, shadow series, discount/cap stacking, pro-rata rights).
+rules:
+  - id: maturity-cash-crunch
+    title: Maturity date forces cash repayment
+    severity: high
+    description: The note matures on a fixed date and any unconverted principal plus interest becomes due in cash.
+    why: >-
+      A hard maturity date is a ticking clock. If you have not raised a
+      qualified financing by then, you owe real money — often to the very
+      people whose support you need for the next round. Founders
+      sometimes discover this clause the week the money runs out. The
+      market-friendly version converts automatically (at the cap or
+      discount) instead of demanding cash.
+    suggestion: Push the maturity out (24+ months), and make the default
+      outcome automatic conversion — not cash repayment.
+    fallback: "If no Qualified Financing has occurred by the Maturity
+      Date, the notes shall automatically convert into Common Stock at
+      the Valuation Cap; the notes are never repayable in cash."
+    check:
+      kind: forbids_unless
+      patterns:
+        - maturity date
+      unless_any:
+        - automatically convert
+        - convert into common
+        - never repayable
+
+  - id: change-of-control-multiple
+    title: Change-of-control payout multiple
+    severity: high
+    description: On an acquisition before conversion, noteholders get a multiple (2x–3x) of their money back before common sees a dollar.
+    why: >-
+      A 2x or 3x change-of-control multiple turns noteholders into
+      preferred creditors of your exit. In an acqui-hire or modest
+      acquisition, the multiple can eat the entire proceeds — founders
+      walk away with nothing from the deal they built. 1x (money back,
+      no premium) is the founder-friendly standard for early notes.
+    suggestion: Cap the change-of-control payout at 1x principal plus
+      accrued interest, with no multiple.
+    fallback: "Upon a Change of Control prior to conversion, each note
+      shall be repaid at 1.0x outstanding principal plus accrued
+      interest, with no premium or multiple."
+    check:
+      kind: forbids_unless
+      patterns:
+        - change of control
+      unless_any:
+        - \b1x\b
+        - 1\.0x
+        - no premium
+        - no multiple
+
+  - id: shadow-series-preference
+    title: Shadow-series liquidation preference
+    severity: high
+    description: The notes convert into a "shadow series" of preferred stock carrying a full liquidation preference.
+    why: >-
+      A shadow series gives noteholders a liquidation preference they
+      never paid preferred-stock prices for — they get the discount or
+      cap AND a preference senior to common. In a soft exit, that
+      preference is paid out of founders' share. Conversion into plain
+      common (or non-preferred shadow stock) keeps the economics honest.
+    suggestion: Convert into common stock, or a shadow series with no
+      liquidation preference.
+    fallback: "The notes shall convert into Common Stock (or a shadow
+      series of Preferred Stock with no liquidation preference)."
+    check:
+      kind: forbids_any
+      patterns:
+        - shadow series
+
+  - id: interest-accrual
+    title: Interest accrues and compounds
+    severity: medium
+    description: The note bears compounding interest, increasing the amount that converts (or is owed) over time.
+    why: >-
+      SAFEs famously carry no interest — that is part of their
+      founder-friendliness. Compounding interest on a note quietly grows
+      the conversion amount, handing noteholders more equity (or a
+      bigger cash claim at maturity) the longer you take to raise. If
+      interest must exist, keep it simple and low.
+    suggestion: Remove interest (SAFE-style), or cap it at simple
+      interest of 5% or less with no compounding.
+    fallback: "The notes bear no interest. (Alternatively: simple
+      interest at 5% per annum, non-compounding.)"
+    check:
+      kind: forbids_unless
+      patterns:
+        - interest accrues
+        - accrue[sd]? interest
+        - interest rate
+        - compound
+      unless_any:
+        - no interest
+        - bear no interest
+        - 0% interest
+        - interest-free
+
+  - id: no-prorata-rights
+    title: Noteholders get no pro-rata rights
+    severity: medium
+    description: The note gives its holders no right to invest pro-rata in the next financing round.
+    why: >-
+      Your earliest believers take the most risk and deserve to defend
+      their ownership. Without pro-rata rights, a noteholder's stake is
+      diluted at exactly the moment the company de-risks — punishing
+      the people who backed you first and discouraging future bridge
+      investors. Standard notes include pro-rata for major holders.
+    suggestion: Grant pro-rata rights to noteholders above a minimum
+      threshold in the next equity financing.
+    fallback: "Each Major Noteholder shall have pro-rata rights in the
+      next equity financing, based on as-converted ownership."
+    check:
+      kind: requires_any
+      patterns:
+        - pro-?rata
+
+  - id: discount-cap-stacking
+    title: Discount and cap with no "greater of" language
+    severity: medium
+    description: The note offers both a discount and a valuation cap, but never says the founder gets the better of the two.
+    why: >-
+      Discount and cap are meant to be alternative price protections —
+      you get whichever gives the investor the lower price (i.e., the
+      better deal for them, worse for you) only if the document is
+      silent. Explicit "greater of / more favorable to the Company"
+      language forces the math to pick the outcome that costs you the
+      least dilution. Without it, investors can argue for the harsher
+      reading on both.
+    suggestion: Add "whichever is more favorable to the Company"
+      language so only one mechanism applies per conversion.
+    fallback: "The notes convert at the discount or the valuation cap,
+      whichever is more favorable to the Company (greater of)."
+    check:
+      kind: forbids_unless
+      patterns:
+        - discount.{0,100}?valuation cap
+        - valuation cap.{0,100}?discount
+      unless_any:
+        - greater of
+        - more favorable
+
+  - id: qualified-financing-too-high
+    title: Qualified-financing threshold set too high
+    severity: medium
+    description: The financing that triggers conversion must raise $5M or more — the note may never convert.
+    why: >-
+      A high qualified-financing threshold means your seed or bridge
+      does not count: the note sits unconverted while you keep raising,
+      and the maturity clock keeps ticking toward a cash repayment you
+      cannot make. Set the threshold at a level your actual next raise
+      will clear — usually $1–2M for an early note.
+    suggestion: Lower the qualified-financing threshold to $1–2M so the
+      note converts on your real next raise.
+    fallback: "Qualified Financing means an equity financing with
+      aggregate gross proceeds of at least $1,000,000."
+    check:
+      kind: forbids_any
+      patterns:
+        - qualified financing.{0,100}?\$ ?(?:[5-9]|1[0-9]|[2-9][0-9])\s*million
+        - qualified financing.{0,100}?\$ ?(?:[5-9]|[12][0-9]),000,000
+
+  - id: noteholder-consent-veto
+    title: Noteholder consent rights over operations
+    severity: low
+    description: The company needs noteholder consent for operating decisions (budget, hiring, debt) beyond note amendments.
+    why: >-
+      Noteholders are lenders-in-waiting, not board members. Consent
+      rights over the budget, executive hiring, or ordinary-course debt
+      give a minority capital provider a veto on running the company —
+      and a hold-up right in every future financing negotiation. Keep
+      their consent to what is theirs: amendments to the notes.
+    suggestion: Limit noteholder consent to amendments of the notes
+      themselves; no operating vetoes.
+    fallback: "No consent of the noteholders is required except for
+      amendments to the terms of the notes."
+    check:
+      kind: forbids_unless
+      patterns:
+        - consent of.{0,80}?noteholders
+        - consent.{0,60}?majority.{0,40}?notes
+      unless_any:
+        - amend
