@@ -1,7 +1,8 @@
 """redline CLI: review a contract file against a playbook.
 
-    redline review contract.md --playbook saas-vendor
+redline review contract.md --playbook saas-vendor
 """
+
 from __future__ import annotations
 
 import argparse
@@ -10,7 +11,7 @@ import sys
 from pathlib import Path
 
 from .compare import compare_contracts
-from .html import render_batch_html_memo, render_html_memo
+from .html import render_batch_html_memo, render_compare_html, render_html_memo
 from .ingest import SUPPORTED_SUFFIXES, IngestionError, extract_text
 from .memo import (
     render_batch_json,
@@ -39,7 +40,8 @@ VERSION = "0.1.0"
 def _contract_files(directory: Path) -> list[Path]:
     """Supported contract files under a directory, sorted, recursive."""
     return sorted(
-        p for p in directory.rglob("*")
+        p
+        for p in directory.rglob("*")
         if p.is_file() and p.suffix.lower() in SUPPORTED_SUFFIXES
     )
 
@@ -79,8 +81,10 @@ def _resolve_playbook(name_or_path: str) -> Path:
     p = Path(name_or_path)
     if p.is_file():
         return p
-    for candidate in (bundled_playbook_path(name_or_path),
-                      bundled_playbook_path(f"{name_or_path}.yaml")):
+    for candidate in (
+        bundled_playbook_path(name_or_path),
+        bundled_playbook_path(f"{name_or_path}.yaml"),
+    ):
         if candidate.is_file():
             return candidate
     return p  # not found: load_playbook raises the clear error
@@ -100,13 +104,29 @@ def cmd_review(args: argparse.Namespace) -> int:
         return err
     findings = review_contract(text, playbook)
     if args.format == "json":
-        print(render_json(contract_path.name, playbook.name, findings, len(playbook.rules)))
+        print(
+            render_json(
+                contract_path.name, playbook.name, findings, len(playbook.rules)
+            )
+        )
     elif args.format == "diff":
-        print(render_diff(contract_path.name, playbook.name, findings, len(playbook.rules)))
+        print(
+            render_diff(
+                contract_path.name, playbook.name, findings, len(playbook.rules)
+            )
+        )
     elif args.format == "html":
-        print(render_html_memo(contract_path.name, playbook.name, findings, len(playbook.rules)))
+        print(
+            render_html_memo(
+                contract_path.name, playbook.name, findings, len(playbook.rules)
+            )
+        )
     else:
-        print(render_memo(contract_path.name, playbook.name, findings, len(playbook.rules)))
+        print(
+            render_memo(
+                contract_path.name, playbook.name, findings, len(playbook.rules)
+            )
+        )
     if args.fail_on:
         threshold = SEVERITY_RANK[args.fail_on]
         if any(SEVERITY_RANK.get(f.severity, 9) <= threshold for f in findings):
@@ -120,7 +140,9 @@ def cmd_review(args: argparse.Namespace) -> int:
 def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
     files = _contract_files(contract_dir)
     if not files:
-        print(f"error: no supported contract files under {contract_dir}", file=sys.stderr)
+        print(
+            f"error: no supported contract files under {contract_dir}", file=sys.stderr
+        )
         return 2
     per_file_playbooks: dict[str, str] = {}
     if args.playbook:
@@ -159,11 +181,20 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
         header_playbook = None
         rule_count = None
     if args.format == "json":
-        print(render_batch_json(results, header_playbook,
-                                per_file_playbooks=per_file_playbooks or None))
+        print(
+            render_batch_json(
+                results, header_playbook, per_file_playbooks=per_file_playbooks or None
+            )
+        )
     elif args.format == "html":
-        print(render_batch_html_memo(results, header_playbook, rule_count,
-                                     per_file_playbooks=per_file_playbooks or None))
+        print(
+            render_batch_html_memo(
+                results,
+                header_playbook,
+                rule_count,
+                per_file_playbooks=per_file_playbooks or None,
+            )
+        )
     elif args.format == "diff":
         for name, findings, error in results:
             pb_name = per_file_playbooks.get(name, header_playbook)
@@ -172,8 +203,14 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
             else:
                 print(render_diff(name, pb_name, findings))
     else:
-        print(render_batch_memo(results, header_playbook, rule_count,
-                                per_file_playbooks=per_file_playbooks or None))
+        print(
+            render_batch_memo(
+                results,
+                header_playbook,
+                rule_count,
+                per_file_playbooks=per_file_playbooks or None,
+            )
+        )
     if args.fail_on:
         threshold = SEVERITY_RANK[args.fail_on]
         if any(
@@ -184,7 +221,8 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
             return 1
     if args.fail_below:
         if any(
-            not error and grade_worse_than(risk_grade(risk_score(findings)), args.fail_below)
+            not error
+            and grade_worse_than(risk_grade(risk_score(findings)), args.fail_below)
             for _, findings, error in results
         ):
             return 1
@@ -200,7 +238,10 @@ def cmd_suggest(args: argparse.Namespace) -> int:
     if contract_path.is_dir():
         files = _contract_files(contract_path)
         if not files:
-            print(f"error: no supported contract files under {contract_path}", file=sys.stderr)
+            print(
+                f"error: no supported contract files under {contract_path}",
+                file=sys.stderr,
+            )
             return 2
         targets = []
         for path in files:
@@ -209,7 +250,10 @@ def cmd_suggest(args: argparse.Namespace) -> int:
             except IngestionError:
                 continue
         if not targets:
-            print(f"error: no supported contract files under {contract_path}", file=sys.stderr)
+            print(
+                f"error: no supported contract files under {contract_path}",
+                file=sys.stderr,
+            )
             return 2
     else:
         try:
@@ -260,6 +304,8 @@ def cmd_compare(args: argparse.Namespace) -> int:
     cmp = compare_contracts(old_path.name, new_path.name, old_text, new_text, playbook)
     if args.format == "json":
         print(render_compare_json(cmp))
+    elif args.format == "html":
+        print(render_compare_html(cmp))
     else:
         print(render_compare_memo(cmp))
     if args.fail_on_gain:
@@ -276,10 +322,12 @@ def cmd_playbooks(args: argparse.Namespace) -> int:
         pb = load_playbook(path)
         rows.append((pb.name, len(pb.rules), pb.description))
     if args.format == "json":
-        print(json.dumps(
-            [{"name": n, "rules": c, "description": d} for n, c, d in rows],
-            indent=2,
-        ))
+        print(
+            json.dumps(
+                [{"name": n, "rules": c, "description": d} for n, c, d in rows],
+                indent=2,
+            )
+        )
     else:
         width = max(len(n) for n, _, _ in rows)
         print(f"{len(rows)} bundled playbooks:\n")
@@ -350,8 +398,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    review = sub.add_parser("review", help="review a contract file (or a directory of contracts) against a playbook")
-    review.add_argument("contract", help="path to a contract file (markdown, text, .docx, or .pdf) or a directory of contracts for batch review")
+    review = sub.add_parser(
+        "review",
+        help="review a contract file (or a directory of contracts) against a playbook",
+    )
+    review.add_argument(
+        "contract",
+        help="path to a contract file (markdown, text, .docx, or .pdf) or a directory of contracts for batch review",
+    )
     review.add_argument(
         "--playbook",
         default=None,
@@ -393,7 +447,9 @@ def build_parser() -> argparse.ArgumentParser:
         "suggest",
         help="rank bundled playbooks against a contract without reviewing it",
     )
-    suggest.add_argument("contract", help="path to a contract file or a directory of contracts")
+    suggest.add_argument(
+        "contract", help="path to a contract file or a directory of contracts"
+    )
     suggest.add_argument(
         "--limit",
         type=int,
@@ -412,7 +468,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="compare two drafts of a contract: text changes plus "
         "red flags gained, resolved, or reworded between rounds",
     )
-    compare.add_argument("old", help="path to the earlier draft (markdown, text, .docx, or .pdf)")
+    compare.add_argument(
+        "old", help="path to the earlier draft (markdown, text, .docx, or .pdf)"
+    )
     compare.add_argument("new", help="path to the newer draft")
     compare.add_argument(
         "--playbook",
@@ -428,9 +486,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compare.add_argument(
         "--format",
-        choices=("memo", "json"),
+        choices=("memo", "json", "html"),
         default="memo",
-        help="output format: human-readable memo (default) or machine-readable JSON",
+        help="output format: human-readable memo (default), machine-readable "
+        "JSON, or self-contained HTML for sharing with a human reviewer",
     )
     compare.add_argument(
         "--fail-on-gain",
@@ -454,14 +513,22 @@ def build_parser() -> argparse.ArgumentParser:
         "playbooks", help="list bundled playbooks with rule counts and descriptions"
     )
     playbooks.add_argument(
-        "--format", choices=["text", "json"], default="text",
+        "--format",
+        choices=["text", "json"],
+        default="text",
         help="output format (default: text)",
     )
     playbooks.set_defaults(func=cmd_playbooks)
 
-    serve = sub.add_parser("serve", help="start a minimal local web UI (127.0.0.1 only)")
-    serve.add_argument("--port", type=int, default=8000, help="port to listen on (default: 8000)")
-    serve.add_argument("--bind", default="127.0.0.1", help="interface to bind (default: 127.0.0.1)")
+    serve = sub.add_parser(
+        "serve", help="start a minimal local web UI (127.0.0.1 only)"
+    )
+    serve.add_argument(
+        "--port", type=int, default=8000, help="port to listen on (default: 8000)"
+    )
+    serve.add_argument(
+        "--bind", default="127.0.0.1", help="interface to bind (default: 127.0.0.1)"
+    )
     serve.set_defaults(func=cmd_serve)
 
     new_playbook = sub.add_parser(

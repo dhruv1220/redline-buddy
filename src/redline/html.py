@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import html as _html
 
+from .compare import Comparison
 from .review import Finding
 from .score import risk_grade, risk_score, severity_counts
 
@@ -59,6 +60,7 @@ blockquote.excerpt{border-left:3px solid #ccc;margin:0.75rem 0;padding:0.25rem 0
 .fallback{background:#f6f8fa;border:1px solid #ddd;border-radius:6px;
   padding:0.75rem;font-family:ui-monospace,monospace;font-size:0.85rem;
   white-space:pre-wrap;word-wrap:break-word}
+.del{color:#b42318} .add{color:#067647}
 .ok{background:#f0fdf4;border:1px solid #067647;border-radius:8px;padding:1rem}
 table.summary{border-collapse:collapse;width:100%;font-size:0.85rem;margin:1rem 0}
 table.summary th,table.summary td{border:1px solid #ddd;padding:0.4rem 0.6rem;text-align:left}
@@ -229,3 +231,109 @@ def render_batch_html_memo(
             parts.append(_memo_body(name, pb or "", findings, rule_count))
         parts.append("</section>")
     return _document("Batch red-flag review", "\n".join(parts))
+
+
+def render_compare_html(cmp: Comparison) -> str:
+    """Standalone HTML for a two-draft comparison: what changed, what risk changed."""
+    added = sum(1 for c in cmp.changes if c.kind == "added")
+    removed = sum(1 for c in cmp.changes if c.kind == "removed")
+    modified = sum(1 for c in cmp.changes if c.kind == "modified")
+    old_score, new_score = risk_score(cmp.findings_old), risk_score(cmp.findings_new)
+    old_grade, new_grade = risk_grade(old_score), risk_grade(new_score)
+    trend = (
+        "improved"
+        if new_score > old_score
+        else ("worsened" if new_score < old_score else "unchanged")
+    )
+
+    kind_label = {
+        "added": "paragraph added",
+        "removed": "paragraph removed",
+        "modified": "paragraph reworded",
+    }
+
+    parts = [
+        f"<h1>Contract comparison: {_esc(cmp.old_name)} → {_esc(cmp.new_name)}</h1>",
+        f"<p>Playbook: <code>{_esc(cmp.playbook_name)}</code>.</p>",
+        f'<div class="disclaimer">{_DISCLAIMER_HTML}</div>',
+        "<h2>Summary</h2>",
+        (
+            '<div class="risk">'
+            f"Text changes: <b>{len(cmp.changes)}</b> "
+            f"({added} added, {removed} removed, {modified} reworded)<br>"
+            f"Findings: <b>{len(cmp.findings_old)}</b> → "
+            f"<b>{len(cmp.findings_new)}</b> — "
+            f"🚨 {len(cmp.gained)} new red flag(s), "
+            f"✅ {len(cmp.resolved)} resolved, "
+            f"🔁 {len(cmp.reworded)} reworded but still flagged<br>"
+            f"Risk: "
+            f'<span class="g{old_grade}"><b>{old_grade} ({old_score})</b></span> → '
+            f'<span class="g{new_grade}"><b>{new_grade} ({new_score})</b></span> — '
+            f"{_esc(trend)}"
+            "</div>"
+        ),
+    ]
+
+    if cmp.gained:
+        parts.append("<h2>🚨 New red flags introduced in this round</h2>")
+        for i, f in enumerate(cmp.gained, 1):
+            parts.append(_finding_section(f, i))
+    else:
+        parts.append(
+            "<h2>🚨 New red flags introduced in this round</h2>"
+            "<p>None — the new draft introduces no new playbook findings.</p>"
+        )
+
+    if cmp.resolved:
+        items = []
+        for f in cmp.resolved:
+            sev_class, badge = _SEVERITY_BADGE.get(f.severity, ("", f.severity.upper()))
+            items.append(
+                f'<li><span class="badge {sev_class}">{_esc(badge)}</span> '
+                f"{_esc(f.title)}</li>"
+            )
+        parts.append("<h2>✅ Resolved this round</h2><ul>" + "".join(items) + "</ul>")
+    else:
+        parts.append("<h2>✅ Resolved this round</h2><p>None.</p>")
+
+    if cmp.reworded:
+        parts.append("<h2>🔁 Reworded but still flagged</h2>")
+        for i, rw in enumerate(cmp.reworded, 1):
+            sev_class, badge = _SEVERITY_BADGE.get(
+                rw.after.severity, ("", rw.after.severity.upper())
+            )
+            parts.append(
+                '<div class="finding">'
+                f'<div class="badge {sev_class}">{_esc(badge)}</div>'
+                f"<h3>{i}. {_esc(rw.after.title)}</h3>"
+                "<p><strong>Before:</strong> "
+                f"{_esc(rw.before.excerpt or '(clause missing)')}</p>"
+                "<p><strong>Now:</strong> "
+                f"{_esc(rw.after.excerpt or '(clause missing)')}</p>"
+                "</div>"
+            )
+    else:
+        parts.append("<h2>🔁 Reworded but still flagged</h2><p>None.</p>")
+
+    if cmp.changes:
+        parts.append("<h2>📝 Text changes</h2>")
+        for i, ch in enumerate(cmp.changes, 1):
+            hunks = []
+            if ch.kind in ("removed", "modified"):
+                for ln in ch.old.splitlines():
+                    hunks.append(f'<div class="del">- {_esc(ln)}</div>')
+            if ch.kind in ("added", "modified"):
+                for ln in ch.new.splitlines():
+                    hunks.append(f'<div class="add">+ {_esc(ln)}</div>')
+            parts.append(
+                f"<h3>Change {i} — {kind_label[ch.kind]}</h3>"
+                '<div class="fallback">' + "".join(hunks) + "</div>"
+            )
+    else:
+        parts.append(
+            "<h2>📝 Text changes</h2>"
+            "<p>No text changes — the documents are identical.</p>"
+        )
+
+    title = f"Contract comparison: {cmp.old_name} → {cmp.new_name}"
+    return _document(title, "\n".join(parts))
