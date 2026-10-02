@@ -7,10 +7,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ### Added
 - `redline review --format html`: self-contained HTML memo export for a
   single review or a whole directory (batch summary table plus per-file
-  memos). One file, inline CSS, zero JavaScript, zero network — built to
-  be emailed to a human attorney or saved as PDF from the browser, with a
-  print stylesheet and grade-colored risk banners. All contract-derived
-  text is HTML-escaped at render time.
+  memos), and `redline compare --format html`: shareable comparison page
+  with gained/resolved/reworded findings and text-change hunks. One file
+  each, inline CSS, zero JavaScript, zero network — built to be emailed
+  to a human attorney or saved as PDF from the browser, with a print
+  stylesheet and grade-colored risk banners. All contract-derived text
+  is HTML-escaped at render time.
 - `convertible-note` playbook: founder-side review of SAFE and
   convertible-note instruments — 8 rules (cash repayment at maturity
   [high], change-of-control payout multiple [high], shadow-series
