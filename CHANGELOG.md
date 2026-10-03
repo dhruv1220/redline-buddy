@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `term-sheet-investor` playbook: investor-side review of startup financing
+  term sheets (angels / small funds reviewing founder-drafted SAFE,
+  convertible-note, or priced-seed terms) — 8 rules (no pro-rata rights
+  [high], no information rights [high], no founder vesting [high], no
+  liquidation preference [high], no protective provisions [medium], no
+  anti-dilution [medium], no drag-along [medium], no board seat or observer
+  rights [low]), each with quotable fallback language; sample fixture fires
+  8/8, clean fixture fires 0
 - `construction-contract` playbook: homeowner-side review of home-improvement
   and construction contracts (kitchen/bath remodels, additions, GC agreements)
   — 12 rules (large upfront deposit over 33% [high], final payment before
