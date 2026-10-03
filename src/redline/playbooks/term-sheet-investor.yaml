@@ -1,0 +1,105 @@
+name: term-sheet-investor
+version: 1
+description: Red-flag rules for reviewing startup financing term sheets from the investor side (angels, solo capitalists, and small funds reviewing founder-drafted SAFE, convertible-note, or priced-seed terms).
+rules:
+  - id: no-pro-rata
+    title: No pro-rata (follow-on) rights
+    severity: high
+    description: The term sheet gives the investor no pro-rata right to participate in future financings.
+    why: Without pro-rata rights your ownership gets diluted away in every subsequent round — and the winners are exactly the rounds you most want to double down on. Pro-rata is the cheapest optionality an early investor can hold.
+    suggestion: Require pro-rata rights on all future equity financings, ideally transferable to affiliated funds.
+    fallback: "Investor shall have pro-rata rights to purchase its pro-rata share of any future equity financing of the Company."
+    check:
+      kind: requires_any
+      patterns:
+        - pro[\s-]?rata
+
+  - id: no-information-rights
+    title: No information or inspection rights
+    severity: high
+    description: The term sheet grants no information rights — no quarterly financials, annual budget, or inspection rights.
+    why: An investor with no information rights is flying blind between financings and cannot mark the investment, spot trouble early, or help. Even non-lead angels should get quarterly financials and the annual budget.
+    suggestion: Require quarterly financial statements, the annual budget, and reasonable inspection rights.
+    fallback: "The Company shall deliver quarterly financial statements, the annual budget, and permit reasonable inspection of books and records."
+    check:
+      kind: requires_any
+      patterns:
+        - information\s+rights
+        - quarterly.{0,30}(financial|report)
+        - annual.{0,30}(budget|financial)
+
+  - id: no-founder-vesting
+    title: No founder vesting schedule
+    severity: high
+    description: Founder shares are not subject to any vesting schedule.
+    why: If a founder walks away in month six with 100% of their equity vested, the company is unfundable and your investment is stranded. Four-year vesting with a one-year cliff on founder stock is the market standard for a reason.
+    suggestion: Require all founder stock to vest over four years with a one-year cliff, with acceleration only on double-trigger.
+    fallback: "All founder shares vest over four years with a one-year cliff; unvested shares are subject to Company repurchase at cost."
+    check:
+      kind: requires_any
+      patterns:
+        - vesting
+        - vest\s+over
+
+  - id: weak-liquidation-preference
+    title: No liquidation preference stated
+    severity: high
+    description: The term sheet states no liquidation preference for the investor's shares.
+    why: Without a liquidation preference you stand behind every creditor and preferred holder in a downside exit — the preference is the core downside protection of preferred stock. 1x non-participating is the standard ask.
+    suggestion: Require a 1x non-participating liquidation preference, senior to common.
+    fallback: "Investor shares carry a 1x non-participating liquidation preference, senior to all common stock."
+    check:
+      kind: requires_any
+      patterns:
+        - liquidation\s+preference
+
+  - id: no-protective-provisions
+    title: No protective provisions or consent rights
+    severity: medium
+    description: The investor has no protective provisions — no consent right over selling the company, issuing senior securities, or changing the charter.
+    why: Protective provisions are the investor's seatbelt. Without them the company can sell itself, authorize senior stock that leapfrogs you, or amend your rights away without your vote.
+    suggestion: "Require standard protective provisions: consent for sale of the company, charter amendments adverse to the series, and issuance of senior securities."
+    fallback: "The following require Investor consent: sale of the Company, amendments adverse to Investor shares, and issuance of securities senior to Investor shares."
+    check:
+      kind: requires_any
+      patterns:
+        - protective\s+provisions
+        - consent\s+rights
+        - investor\s+consent
+
+  - id: no-anti-dilution
+    title: No anti-dilution protection
+    severity: medium
+    description: The term sheet includes no anti-dilution protection for the investor's price.
+    why: In a down round your entry price stays high while new investors buy cheap — broad-based weighted-average anti-dilution is the standard, low-drama protection. Its absence is a quiet giveaway.
+    suggestion: Require broad-based weighted-average anti-dilution adjustment.
+    fallback: "The conversion price is subject to broad-based weighted-average anti-dilution adjustment."
+    check:
+      kind: requires_any
+      patterns:
+        - anti[\s-]?dilution
+
+  - id: no-drag-along
+    title: No drag-along provision
+    severity: medium
+    description: The term sheet has no drag-along provision compelling minority holders to join an approved sale.
+    why: Without drag-along, a small holder can block or hold up an acquisition to extract a side payment — the classic holdout tax on an otherwise clean exit.
+    suggestion: Require drag-along on a sale approved by the board and a majority of preferred.
+    fallback: "All stockholders shall consent to a sale approved by the Board and a majority of the preferred stock (drag-along)."
+    check:
+      kind: requires_any
+      patterns:
+        - drag[\s-]?along
+
+  - id: no-board-rights
+    title: No board seat or observer rights
+    severity: low
+    description: The investor gets no board seat or board-observer rights.
+    why: A board seat is not always realistic for a small check, but observer rights cost the company nothing and keep you in the room where strategy and follow-on decisions happen.
+    suggestion: Ask for a board seat; accept observer rights with board-material access as the fallback.
+    fallback: "Investor may appoint one board observer with the right to attend meetings and receive board materials."
+    check:
+      kind: requires_any
+      patterns:
+        - board\s+(seat|observer|representation)
+        - observer\s+rights
