@@ -1,0 +1,174 @@
+name: construction-contract
+version: 1
+description: Red-flag rules for reviewing home-improvement and construction contracts from the homeowner side (kitchen/bath remodels, additions, general contractor agreements).
+rules:
+  - id: large-upfront-deposit
+    title: Upfront deposit exceeds one-third of the contract price
+    severity: high
+    description: The contract requires a deposit or down payment of more than 33% of the contract price before work begins.
+    why: Large upfront deposits are the classic contractor-fraud setup — once a contractor holds half your money, your leverage is gone. Consumer-protection guidance consistently says never pay more than one-third up front; deposits should track completed milestones.
+    suggestion: Cap the deposit at 10-33% and tie every subsequent payment to a completed, inspectable milestone.
+    fallback: "The initial deposit shall not exceed 33% of the contract price; all further payments are tied to completed milestones listed in the payment schedule."
+    check:
+      kind: max_value
+      group: value
+      max: 33
+      patterns:
+        - deposit\s+of\s+(?P<value>\d+(?:\.\d+)?)\s*%
+        - down\s+payment\s+of\s+(?P<value>\d+(?:\.\d+)?)\s*%
+        - (?P<value>\d+(?:\.\d+)?)\s*%\s*(of\s+the\s+(contract|total|agreed)\s+price\s+)?(as\s+(an?\s+)?)?(deposit|down\s+payment)
+
+  - id: final-payment-before-completion
+    title: Final payment due before final inspection or completion
+    severity: high
+    description: The final payment is due before the final walkthrough, inspection, or substantial completion of the work.
+    why: Paying in full before the work is verified complete removes your only leverage for punch-list items and defects. The final payment should follow your written acceptance after final inspection.
+    suggestion: Hold the final 10% until after final inspection and your written sign-off on the punch list.
+    fallback: "Final payment is due within 10 days after final inspection and Owner's written acceptance of the completed Work, including all punch-list items."
+    check:
+      kind: forbids_any
+      patterns:
+        - final\s+payment.{0,80}before.{0,40}(final\s+inspection|substantial\s+completion|punch|completion\s+of\s+the\s+work)
+        - payable\s+(in\s+full\s+)?before\s+(final\s+inspection|completion)
+
+  - id: no-written-change-orders
+    title: No written change-order requirement
+    severity: high
+    description: The contract does not require extra work to be authorized by a written, signed change order.
+    why: Verbal while-we-are-at-it extras are where remodeling budgets die — without a written change order stating price and schedule impact, surprise extras turn into invoices you cannot contest.
+    suggestion: Require a written change order, signed by both parties, stating price and schedule impact before any extra work begins.
+    fallback: "No extra or changed work shall be performed without a written change order signed by both parties stating the price and any schedule adjustment."
+    check:
+      kind: requires_any
+      patterns:
+        - written\s+change\s+order
+        - change\s+order.{0,40}signed
+        - extras?.{0,30}in\s+writing
+
+  - id: no-start-completion-dates
+    title: No start or completion dates
+    severity: high
+    description: The contract states no start date, completion date, or substantial-completion deadline.
+    why: Without dates the contractor has no enforceable obligation to start, finish, or even show up — your project can stall indefinitely with no contractual remedy.
+    suggestion: Require a start date and a substantial-completion date, with a per-day remedy or termination right if the deadline slips.
+    fallback: "Work shall commence on [start date] and reach substantial completion no later than [date]; Contractor is liable for $[X] per day of delay beyond that date."
+    check:
+      kind: requires_any
+      patterns:
+        - start\s+date
+        - completion\s+date
+        - substantial\s+completion
+        - commence.{0,20}work
+
+  - id: no-lien-waiver
+    title: No lien-waiver protection on payments
+    severity: high
+    description: The contract does not require the contractor (or subcontractors and suppliers) to provide lien waivers or releases with payment.
+    why: If the general contractor takes your money but doesn't pay the subs, the subs can file a mechanics lien against YOUR house — even though you paid in full. Lien waivers with each payment are the standard shield.
+    suggestion: Require unconditional lien waivers from the contractor and every subcontractor and supplier with each payment application, and before final payment.
+    fallback: "Contractor shall deliver unconditional lien waivers from itself and every subcontractor and supplier with each payment request and before final payment."
+    check:
+      kind: requires_any
+      patterns:
+        - lien\s+waiver
+        - lien\s+release
+        - waiver\s+of\s+lien
+
+  - id: vague-scope
+    title: Vague or missing scope of work
+    severity: medium
+    description: The contract has no detailed scope of work, specifications, or referenced plans.
+    why: A bare promise to remodel the kitchen means different things to you and the contractor. Disputes over what was included are the most common remodeling fight — the scope must be itemized in writing and attached.
+    suggestion: Attach an itemized scope of work with materials, finishes, and referenced plans as an exhibit.
+    fallback: "The scope of work, materials, finishes, and referenced plans are set out in Exhibit A, which is incorporated by reference."
+    check:
+      kind: requires_any
+      patterns:
+        - scope\s+of\s+work
+        - specifications
+        - exhibit\s+a
+        - plans\s+and\s+specifications
+
+  - id: binding-arbitration
+    title: Binding arbitration clause
+    severity: medium
+    description: Disputes must go to binding arbitration rather than court.
+    why: Binding arbitration waives your right to a jury trial and, usually, to appeal — and the contractor picks the forum in practice. For a homeowner it tilts dispute resolution toward the repeat player.
+    suggestion: Strike binding arbitration, or make it non-binding/mutually optional with small-claims court preserved.
+    fallback: "Disputes shall be resolved in a court of competent jurisdiction; either party may elect non-binding mediation first."
+    check:
+      kind: forbids_any
+      patterns:
+        - binding\s+arbitration
+
+  - id: contractor-may-assign
+    title: Contractor may assign or subcontract without your consent
+    severity: low
+    description: The contractor can assign the contract or subcontract the work without the owner's consent.
+    why: You hired this contractor based on their reputation and crew — free assignment means a stranger can show up to do the work, with no recourse if the quality drops.
+    suggestion: Require your prior written consent for any assignment or subcontracting of the work.
+    fallback: "Contractor shall not assign this contract or subcontract any portion of the Work without Owner's prior written consent."
+    check:
+      kind: forbids_unless
+      patterns:
+        - may\s+(assign|subcontract).{0,60}without.{0,30}consent
+      unless_any:
+        - prior\s+written\s+consent
+
+  - id: no-workmanship-warranty
+    title: No workmanship warranty
+    severity: medium
+    description: The contract states no warranty on the contractor's workmanship.
+    why: Without a written warranty, a leaking shower pan or cracking tile six months later is your problem to prove — a one-year workmanship warranty is the industry norm and costs the contractor nothing to promise if the work is sound.
+    suggestion: Require a minimum one-year written warranty on all workmanship.
+    fallback: "Contractor warrants all workmanship against defects for one year from substantial completion and shall correct defective work at no cost."
+    check:
+      kind: requires_any
+      patterns:
+        - warran
+
+  - id: no-cancellation-right
+    title: No three-day cancellation right stated
+    severity: medium
+    description: The contract does not state the homeowner's three-business-day right to cancel (the federal cooling-off rule for home-solicitation sales).
+    why: Contracts signed at your home — the classic door-to-door contractor sale — carry a federal three-day cooling-off period. If the contract doesn't disclose it, the contractor either doesn't know the law or hopes you don't.
+    suggestion: Add the written three-day cancellation notice required for home-solicitation contracts.
+    fallback: "Owner may cancel this contract within three business days of signing by written notice to Contractor."
+    check:
+      kind: requires_any
+      patterns:
+        - right\s+to\s+cancel
+        - three[-\s]?day
+        - cooling[-\s]?off
+        - rescind
+        - rescission
+
+  - id: open-ended-pricing
+    title: Open-ended time-and-materials or cost-plus pricing
+    severity: high
+    description: The contract prices the work on a time-and-materials or cost-plus basis with no cap or guaranteed maximum.
+    why: Uncapped T&M turns your budget into a suggestion — every inefficiency is billed to you. If T&M is unavoidable, it needs a not-to-exceed cap with the contractor absorbing overruns.
+    suggestion: Convert to a fixed price, or cap T&M with a guaranteed maximum and require pre-approval of hours.
+    fallback: "Time-and-materials charges shall not exceed $[X] (the guaranteed maximum); overruns are Contractor's responsibility."
+    check:
+      kind: forbids_unless
+      patterns:
+        - time[\s-]+and[\s-]+materials
+        - time\s*&\s*materials
+        - cost[\s-]plus
+      unless_any:
+        - not\s+to\s+exceed
+        - guaranteed\s+maximum
+        - \bcapped?\b
+
+  - id: owner-pulls-permits
+    title: Owner made responsible for permits
+    severity: medium
+    description: The contract makes the homeowner responsible for obtaining building permits.
+    why: Permits pulled by the owner shift liability for code compliance and inspections onto you, and let the contractor disclaim responsibility for failed inspections. The contractor doing the work should pull the permits.
+    suggestion: Make the contractor responsible for obtaining all required permits and passing inspections.
+    fallback: "Contractor shall obtain all required building permits at its own expense and is responsible for passing all inspections."
+    check:
+      kind: forbids_any
+      patterns:
+        - owner.{0,50}(responsible|obtains?|shall\s+obtain).{0,40}permit

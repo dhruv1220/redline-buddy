@@ -44,6 +44,7 @@ PAIRS = [
     ("event-venue", "clean-event-venue.md"),
     ("term-sheet", "clean-term-sheet.md"),
     ("convertible-note", "clean-convertible-note.md"),
+    ("construction-contract", "clean-construction-contract.md"),
 ]
 
 
