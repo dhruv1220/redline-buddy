@@ -2,7 +2,9 @@
 
 All notable changes to redline-buddy. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.1.0] - 2026-10-03
+
+First PyPI release.
 
 ### Added
 - `term-sheet-investor` playbook: investor-side review of startup financing
