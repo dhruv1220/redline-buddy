@@ -5,6 +5,16 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `construction-contract` playbook: homeowner-side review of home-improvement
+  and construction contracts (kitchen/bath remodels, additions, GC agreements)
+  — 12 rules (large upfront deposit over 33% [high], final payment before
+  final inspection [high], no written change-order requirement [high], no
+  start/completion dates [high], no lien-waiver protection [high], uncapped
+  time-and-materials pricing [high], vague scope [medium], binding arbitration
+  [medium], no workmanship warranty [medium], no three-day cancellation right
+  [medium], owner made responsible for permits [medium], contractor may
+  assign/subcontract without consent [low]), each with quotable fallback
+  language; sample fixture fires 12/12, clean fixture fires 0
 - `redline review --format html`: self-contained HTML memo export for a
   single review or a whole directory (batch summary table plus per-file
   memos), and `redline compare --format html`: shareable comparison page
