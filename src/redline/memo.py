@@ -39,6 +39,7 @@ def render_memo(
     playbook_name: str,
     findings: list[Finding],
     rule_count: int | None = None,
+    second_reader_model: str | None = None,
 ) -> str:
     lines = [
         f"# Red-flag memo: {contract_name}",
@@ -47,16 +48,28 @@ def render_memo(
         "",
         f"Playbook: `{playbook_name}` — {len(findings)} finding(s).",
         "",
-        DISCLAIMER,
-        "",
     ]
+    if second_reader_model:
+        confirmed = sum(1 for f in findings if f.llm_confirmed)
+        novel = sum(1 for f in findings if f.origin == "second-reader")
+        lines += [
+            f"Second reader: `{second_reader_model}` — {confirmed} rule hit(s) "
+            f"independently confirmed, {novel} new observation(s).",
+            "",
+        ]
+    lines += [DISCLAIMER, ""]
     if not findings:
         lines += ["## ✅ No red flags", "", "Nothing in the playbook fired on this document."]
     else:
         lines += ["## Findings", ""]
         for i, f in enumerate(findings, 1):
             badge = _SEVERITY_BADGE.get(f.severity, f.severity.upper())
-            lines += [f"### {i}. [{badge}] {f.title}", ""]
+            marker = ""
+            if f.origin == "second-reader":
+                marker = " · 🤖 second-reader observation"
+            elif f.llm_confirmed:
+                marker = " · ✓ confirmed by second reader"
+            lines += [f"### {i}. [{badge}] {f.title}{marker}", ""]
             if f.excerpt:
                 lines += [f"> {f.excerpt}", ""]
             lines += [f"**Why it matters:** {f.why}", ""]

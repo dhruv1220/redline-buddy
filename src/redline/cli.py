@@ -93,6 +93,12 @@ def _resolve_playbook(name_or_path: str) -> Path:
 def cmd_review(args: argparse.Namespace) -> int:
     contract_path = Path(args.contract)
     if contract_path.is_dir():
+        if args.second_reader:
+            print(
+                "warning: --second-reader is single-file only; "
+                "ignoring it for batch review",
+                file=sys.stderr,
+            )
         return _cmd_review_batch(contract_path, args)
     try:
         text = extract_text(contract_path, ocr=args.ocr)
@@ -103,6 +109,27 @@ def cmd_review(args: argparse.Namespace) -> int:
     if err is not None:
         return err
     findings = review_contract(text, playbook)
+    second_reader_model = args.second_reader
+    if second_reader_model:
+        # Lazy import: the default offline path must not require litellm.
+        from .second_reader import (
+            SecondReaderConfig,
+            SecondReaderError,
+            litellm_provider,
+            run_second_reader,
+        )
+
+        config = SecondReaderConfig(
+            model=second_reader_model, timeout=args.second_reader_timeout
+        )
+        try:
+            provider = litellm_provider(config)
+            findings = run_second_reader(
+                text, playbook, provider, config, rule_findings=findings
+            )
+        except SecondReaderError as exc:
+            print(f"error: second reader: {exc}", file=sys.stderr)
+            return 2
     if args.format == "json":
         print(
             render_json(
@@ -124,7 +151,11 @@ def cmd_review(args: argparse.Namespace) -> int:
     else:
         print(
             render_memo(
-                contract_path.name, playbook.name, findings, len(playbook.rules)
+                contract_path.name,
+                playbook.name,
+                findings,
+                len(playbook.rules),
+                second_reader_model=second_reader_model,
             )
         )
     if args.fail_on:
@@ -440,6 +471,23 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="exit 1 (fail) when the risk grade is worse than this letter — "
         "for CI gates on the headline score (default: never fail)",
+    )
+    review.add_argument(
+        "--second-reader",
+        metavar="MODEL",
+        default=None,
+        help="optional LLM second reader (e.g. gpt-4o-mini): a model re-reads "
+        "the contract against the playbook to catch paraphrased clauses the "
+        "rules miss and confirm rule hits. Sends contract text to the model "
+        "provider — strictly opt-in, requires your own API key and "
+        '\'pip install "redline-buddy[llm]"\' (single-file review only)',
+    )
+    review.add_argument(
+        "--second-reader-timeout",
+        type=int,
+        default=120,
+        metavar="SECS",
+        help="timeout for the second-reader LLM call (default: 120)",
     )
     review.set_defaults(func=cmd_review)
 

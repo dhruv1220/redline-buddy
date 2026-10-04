@@ -2,6 +2,21 @@
 
 All notable changes to redline-buddy. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+- Optional LLM second reader: `redline review --second-reader <model>`
+  (e.g. `gpt-4o-mini`) re-reads the contract against the same playbook after
+  the deterministic engine. Rule hits the model independently flags are
+  marked "✓ confirmed by second reader"; genuinely new observations are
+  appended as "🤖 second-reader observations". Model output is validated
+  hard: unknown rule ids, missing verbatim quotes, and invalid severities
+  are dropped, and an empty/garbled response is an error, not a silent pass.
+  Strictly opt-in via the `llm` extra (`pip install "redline-buddy[llm]"`,
+  BYO provider API key) — the default path stays offline and keyless, and
+  the flag sends contract text to the provider, so it warns accordingly.
+  Single-file review only. 16 new tests; full suite 369 passed, 1 skipped.
+
 ## [0.1.0] - 2026-10-03
 
 First PyPI release.

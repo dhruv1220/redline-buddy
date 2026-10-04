@@ -18,6 +18,11 @@ class Finding:
     why: str
     suggestion: str
     fallback: str = ""
+    # Provenance: "rules" for the deterministic engine, "second-reader" for
+    # the optional LLM pass. llm_confirmed marks a rule hit the LLM
+    # independently flagged too.
+    origin: str = "rules"
+    llm_confirmed: bool = False
 
 
 def _compile(patterns: list[str]) -> list[re.Pattern]:
