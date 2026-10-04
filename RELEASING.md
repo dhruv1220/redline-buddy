@@ -10,14 +10,13 @@ clean virtualenvs.
 ## One-time setup (needs Dhruv)
 
 1. Create an account at https://pypi.org and enable 2FA.
-2. Generate an API token (Account settings → API tokens), scope it to the
-   `redline-buddy` project once the first upload reserves the name.
-3. Save it as `~/.pypirc`:
-   ```ini
-   [pypi]
-   username = __token__
-   password = pypi-...   # the token; never commit this file
-   ```
+2. Generate an API token (Account settings → API tokens). For the very first
+   upload the project won't appear in the scope dropdown (it doesn't exist yet),
+   so scope the first token to "Entire account"; once the first release is live,
+   mint project-scoped tokens for `redline-buddy` and retire the broad one.
+3. The token is supplied transiently at release time (pasted in chat) and used
+   once via `TWINE_USERNAME=__token__` / `TWINE_PASSWORD` env vars. It is never
+   written to `~/.pypirc`, files, or memory — do not persist it anywhere.
 
 ## Cutting a release
 
