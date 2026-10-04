@@ -74,6 +74,30 @@ redline compare examples/compare-round1.md examples/compare-round2.md
 
 Every rule carries a `fallback:` field: concrete, quotable clause language — not just advice — so the diff view gives you something you can actually propose back.
 
+### Optional LLM second reader
+
+The deterministic engine is the default: offline, no API keys, nothing leaves
+your machine. Regex rules can still miss paraphrased clauses or get fooled by
+negations, so `review` accepts an opt-in second pass:
+
+```bash
+pip install "redline-buddy[llm]"   # adds litellm (optional dependency)
+export OPENAI_API_KEY=...          # or ANTHROPIC_API_KEY, etc. — your key, your provider
+
+redline review contract.md --playbook saas-vendor --second-reader gpt-4o-mini
+```
+
+The model re-reads the contract against the same playbook. Rule hits it
+independently flags are marked **✓ confirmed by second reader**; genuinely new
+observations are appended as **🤖 second-reader observations** (anything
+referencing an unknown rule, lacking a verbatim quote, or carrying a bogus
+severity is dropped — a hallucinating model must not invent findings).
+
+⚠️ `--second-reader` sends your contract text to the model provider. Redact
+or skip it for documents you can't share. Single-file review only; batch mode
+ignores the flag with a warning. Output is still a first-pass draft for human
+attorney review — never legal advice.
+
 ## Risk score
 
 Every memo opens with a headline: **Risk score: 63/100 · Grade C** — a

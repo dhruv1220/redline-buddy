@@ -8,6 +8,11 @@ authors = [{ name = "Dhruv Arora" }]
 keywords = ["contracts", "legal-tech", "redlining", "playbook", "msa", "nda", "cli"]
 requires-python = ">=3.10"
 dependencies = ["pyyaml>=6", "python-docx>=1.1", "pypdf>=6"]
+
+[project.optional-dependencies]
+# Optional LLM second reader: `redline review --second-reader gpt-4o-mini`.
+# Kept out of the default install so the core stays offline and keyless.
+llm = ["litellm>=1.0"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Legal Industry",
