@@ -49,6 +49,7 @@ PAIRS = [
     ("saas-provider", "clean-saas-provider.md"),
     ("software-licensor", "clean-software-licensor.md"),
     ("commercial-tenant", "clean-commercial-tenant.md"),
+    ("employment-employer", "clean-employment-employer.md"),
 ]
 
 
