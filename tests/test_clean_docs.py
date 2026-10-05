@@ -48,6 +48,7 @@ PAIRS = [
     ("term-sheet-investor", "clean-term-sheet-investor.md"),
     ("saas-provider", "clean-saas-provider.md"),
     ("software-licensor", "clean-software-licensor.md"),
+    ("commercial-tenant", "clean-commercial-tenant.md"),
 ]
 
 
