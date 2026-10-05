@@ -119,6 +119,7 @@ negotiation rounds (`Risk: C (63) → B (78) — improved`).
 | Playbook | Reviews from | Checks |
 |---|---|---|
 | `saas-vendor` | customer side | liability cap, mutual indemnification, auto-renewal, termination for convenience, confidentiality, notice period, AI training on customer data, data return/deletion on exit, uptime SLA/service credits, unilateral terms changes |
+| `saas-provider` | provider side | liability cap, customer termination for convenience, uncapped SLA credits, customer IP ownership claims, late-payment remedy, price uplift rights, overbroad indemnity, customer audit rights |
 | `nda-recipient` | recipient side | hidden non-compete, survival > 5 years, missing standard exclusions, injunctive relief, return-or-destroy |
 | `contractor` | hiring-company side | IP assignment, hidden non-compete, payment terms, termination at will, confidentiality, expense pre-approval |
 | `dpa` | customer / controller side | subprocessor objection, return-or-delete, breach-notification timeline, security measures, audit rights, cross-border transfers |
