@@ -41,6 +41,8 @@ redline review contract.pdf --format diff
 redline compare round1.pdf round2.pdf --playbook saas-vendor
 # fail CI when the new draft introduces new high-or-worse red flags:
 redline compare round1.pdf round2.pdf --fail-on-gain high
+# Word redline with tracked changes — a counter-draft you can send back:
+redline review contract.pdf --format docx   # writes contract.redline.docx
 ```
 
 ## Comparing negotiation rounds
@@ -70,7 +72,7 @@ redline compare examples/compare-round1.md examples/compare-round2.md
 
 1. A **playbook** (`src/redline/playbooks/saas-vendor.yaml`) declares rules: severity, plain-language explanation, and checks (`requires_any`, `forbids_any`, `forbids_unless`, `max_value`).
 2. The **review engine** runs every rule against the contract text and collects findings with excerpts.
-3. Findings render four ways: a **markdown memo** (default), **JSON** (`--format json`) for CI gates, a **redline diff** (`--format diff`) — each finding as a unified-diff hunk with the flagged contract language as `-` lines and quotable fallback clause language as `+` lines, ready to paste into your counter-draft — or a **self-contained HTML memo** (`--format html`), a single file with inline CSS (no JS, no network) you can email to your attorney or save as a PDF from the browser.
+3. Findings render five ways: a **markdown memo** (default), **JSON** (`--format json`) for CI gates, a **redline diff** (`--format diff`) — each finding as a unified-diff hunk with the flagged contract language as `-` lines and quotable fallback clause language as `+` lines, ready to paste into your counter-draft — a **Word redline** (`--format docx`), the full contract as a `.docx` with each finding's flagged language struck through and the fallback inserted as real tracked changes (open Review → All Markup to accept/reject each edit, then send it back), or a **self-contained HTML memo** (`--format html`), a single file with inline CSS (no JS, no network) you can email to your attorney or save as a PDF from the browser.
 
 Every rule carries a `fallback:` field: concrete, quotable clause language — not just advice — so the diff view gives you something you can actually propose back.
 

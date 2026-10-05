@@ -5,6 +5,17 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline review --format docx`: Word redline export with real tracked
+  changes. The full contract is written to `<contract>.redline.docx` with
+  each finding's flagged language struck through (`w:del`) and the
+  playbook's quotable fallback language inserted after it (`w:ins`), so the
+  file opens in Word ready for Review → All Markup accept/reject — a
+  counter-draft you can send back, not just a memo. Missing-clause findings
+  (no excerpt) become tracked insertions under a "Proposed additions"
+  section; every finding is also listed in a summary table with severity,
+  rationale, and proposed language. Works for single files and batch
+  directories (one `.redline.docx` per contract); `--fail-on` /
+  `--fail-below` still apply. 10 new tests; full suite 379 passed, 1 skipped.
 - Optional LLM second reader: `redline review --second-reader <model>`
   (e.g. `gpt-4o-mini`) re-reads the contract against the same playbook after
   the deterministic engine. Rule hits the model independently flags are
