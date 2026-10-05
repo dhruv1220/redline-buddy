@@ -1,5 +1,10 @@
 # Releasing redline-buddy to PyPI
 
+Releases publish from GitHub Actions via PyPI Trusted Publishing (OIDC) — no
+API tokens, no pasting tokens in chat. Pushing a `v*` tag runs
+`.github/workflows/pypi-publish.yml`, which tests, builds, checks the
+distributions with `twine check`, and publishes to PyPI.
+
 The package is publish-ready: `python -m build` produces an sdist + wheel and
 `twine check` passes. Bundled playbooks ship inside the wheel via
 `importlib.resources` (`redline.playbook.bundled_playbook_path`), so
@@ -7,29 +12,32 @@ The package is publish-ready: `python -m build` produces an sdist + wheel and
 `pip install redline-buddy` — verified from both the wheel and the sdist in
 clean virtualenvs.
 
-## One-time setup (needs Dhruv)
+## One-time setup (needs Dhruv, ~4 minutes)
 
-1. Create an account at https://pypi.org and enable 2FA.
-2. Generate an API token (Account settings → API tokens). For the very first
-   upload the project won't appear in the scope dropdown (it doesn't exist yet),
-   so scope the first token to "Entire account"; once the first release is live,
-   mint project-scoped tokens for `redline-buddy` and retire the broad one.
-3. The token is supplied transiently at release time (pasted in chat) and used
-   once via `TWINE_USERNAME=__token__` / `TWINE_PASSWORD` env vars. It is never
-   written to `~/.pypirc`, files, or memory — do not persist it anywhere.
+1. Add the release workflow: in the GitHub web UI, go to redline-buddy →
+   Add file → Create new file, set the path to
+   `.github/workflows/pypi-publish.yml`, and paste in the contents of
+   `docs/pypi-publish.yml` (kept in sync with the workflow). The filename must
+   match exactly — PyPI's trusted-publisher config references it.
+2. Register the trusted publisher on PyPI: go to
+   https://pypi.org/manage/project/redline-buddy/settings/publishing/ →
+   "Add a new trusted publisher" with Owner `dhruv1220`, Repository
+   `redline-buddy`, Workflow name `pypi-publish.yml`, and an empty
+   Environment name.
+3. Once the first OIDC publish succeeds, retire any PyPI API tokens for the
+   project (Account settings → API tokens) — they are redundant.
+
+Note: the workflow fails with an OIDC error until step 2 is done — expected,
+not a bug.
 
 ## Cutting a release
 
 ```bash
-cd ~/workspace/projects/redline-buddy
 # 1. Bump the version in pyproject.toml and add a CHANGELOG entry under a
 #    dated heading (Keep a Changelog format, matching existing entries).
-# 2. Full check:
-python -m pytest -q && python -m build && python -m twine check dist/*
-# 3. Upload:
-python -m twine upload dist/*
-# 4. Tag and push the release commit:
-#    (via the gh.py API flow used for this repo, or git)
+# 2. Commit, tag, and push — the workflow does the rest:
+git tag v0.2.0 && git push origin v0.2.0
+# 3. Watch the "Publish to PyPI" workflow run on the tag; no token needed.
 ```
 
 ## Pre-publish sanity checklist
