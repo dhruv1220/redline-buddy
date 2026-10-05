@@ -1,0 +1,120 @@
+name: software-licensor
+version: 1
+description: Licensor-side review of perpetual software license agreements (you're licensing your software out).
+rules:
+  - id: liability-cap
+    title: No limitation of liability
+    severity: high
+    description: The agreement has no clause capping the licensor's liability.
+    why: Enterprise licensees sue for consequential losses (their downtime, their lost deals) that dwarf your license fee.
+    suggestion: Cap aggregate liability at the license fees paid, carving out IP infringement and confidentiality breaches.
+    fallback: "Neither party's aggregate liability shall exceed the license fees paid under this Agreement in the twelve (12) months preceding the claim, excluding infringement of intellectual property rights and breaches of confidentiality."
+    check:
+      kind: requires_any
+      patterns:
+        - limitation of liability
+        - liability.{0,40}shall not exceed
+        - cap.{0,30}liabilit
+        - liabilit.{0,30}cap
+
+  - id: warranty-disclaimer
+    title: No warranty disclaimer
+    severity: high
+    description: The license has no "as-is" disclaimer of implied warranties.
+    why: Without it, implied warranties of merchantability and fitness attach by default in many jurisdictions — you're warranting perfection.
+    suggestion: Disclaim all implied warranties to the maximum extent permitted by law.
+    fallback: "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE."
+    check:
+      kind: requires_any
+      patterns:
+        - as is
+        - disclaim.{0,30}warrant
+        - no warranty
+        - without warranty of any kind
+
+  - id: sublicense-scope
+    title: Unrestricted sublicensing or redistribution
+    severity: high
+    description: The licensee may sublicense, redistribute, or resell without your consent.
+    why: One license becomes unlimited distribution — your per-seat pricing collapses and you lose control of where the software runs.
+    suggestion: Prohibit sublicensing and redistribution without prior written consent.
+    fallback: "Licensee shall not sublicense, redistribute, resell, or otherwise transfer the Software or any rights therein without Licensor's prior written consent."
+    check:
+      kind: forbids_unless
+      patterns:
+        - sublicens
+        - redistribut
+        - resell.{0,20}software
+      unless_any:
+        - prior written consent
+        - with.{0,20}consent of licensor
+
+  - id: improvements-ownership
+    title: Licensee owns improvements and modifications
+    severity: high
+    description: Modifications, customizations, or derivative works vest in the licensee.
+    why: Every customer improvement should flow back into your product — assigning them away fragments your IP across customers.
+    suggestion: Retain ownership of all modifications and derivative works; grant the licensee a license back if needed.
+    fallback: "All modifications, customizations, and derivative works of the Software, whether made by Licensor or Licensee, are owned exclusively by Licensor."
+    check:
+      kind: forbids_any
+      patterns:
+        - improvements.{0,30}vest
+        - modifications.{0,30}assign.{0,20}licensee
+        - derivative works.{0,30}owned by licensee
+        - work product.{0,30}vest.{0,20}licensee
+
+  - id: ip-indemnity
+    title: Overbroad IP indemnity to licensee
+    severity: medium
+    description: The licensor indemnifies beyond third-party IP infringement claims.
+    why: An any-and-all-claims indemnity makes you the insurer of how the licensee deploys your software.
+    suggestion: Limit licensor indemnity to third-party IP infringement claims.
+    fallback: "Licensor shall indemnify Licensee against third-party claims alleging that the Software infringes intellectual property rights, and against no other claims under this Section."
+    check:
+      kind: forbids_unless
+      patterns:
+        - licensor.{0,60}indemnif
+      unless_any:
+        - infringement
+
+  - id: license-audit
+    title: No license-compliance verification right
+    severity: medium
+    description: The agreement gives you no right to verify the licensee's deployment count or usage.
+    why: Shelfware audits are how licensors discover 500 installs on a 50-seat license — without the right, you're relying on trust.
+    suggestion: Add an annual usage-verification right on reasonable notice.
+    fallback: "Licensor may verify Licensee's compliance with the licensed seat count once per twelve (12) months on thirty (30) days' written notice."
+    check:
+      kind: requires_any
+      patterns:
+        - audit.{0,30}(usage|deployment|compliance)
+        - verify.{0,30}compliance
+        - certif.{0,30}deployment
+
+  - id: termination-breach
+    title: No termination for licensee breach
+    severity: medium
+    description: You cannot terminate if the licensee breaches (non-payment, license abuse).
+    why: A perpetual license with no termination right is irrevocable in practice — even against a licensee who stops paying.
+    suggestion: Add termination for material breach uncured within 30 days.
+    fallback: "Licensor may terminate this Agreement upon thirty (30) days' written notice if Licensee materially breaches and fails to cure within the notice period."
+    check:
+      kind: requires_any
+      patterns:
+        - terminat.{0,40}material breach
+        - terminat.{0,40}breach.{0,30}cure
+
+  - id: export-control
+    title: No export-control compliance clause
+    severity: low
+    description: The license has no export-control or sanctions compliance obligation.
+    why: Software is dual-use; without the clause you have no contractual hook if the licensee ships it somewhere sanctioned.
+    suggestion: Require compliance with applicable export-control and sanctions laws.
+    fallback: "Licensee shall comply with all applicable export-control and economic sanctions laws and shall not export or re-export the Software in violation thereof."
+    check:
+      kind: requires_any
+      patterns:
+        - export.control
+        - export laws
+        - sanctions laws

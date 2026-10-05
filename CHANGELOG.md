@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `software-licensor` playbook: licensor-side review of perpetual software
+  license agreements — the mirror of `software-license` for teams licensing
+  their software out. 8 rules (no liability cap [high], no warranty
+  disclaimer [high], unrestricted sublicensing/redistribution [high],
+  licensee-owned improvements [high], overbroad IP indemnity [medium], no
+  license-compliance verification right [medium], no termination for breach
+  [medium], no export-control clause [low]), each with quotable fallback
+  language; sample fixture fires 8/8, clean fixture fires 0.
 - `saas-provider` playbook: provider-side review of SaaS / subscription
   agreements — the mirror of `saas-vendor` for founders selling software,
   not just buying it. 8 rules (no liability cap [high], customer
