@@ -28,6 +28,7 @@ from .playbook import (
     bundled_playbooks_dir,
     load_playbook,
 )
+from .redline_docx import render_redline_docx
 from .review import SEVERITY_RANK, review_contract
 from .scaffold import NEXT_STEPS, scaffold_playbook
 from .score import grade_worse_than, risk_grade, risk_score
@@ -90,6 +91,30 @@ def _resolve_playbook(name_or_path: str) -> Path:
     return p  # not found: load_playbook raises the clear error
 
 
+def _write_redline_docx(
+    contract_path: Path,
+    text: str,
+    playbook_name: str | None,
+    findings: list,
+    rule_count: int | None,
+) -> Path:
+    """Render a tracked-changes Word redline and write it next to cwd.
+
+    Returns the written path. ``.docx`` can't go to stdout, so unlike the
+    other formats this one always writes a ``<stem>.redline.docx`` file.
+    """
+    data = render_redline_docx(
+        contract_path.name, text, playbook_name or "unknown", findings, rule_count
+    )
+    out = Path.cwd() / f"{contract_path.stem}.redline.docx"
+    n = 2
+    while out.exists():
+        out = Path.cwd() / f"{contract_path.stem}.redline-{n}.docx"
+        n += 1
+    out.write_bytes(data)
+    return out
+
+
 def cmd_review(args: argparse.Namespace) -> int:
     contract_path = Path(args.contract)
     if contract_path.is_dir():
@@ -148,6 +173,11 @@ def cmd_review(args: argparse.Namespace) -> int:
                 contract_path.name, playbook.name, findings, len(playbook.rules)
             )
         )
+    elif args.format == "docx":
+        out = _write_redline_docx(
+            contract_path, text, playbook.name, findings, len(playbook.rules)
+        )
+        print(f"wrote {out}")
     else:
         print(
             render_memo(
@@ -176,6 +206,7 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
         )
         return 2
     per_file_playbooks: dict[str, str] = {}
+    rule_counts: dict[str, int] = {}
     if args.playbook:
         # One playbook for the whole batch (explicit --playbook).
         texts: list[str] = []
@@ -190,6 +221,7 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
         results = _review_batch(contract_dir, playbook, ocr=args.ocr)
         header_playbook: str | None = playbook.name
         rule_count: int | None = len(playbook.rules)
+        rule_counts = {path.name: len(playbook.rules) for path in files}
     else:
         # Per-file auto-detection: each contract gets its own playbook,
         # so a mixed folder (MSA + DPA + NDA) is reviewed correctly.
@@ -209,6 +241,7 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
             if name not in playbooks:
                 playbooks[name] = load_playbook(bundled_playbook_path(name))
             results.append((path.name, review_contract(text, playbooks[name]), None))
+            rule_counts[path.name] = len(playbooks[name].rules)
         header_playbook = None
         rule_count = None
     if args.format == "json":
@@ -233,6 +266,22 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
                 print(f"# {name}\n\n⚠️ Skipped: {error}\n")
             else:
                 print(render_diff(name, pb_name, findings))
+    elif args.format == "docx":
+        for path in files:
+            try:
+                text = extract_text(path, ocr=args.ocr)
+            except IngestionError as exc:
+                print(f"warning: skipped {path.name}: {exc}", file=sys.stderr)
+                continue
+            entry = next((r for r in results if r[0] == path.name), None)
+            if entry is None or entry[2]:
+                continue
+            _, findings, _ = entry
+            pb_name = per_file_playbooks.get(path.name, header_playbook)
+            out = _write_redline_docx(
+                path, text, pb_name, findings, rule_counts.get(path.name)
+            )
+            print(f"wrote {out}")
     else:
         print(
             render_batch_memo(
@@ -452,11 +501,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     review.add_argument(
         "--format",
-        choices=("memo", "json", "diff", "html"),
+        choices=("memo", "json", "diff", "html", "docx"),
         default="memo",
         help="output format: human-readable memo (default), machine-readable JSON, "
-        "redline diff view (their language vs. your fallback), or self-contained "
-        "HTML memo for sharing with a human reviewer",
+        "redline diff view (their language vs. your fallback), self-contained "
+        "HTML memo for sharing with a human reviewer, or a Word redline with "
+        "tracked changes (writes <contract>.redline.docx)",
     )
     review.add_argument(
         "--fail-on",
