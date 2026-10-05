@@ -32,7 +32,8 @@ redline review contract.pdf --fail-below B || echo "risk gate failed"
 # minimal local web UI (paste text, pick a playbook, get the memo):
 redline serve
 # the web UI now shows playbook descriptions in the picker, one-click
-# "Copy fallback" buttons per finding, and severity filters on memos
+# "Copy fallback" buttons per finding, severity filters on memos, and a
+# "Download Word redline" link after every review
 # validate a playbook you wrote, optionally against a sample contract:
 redline validate my-playbook.yaml --sample examples/sample-msa.md
 # redline diff view: their language vs. your fallback, per finding:

@@ -9,16 +9,22 @@ from __future__ import annotations
 
 import html
 import http.server
+import re
 import urllib.parse
 from pathlib import Path
 
 from .ingest import IngestionError, extract_text
 from .memo import render_diff
 from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
+from .redline_docx import render_redline_docx
 from .review import review_contract
 from .score import risk_grade, risk_label, risk_score, severity_counts
 
 PLAYBOOKS_DIR = bundled_playbooks_dir()
+
+# The most recent successful review, so GET /download.docx can serve it.
+# Single-user local server: one slot is enough.
+_last_review: dict = {}
 
 PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><title>redline-buddy</title>
@@ -174,6 +180,29 @@ def review_to_html(
                              len(playbook.rules))
 
 
+def review_to_docx(
+    text: str, playbook_name: str, contract_name: str = "pasted contract"
+) -> bytes:
+    """Run a review and render the tracked-changes Word redline. Raises ValueError."""
+    pb_path = PLAYBOOKS_DIR / f"{playbook_name}.yaml"
+    try:
+        playbook = load_playbook(pb_path)
+    except PlaybookError as exc:
+        raise ValueError(f"bad playbook: {exc}") from exc
+    if not text.strip():
+        raise ValueError("paste some contract text or upload a file first")
+    findings = review_contract(text, playbook)
+    return render_redline_docx(
+        contract_name, text, playbook.name, findings, len(playbook.rules)
+    )
+
+
+def _download_filename(contract_name: str) -> str:
+    stem = Path(contract_name).stem or "contract"
+    safe = re.sub(r"[^\w\-. ]+", "_", stem).strip() or "contract"
+    return f"{safe}.redline.docx"
+
+
 def _parse_multipart(body: bytes, content_type: str):
     """Minimal multipart/form-data parser.
 
@@ -221,7 +250,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _send_docx(self, data: bytes, filename: str):
+        self.send_response(200)
+        self.send_header(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_GET(self):
+        if self.path == "/download.docx":
+            if not _last_review:
+                return self._send("<h1>no review yet — review a contract first</h1>", 404)
+            try:
+                data = review_to_docx(
+                    _last_review["text"],
+                    _last_review["playbook"],
+                    _last_review["name"],
+                )
+            except ValueError as exc:
+                return self._send(f"<h1>error: {html.escape(str(exc))}</h1>", 400)
+            return self._send_docx(data, _download_filename(_last_review["name"]))
         if self.path != "/":
             return self._send("<h1>not found</h1>", 404)
         self._send(page_html())
@@ -267,6 +319,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     Path(tmp.name).unlink(missing_ok=True)
                 contract_name = Path(filename).name
             result = review_to_html(text, playbook, fmt, contract_name)
+            _last_review.clear()
+            _last_review.update(
+                {"text": text, "playbook": playbook, "name": contract_name}
+            )
+            result += (
+                '<p><a href="/download.docx">⬇ Download Word redline '
+                "(.docx, tracked changes)</a></p>"
+            )
         except (ValueError, IngestionError) as exc:
             result = f'<div class="warn">⚠️ {html.escape(str(exc))}</div>'
         self._send(page_html(result, playbook))

@@ -5,6 +5,10 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline serve` now offers a "Download Word redline" link after every
+  review: `GET /download.docx` serves the last review as a tracked-changes
+  `.docx` (same renderer as `--format docx`), as a file download. 5 new
+  tests; full suite 391 passed, 1 skipped.
 - `redline compare --format docx`: Word redline of a negotiation round.
   Writes `<old>-vs-<new>.redline.docx` with the new draft's gained and
   reworded flags as tracked changes (their round-2 language struck,

@@ -175,3 +175,76 @@ def test_empty_post_warns():
     status, page = _post("/review", body, ctype)
     assert status == 200
     assert "paste some contract text or upload a file" in page
+
+
+# --- Word redline download -------------------------------------------------
+
+
+def _get(path: str) -> tuple[int, dict, bytes]:
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        conn = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=10)
+        conn.request("GET", path)
+        resp = conn.getresponse()
+        return resp.status, dict(resp.getheaders()), resp.read()
+    finally:
+        server.shutdown()
+        thread.join()
+
+
+def test_review_to_docx_returns_valid_docx():
+    import io
+    import zipfile
+
+    from redline.serve import review_to_docx
+
+    data = review_to_docx(OFFER, "offer-letter", "offer.md")
+    xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
+    assert "<w:del " in xml or "<w:ins " in xml
+
+
+def test_review_to_docx_rejects_bad_input():
+    from redline.serve import review_to_docx
+
+    with pytest.raises(ValueError):
+        review_to_docx("   ", "offer-letter")
+
+
+def test_download_filename_sanitized():
+    from redline.serve import _download_filename
+
+    assert _download_filename("contract.md") == "contract.redline.docx"
+    assert _download_filename("pasted contract") == "pasted contract.redline.docx"
+    assert _download_filename("../../evil.md") == "evil.redline.docx"
+
+
+def test_download_docx_without_review_404s():
+    from redline.serve import _last_review
+
+    _last_review.clear()
+    status, _, _ = _get("/download.docx")
+    assert status == 404
+
+
+def test_download_docx_after_review():
+    import io
+    import zipfile
+
+    body, ctype = _multipart(
+        {"text": OFFER, "playbook": "offer-letter", "format": "memo"}, {}
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "/download.docx" in page
+    status, headers, data = _get("/download.docx")
+    assert status == 200
+    assert headers.get("Content-Type", "").startswith(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    assert 'attachment; filename="pasted contract.redline.docx"' in headers.get(
+        "Content-Disposition", ""
+    )
+    xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
+    assert "<w:del " in xml or "<w:ins " in xml
