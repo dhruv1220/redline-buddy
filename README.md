@@ -62,7 +62,10 @@ paragraph level and re-runs the playbook on both, reporting:
 Use `--format json` for machine-readable output and `--fail-on-gain high`
 as a CI gate: fail the pipeline when a new round introduces new red flags at
 or above a severity. Add `--format html` for a shareable comparison page
-you can send to your attorney. Try it on the bundled example:
+you can send to your attorney, or `--format docx` for a Word redline of the
+new draft — gained and reworded flags as tracked changes, concessions won,
+and paragraph-level text changes, ready to send back as your counter to
+their round. Try it on the bundled example:
 
 ```bash
 redline compare examples/compare-round1.md examples/compare-round2.md

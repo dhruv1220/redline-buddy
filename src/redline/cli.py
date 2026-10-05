@@ -28,7 +28,7 @@ from .playbook import (
     bundled_playbooks_dir,
     load_playbook,
 )
-from .redline_docx import render_redline_docx
+from .redline_docx import render_compare_docx, render_redline_docx
 from .review import SEVERITY_RANK, review_contract
 from .scaffold import NEXT_STEPS, scaffold_playbook
 from .score import grade_worse_than, risk_grade, risk_score
@@ -91,6 +91,15 @@ def _resolve_playbook(name_or_path: str) -> Path:
     return p  # not found: load_playbook raises the clear error
 
 
+def _unique_docx_path(stem: str) -> Path:
+    out = Path.cwd() / f"{stem}.redline.docx"
+    n = 2
+    while out.exists():
+        out = Path.cwd() / f"{stem}.redline-{n}.docx"
+        n += 1
+    return out
+
+
 def _write_redline_docx(
     contract_path: Path,
     text: str,
@@ -106,11 +115,7 @@ def _write_redline_docx(
     data = render_redline_docx(
         contract_path.name, text, playbook_name or "unknown", findings, rule_count
     )
-    out = Path.cwd() / f"{contract_path.stem}.redline.docx"
-    n = 2
-    while out.exists():
-        out = Path.cwd() / f"{contract_path.stem}.redline-{n}.docx"
-        n += 1
+    out = _unique_docx_path(contract_path.stem)
     out.write_bytes(data)
     return out
 
@@ -386,6 +391,10 @@ def cmd_compare(args: argparse.Namespace) -> int:
         print(render_compare_json(cmp))
     elif args.format == "html":
         print(render_compare_html(cmp))
+    elif args.format == "docx":
+        out = _unique_docx_path(f"{old_path.stem}-vs-{new_path.stem}")
+        out.write_bytes(render_compare_docx(cmp, new_text, len(playbook.rules)))
+        print(f"wrote {out}")
     else:
         print(render_compare_memo(cmp))
     if args.fail_on_gain:
@@ -584,10 +593,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compare.add_argument(
         "--format",
-        choices=("memo", "json", "html"),
+        choices=("memo", "json", "html", "docx"),
         default="memo",
         help="output format: human-readable memo (default), machine-readable "
-        "JSON, or self-contained HTML for sharing with a human reviewer",
+        "JSON, self-contained HTML for sharing with a human reviewer, or a "
+        "Word redline with tracked changes (writes <old>-vs-<new>.redline.docx)",
     )
     compare.add_argument(
         "--fail-on-gain",
