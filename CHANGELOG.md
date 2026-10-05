@@ -5,6 +5,12 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline compare --format docx`: Word redline of a negotiation round.
+  Writes `<old>-vs-<new>.redline.docx` with the new draft's gained and
+  reworded flags as tracked changes (their round-2 language struck,
+  fallback inserted), a "Concessions won" table for resolved flags, the
+  paragraph-level text changes as tracked changes, and the new draft's
+  findings summary. 7 new tests; full suite 386 passed, 1 skipped.
 - `redline review --format docx`: Word redline export with real tracked
   changes. The full contract is written to `<contract>.redline.docx` with
   each finding's flagged language struck through (`w:del`) and the

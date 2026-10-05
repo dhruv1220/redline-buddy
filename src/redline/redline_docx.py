@@ -19,6 +19,7 @@ from __future__ import annotations
 import io
 import re
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from docx import Document
 from docx.oxml import OxmlElement
@@ -27,6 +28,9 @@ from docx.text.paragraph import Paragraph
 
 from .review import Finding
 from .score import risk_label, severity_counts
+
+if TYPE_CHECKING:
+    from .compare import Comparison
 
 REVISION_AUTHOR = "redline-buddy"
 
@@ -207,35 +211,28 @@ def _add_finding_row(table, finding: Finding) -> None:
     cells[3].text = fallback or "(no suggested language — see above)"
 
 
-def render_redline_docx(
-    contract_name: str,
+_TRACKED_NOTE = (
+    "Deletions are struck through; insertions are underlined. In Word, "
+    "use Review → All Markup to accept or reject each edit."
+)
+
+
+def _render_tracked_body(
+    doc: Document,
     text: str,
-    playbook_name: str,
     findings: list[Finding],
-    rule_count: int | None = None,
-) -> bytes:
-    """Build a tracked-changes Word redline of the reviewed contract.
+    date: str,
+    heading: str,
+) -> tuple[list[Finding], list[Finding]]:
+    """Render ``text`` with finding excerpts struck and fallbacks inserted.
 
-    Returns the ``.docx`` file bytes; the caller decides where to write them.
+    Returns ``(additions, orphans)`` for the caller to place in follow-on
+    sections: findings with no excerpt (missing clauses) and findings whose
+    excerpt couldn't be located verbatim.
     """
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    doc = Document()
-    doc.core_properties.title = f"Redline: {contract_name}"
-    doc.core_properties.author = REVISION_AUTHOR
-
-    doc.add_heading(f"Redline: {contract_name}", level=1)
-    doc.add_paragraph(_risk_line(findings, rule_count))
-    doc.add_paragraph(f"Playbook: {playbook_name} — {len(findings)} finding(s).")
-    disclaimer = doc.add_paragraph()
-    disclaimer.add_run(DISCLAIMER).italic = True
-
     edits, additions, orphans = _plan_edits(text, findings)
-
-    doc.add_heading("Redlined contract — tracked changes", level=2)
-    doc.add_paragraph(
-        "Deletions are struck through; insertions are underlined. In Word, "
-        "use Review → All Markup to accept or reject each edit."
-    )
+    doc.add_heading(heading, level=2)
+    doc.add_paragraph(_TRACKED_NOTE)
     for para_text, para_offset in _split_paragraphs(text):
         para_end = para_offset + len(para_text)
         # An excerpt can span a blank line in the raw text (excerpts are
@@ -265,27 +262,38 @@ def render_redline_docx(
             cursor = max(cursor, re_)
         if cursor < len(para_text):
             _append_runs(p, para_text[cursor:], "text", REVISION_AUTHOR, date)
+    return additions, orphans
 
-    if additions:
-        doc.add_heading("Proposed additions", level=2)
-        doc.add_paragraph(
-            "These clauses are missing from the contract. Each is inserted "
-            "below as a tracked change — place it in the right section "
-            "before sending."
-        )
-        for finding in additions:
-            badge = _SEVERITY_LABEL.get(finding.severity, finding.severity.upper())
-            doc.add_heading(f"[{badge}] {finding.title}", level=3)
-            if finding.why:
-                doc.add_paragraph(finding.why)
-            fallback = finding.fallback or finding.suggestion
-            p = doc.add_paragraph()
-            if fallback:
-                _append_runs(p, fallback, "ins", REVISION_AUTHOR, date)
-            else:
-                p.add_run("(no suggested language — see the summary table)")
 
-    doc.add_heading("Findings summary", level=2)
+def _render_additions(doc: Document, additions: list[Finding], date: str) -> None:
+    if not additions:
+        return
+    doc.add_heading("Proposed additions", level=2)
+    doc.add_paragraph(
+        "These clauses are missing from the contract. Each is inserted "
+        "below as a tracked change — place it in the right section "
+        "before sending."
+    )
+    for finding in additions:
+        badge = _SEVERITY_LABEL.get(finding.severity, finding.severity.upper())
+        doc.add_heading(f"[{badge}] {finding.title}", level=3)
+        if finding.why:
+            doc.add_paragraph(finding.why)
+        fallback = finding.fallback or finding.suggestion
+        p = doc.add_paragraph()
+        if fallback:
+            _append_runs(p, fallback, "ins", REVISION_AUTHOR, date)
+        else:
+            p.add_run("(no suggested language — see the summary table)")
+
+
+def _render_summary_table(
+    doc: Document,
+    findings: list[Finding],
+    orphans: list[Finding],
+    heading: str = "Findings summary",
+) -> None:
+    doc.add_heading(heading, level=2)
     if not findings:
         doc.add_paragraph("No red flags — nothing to redline.")
     else:
@@ -307,6 +315,116 @@ def render_redline_docx(
                 + " could not be located verbatim in the extracted text, so "
                 "it is not marked inline — see the proposed language above."
             )
+def render_redline_docx(
+    contract_name: str,
+    text: str,
+    playbook_name: str,
+    findings: list[Finding],
+    rule_count: int | None = None,
+) -> bytes:
+    """Build a tracked-changes Word redline of the reviewed contract.
+
+    Returns the ``.docx`` file bytes; the caller decides where to write them.
+    """
+    date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    doc = Document()
+    doc.core_properties.title = f"Redline: {contract_name}"
+    doc.core_properties.author = REVISION_AUTHOR
+
+    doc.add_heading(f"Redline: {contract_name}", level=1)
+    doc.add_paragraph(_risk_line(findings, rule_count))
+    doc.add_paragraph(f"Playbook: {playbook_name} — {len(findings)} finding(s).")
+    disclaimer = doc.add_paragraph()
+    disclaimer.add_run(DISCLAIMER).italic = True
+
+    additions, orphans = _render_tracked_body(
+        doc, text, findings, date, "Redlined contract — tracked changes"
+    )
+    _render_additions(doc, additions, date)
+    _render_summary_table(doc, findings, orphans)
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
+def render_compare_docx(
+    cmp: Comparison,
+    new_text: str,
+    rule_count: int | None = None,
+) -> bytes:
+    """Build a tracked-changes Word redline of a negotiation round.
+
+    The new draft is rendered with gained and reworded findings as tracked
+    changes (their round-2 language struck, fallback inserted), followed by
+    the concessions won, the paragraph-level text changes, and the new
+    draft's findings summary. Returns the ``.docx`` file bytes.
+    """
+    date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    doc = Document()
+    doc.core_properties.title = f"Redline compare: {cmp.old_name} → {cmp.new_name}"
+    doc.core_properties.author = REVISION_AUTHOR
+
+    doc.add_heading(f"Redline compare: {cmp.old_name} → {cmp.new_name}", level=1)
+    movement = []
+    if cmp.gained:
+        movement.append(f"{len(cmp.gained)} new flag(s)")
+    if cmp.resolved:
+        movement.append(f"{len(cmp.resolved)} resolved")
+    if cmp.reworded:
+        movement.append(f"{len(cmp.reworded)} reworded")
+    doc.add_paragraph(
+        f"Risk: {risk_label(cmp.findings_old)} → {risk_label(cmp.findings_new)}"
+        + (f" — {', '.join(movement)}." if movement else " — no finding changes.")
+    )
+    doc.add_paragraph(f"Playbook: {cmp.playbook_name}.")
+    disclaimer = doc.add_paragraph()
+    disclaimer.add_run(DISCLAIMER).italic = True
+
+    flagged = list(cmp.gained) + [r.after for r in cmp.reworded]
+    additions, orphans = _render_tracked_body(
+        doc, new_text, flagged, date, "Round redline — new and reworded flags"
+    )
+    _render_additions(doc, additions, date)
+
+    if cmp.resolved:
+        doc.add_heading("Concessions won — resolved flags", level=2)
+        doc.add_paragraph(
+            "These fired on the earlier draft and no longer fire — "
+            "their language was fixed or dropped."
+        )
+        table = doc.add_table(rows=1, cols=3)
+        table.style = "Table Grid"
+        hdr = table.rows[0].cells
+        hdr[0].text, hdr[1].text, hdr[2].text = (
+            "Severity",
+            "Finding",
+            "Why it mattered",
+        )
+        for finding in cmp.resolved:
+            cells = table.add_row().cells
+            cells[0].text = _SEVERITY_LABEL.get(finding.severity, finding.severity.upper())
+            cells[1].text = finding.title
+            cells[2].text = finding.why
+
+    if cmp.changes:
+        doc.add_heading("Text changes", level=2)
+        doc.add_paragraph(
+            "Paragraph-level changes between the drafts, as tracked changes."
+        )
+        for change in cmp.changes:
+            p = doc.add_paragraph()
+            label = p.add_run(f"[{change.kind}] ")
+            label.bold = True
+            if change.kind == "added":
+                _append_runs(p, change.new, "ins", REVISION_AUTHOR, date)
+            elif change.kind == "removed":
+                _append_runs(p, change.old, "del", REVISION_AUTHOR, date)
+            else:
+                _append_runs(p, change.old, "del", REVISION_AUTHOR, date)
+                _append_runs(p, change.new, "ins", REVISION_AUTHOR, date)
+
+    _render_summary_table(doc, cmp.findings_new, orphans, heading="Findings summary — new draft")
 
     buf = io.BytesIO()
     doc.save(buf)
