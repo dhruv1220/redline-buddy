@@ -1,0 +1,118 @@
+name: employment-employer
+version: 1
+description: Employer-side review of employment agreements and offer letters (you're doing the hiring).
+rules:
+  - id: ip-assignment
+    title: No invention assignment clause
+    severity: high
+    description: The agreement has no invention / IP assignment clause.
+    why: Without it, the company may not own what its employees build — a diligence-killer in any fundraise or acquisition.
+    suggestion: Add a present-tense assignment of all work product and inventions.
+    fallback: "Employee hereby assigns to the Company all right, title, and interest in all inventions, work product, and intellectual property created within the scope of employment."
+    check:
+      kind: requires_any
+      patterns:
+        - assign.{0,30}inventions
+        - invention assignment
+        - work product.{0,20}assign
+        - intellectual property.{0,25}hereby assign
+
+  - id: confidentiality
+    title: No confidentiality clause
+    severity: high
+    description: The agreement has no confidentiality or non-disclosure obligation.
+    why: Trade secrets, customer lists, and roadmap details walk out the door with every departure unless they're contractually protected.
+    suggestion: Add a confidentiality clause covering proprietary and confidential information.
+    fallback: "Employee shall not disclose the Company's confidential and proprietary information during or after employment, and shall use it solely for Company business."
+    check:
+      kind: requires_any
+      patterns:
+        - confidential information
+        - non-disclosure
+        - proprietary information
+        - confidentiality.{0,20}obligation
+
+  - id: at-will
+    title: No at-will employment statement
+    severity: medium
+    description: The agreement doesn't state employment is at-will.
+    why: Without it, offer language about salary and role can be read as an implied fixed-term promise, complicating terminations.
+    suggestion: State clearly that employment is at-will and terminable by either party at any time.
+    fallback: "Employment is at-will and may be terminated by either party at any time, with or without cause or notice."
+    check:
+      kind: requires_any
+      patterns:
+        - at-will
+        - at will employment
+        - terminat.{0,25}at any time
+
+  - id: non-compete-overbroad
+    title: Non-compete clause included
+    severity: medium
+    description: The agreement contains a post-employment non-compete.
+    why: Non-competes are void in California and several other states — including one invites unenforceability fights and signals you haven't updated your templates.
+    suggestion: Drop the non-compete; rely on confidentiality plus a narrow non-solicitation clause.
+    fallback: "No post-employment non-competition restriction applies. Employee remains bound by the confidentiality and non-solicitation obligations above."
+    check:
+      kind: forbids_any
+      patterns:
+        - non-compete
+        - noncompete
+        - covenant not to compete
+        - not to compete.{0,30}(months|years)
+
+  - id: overtime-waiver
+    title: Overtime waiver for non-exempt role
+    severity: medium
+    description: The agreement purports to waive overtime.
+    why: Overtime rights generally can't be waived by agreement — the clause is unenforceable and a wage-claim magnet.
+    suggestion: Remove the waiver; classify correctly as exempt or non-exempt and pay accordingly.
+    fallback: "Nothing in this Agreement waives any right to overtime compensation where required by applicable law."
+    check:
+      kind: forbids_any
+      patterns:
+        - waive.{0,25}overtime
+        - no overtime.{0,20}(pay|compensation)
+        - exempt from overtime
+
+  - id: severance-release
+    title: Severance without a release of claims
+    severity: medium
+    description: Severance is promised without conditioning it on a release of claims.
+    why: Severance buys peace — without a signed release you're paying for nothing and can still be sued.
+    suggestion: Condition severance on execution of a general release of claims.
+    fallback: "Severance is conditioned on Employee's execution of a general release of claims in a form provided by the Company."
+    check:
+      kind: forbids_unless
+      patterns:
+        - severance
+      unless_any:
+        - release of claims
+        - general release
+
+  - id: arbitration
+    title: No arbitration agreement
+    severity: low
+    description: The agreement has no arbitration clause.
+    why: Without one, every employment dispute heads to court — slower, public, and far more expensive than arbitration.
+    suggestion: Add mutual binding arbitration for employment disputes.
+    fallback: "Any dispute arising from employment shall be resolved by binding arbitration under the applicable employment arbitration rules."
+    check:
+      kind: requires_any
+      patterns:
+        - arbitration
+        - arbitrate.{0,20}dispute
+
+  - id: non-solicitation
+    title: No non-solicitation clause
+    severity: low
+    description: The agreement has no non-solicitation of employees or customers.
+    why: Departing employees can immediately poach your team and clients; a narrow non-solicit is enforceable where non-competes aren't.
+    suggestion: Add a 12-month non-solicitation of employees and customers.
+    fallback: "For twelve (12) months after separation, Employee shall not solicit the Company's employees or customers."
+    check:
+      kind: requires_any
+      patterns:
+        - non-solicit
+        - solicit.{0,25}(employees|customers)
+        - no.{0,15}poaching

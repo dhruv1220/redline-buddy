@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `employment-employer` playbook: employer-side review of employment
+  agreements and offer letters — the mirror of `employment-agreement` for
+  founders doing the hiring. 8 rules (no invention assignment [high], no
+  confidentiality clause [high], no at-will statement [medium], included
+  non-compete [medium], overtime waiver [medium], severance without a
+  release [medium], no arbitration agreement [low], no non-solicitation
+  [low]), each with quotable fallback language; sample fixture fires 8/8,
+  clean fixture fires 0.
 - `commercial-tenant` playbook: tenant-side review of commercial (retail /
   office) leases for small businesses. 8 rules (personal guarantee [high],
   uncapped CAM / operating-expense pass-throughs [high], landlord
