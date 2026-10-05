@@ -1,0 +1,121 @@
+name: saas-provider
+version: 1
+description: Red-flag rules for reviewing SaaS / subscription agreements from the provider (vendor) side.
+rules:
+  - id: liability-cap
+    title: No limitation of liability
+    severity: high
+    description: The agreement has no clause capping the provider's liability.
+    why: Without a cap, one outage or data incident can expose you to damages far beyond the contract's value.
+    suggestion: Add a mutual cap at 12 months of fees paid, carving out IP infringement and confidentiality breaches.
+    fallback: "Neither party's aggregate liability shall exceed the fees paid in the twelve (12) months preceding the claim, excluding breaches of confidentiality and infringement of intellectual property rights."
+    check:
+      kind: requires_any
+      patterns:
+        - limitation of liability
+        - liability.{0,40}shall not exceed
+        - cap.{0,30}liabilit
+        - liabilit.{0,30}cap
+
+  - id: termination-convenience
+    title: Customer can terminate for convenience
+    severity: high
+    description: The customer may walk away mid-term without cause.
+    why: You staff, provision infrastructure, and turn away other business against a committed term — convenience termination strands those costs.
+    suggestion: Remove convenience termination, or require payment of the remaining term's fees on early exit.
+    fallback: "Customer may terminate for convenience only upon payment of all fees remaining for the then-current term; prepaid fees are non-refundable."
+    check:
+      kind: forbids_any
+      patterns:
+        - customer.{0,60}terminat.{0,30}convenience
+        - terminat.{0,50}without cause
+        - terminate.{0,50}for any reason
+
+  - id: sla-credits-uncapped
+    title: Service credits have no cap
+    severity: high
+    description: SLA credits are uncapped or can exceed the fees paid.
+    why: An uncapped credit clause turns a bad month into a full refund — or worse — with no relation to actual harm.
+    suggestion: Cap aggregate credits per month at a fixed percentage of that month's fees.
+    fallback: "Aggregate service credits in any calendar month shall not exceed ten percent (10%) of the subscription fees payable for that month."
+    check:
+      kind: forbids_unless
+      patterns:
+        - service credit
+        - sla.{0,30}credit
+      unless_any:
+        - credit.{0,40}shall not exceed
+        - credit.{0,40}capped at
+        - maximum.{0,25}credit
+
+  - id: ip-ownership
+    title: Customer claims ownership of provider IP
+    severity: high
+    description: The agreement assigns platform or deliverable IP to the customer, or deems it work for hire.
+    why: Your platform is the business. Assigning its IP — even "just the customizations" — to one customer destroys reuse and valuation.
+    suggestion: Retain all platform IP; grant the customer a license, and assign only truly bespoke deliverables if you must.
+    fallback: "Provider retains all right, title, and interest in and to the Service, including all intellectual property rights therein; nothing in this Agreement assigns any such rights to Customer."
+    check:
+      kind: forbids_any
+      patterns:
+        - work for hire
+        - work made for hire
+        - assign.{0,40}intellectual property
+        - intellectual property.{0,30}vest.{0,20}customer
+
+  - id: late-payment
+    title: No late-payment remedy
+    severity: medium
+    description: Overdue invoices carry no interest, fees, or suspension right.
+    why: Without teeth, "net 30" becomes "net whenever" — and chasing payment costs more than the invoice.
+    suggestion: Add monthly interest on overdue amounts plus a right to suspend for sustained non-payment.
+    fallback: "Overdue amounts bear interest at one and one-half percent (1.5%) per month; Provider may suspend the Service for non-payment continuing fifteen (15) days after written notice."
+    check:
+      kind: requires_any
+      patterns:
+        - late payment
+        - interest.{0,30}per month
+        - suspend.{0,40}non.?payment
+        - overdue.{0,30}interest
+
+  - id: price-uplift
+    title: No right to adjust pricing
+    severity: medium
+    description: Fees are locked with no contractual right to raise them at renewal.
+    why: Costs rise every year; without an uplift clause each renewal becomes a renegotiation you can lose.
+    suggestion: Reserve an annual uplift (e.g. up to 5%) on written notice before renewal.
+    fallback: "Provider may increase subscription fees once per calendar year by up to five percent (5%) upon sixty (60) days' written notice before the renewal date."
+    check:
+      kind: requires_any
+      patterns:
+        - price increase
+        - adjust.{0,30}fees
+        - uplift
+        - increase.{0,20}subscription fees
+
+  - id: indemnity-scope
+    title: Overbroad provider indemnity
+    severity: medium
+    description: The provider indemnifies the customer beyond IP infringement claims.
+    why: Indemnifying "any and all claims" makes you the insurer of the customer's business — limit it to what you control, typically third-party IP claims.
+    suggestion: Narrow provider indemnity to third-party IP infringement claims arising from the Service.
+    fallback: "Provider shall indemnify Customer against third-party claims alleging that the Service infringes intellectual property rights, and against no other claims under this Section."
+    check:
+      kind: forbids_unless
+      patterns:
+        - provider.{0,60}indemnif
+      unless_any:
+        - infringement
+
+  - id: audit-rights
+    title: Customer audit rights over provider books
+    severity: low
+    description: The customer may audit the provider's books and records.
+    why: Open-ended audits are disruptive and can expose cost structures and margins to the customer.
+    suggestion: Limit audits to once per year, on 30 days' notice, at customer expense, scoped to fee verification.
+    fallback: "Customer may audit records relating to fees charged under this Agreement no more than once per twelve (12) months, on thirty (30) days' written notice, during business hours, at Customer's expense."
+    check:
+      kind: forbids_any
+      patterns:
+        - audit.{0,40}(books|records)
+        - right to audit

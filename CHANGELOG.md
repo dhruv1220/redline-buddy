@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `saas-provider` playbook: provider-side review of SaaS / subscription
+  agreements — the mirror of `saas-vendor` for founders selling software,
+  not just buying it. 8 rules (no liability cap [high], customer
+  termination for convenience [high], uncapped SLA credits [high],
+  customer claims on provider IP [high], no late-payment remedy [medium],
+  no price-uplift right [medium], overbroad provider indemnity [medium],
+  customer audit rights over provider books [low]), each with quotable
+  fallback language; sample fixture fires 8/8, clean fixture fires 0.
 - `redline serve` now offers a "Download Word redline" link after every
   review: `GET /download.docx` serves the last review as a tracked-changes
   `.docx` (same renderer as `--format docx`), as a file download. 5 new
