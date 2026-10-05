@@ -1,0 +1,120 @@
+name: commercial-tenant
+version: 1
+description: Tenant-side review of commercial (retail / office) lease agreements for small businesses.
+rules:
+  - id: personal-guarantee
+    title: Personal guarantee required
+    severity: high
+    description: You must personally guarantee the lease.
+    why: A personal guarantee pierces the corporate veil — if the business fails, the landlord comes for your house and savings.
+    suggestion: Refuse the guarantee, cap it at 12 months' rent, or burn it off after 2 years of on-time payment.
+    fallback: "No personal guarantee is required. Alternatively, any guarantee is capped at twelve (12) months' Base Rent and burns off after twenty-four (24) months of timely payment."
+    check:
+      kind: forbids_any
+      patterns:
+        - personal guarant
+        - guaranty.{0,30}principal
+        - good guy guarant
+
+  - id: cam-uncapped
+    title: Uncapped CAM / operating-expense pass-throughs
+    severity: high
+    description: Common-area maintenance and operating expenses pass through with no cap.
+    why: Uncapped CAM turns a $5k/month lease into $8k — landlords have no incentive to control costs they pass through.
+    suggestion: Cap annual CAM increases (e.g. 5% controllable) and exclude capital expenditures.
+    fallback: "Annual increases in controllable Operating Expenses are capped at five percent (5%); capital expenditures are excluded from pass-throughs."
+    check:
+      kind: forbids_unless
+      patterns:
+        - common area maintenance
+        - operating expenses.{0,30}pass
+        - CAM charges
+        - triple net
+      unless_any:
+        - cap.{0,30}(CAM|operating)
+        - CAM.{0,30}cap
+        - controllable.{0,20}cap
+
+  - id: landlord-relocation
+    title: Landlord can relocate or terminate you
+    severity: high
+    description: The landlord may relocate your premises or terminate for redevelopment.
+    why: You build out the space and build foot traffic — then get moved to the dead corner of the center.
+    suggestion: Delete relocation rights, or require comparable space plus full moving and build-out costs.
+    fallback: "Landlord has no right to relocate Tenant or terminate for redevelopment; any approved relocation is at Landlord's sole cost including moving and tenant improvements."
+    check:
+      kind: forbids_any
+      patterns:
+        - relocat.{0,30}premises
+        - terminate.{0,40}redevelop
+        - recapture.{0,30}space
+
+  - id: assignment-restriction
+    title: No assignment or sublease right
+    severity: medium
+    description: You cannot assign the lease or sublease without landlord consent, with no reasonableness standard.
+    why: If you need to sell the business or downsize, an absolute consent right lets the landlord kill the deal or extract a fee.
+    suggestion: Consent not to be unreasonably withheld, conditioned, or delayed.
+    fallback: "Tenant may assign or sublease with Landlord's consent, not to be unreasonably withheld, conditioned, or delayed."
+    check:
+      kind: requires_any
+      patterns:
+        - assign.{0,40}consent.{0,40}unreasonably
+        - sublease.{0,40}unreasonably withheld
+        - assignment.{0,30}not be unreasonably
+
+  - id: renewal-option
+    title: No renewal option
+    severity: medium
+    description: The lease has no renewal option or extension right.
+    why: Without a renewal option, the landlord holds all leverage at expiry — renew at their price or lose your location and build-out.
+    suggestion: Add at least one 3–5 year renewal option at fair market rent with arbitration.
+    fallback: "Tenant has one (1) option to renew for five (5) years at the then-fair-market rent, determined by appraisal if the parties cannot agree."
+    check:
+      kind: requires_any
+      patterns:
+        - renewal option
+        - option to renew
+        - option to extend
+        - extend.{0,25}term.{0,20}option
+
+  - id: exclusivity
+    title: No protection against competing tenants
+    severity: medium
+    description: The landlord may lease nearby space to your direct competitors.
+    why: For retail and restaurants, a competitor opening two doors down can halve your revenue while your rent stays fixed.
+    suggestion: Add a radius or center exclusivity clause for your primary use.
+    fallback: "Landlord shall not lease space in the Center to a tenant whose primary business competes with Tenant's permitted use."
+    check:
+      kind: requires_any
+      patterns:
+        - exclusiv
+        - radius restriction
+        - non-compete.{0,30}center
+        - competing.{0,20}use.{0,20}prohibit
+
+  - id: structural-repairs
+    title: Tenant pays for structural repairs
+    severity: medium
+    description: Roof, foundation, and structural repairs fall on the tenant.
+    why: Structural capex belongs to the building owner — a $80k roof replacement can exceed a year's profit for a small tenant.
+    suggestion: Landlord responsible for roof, foundation, and structural elements.
+    fallback: "Landlord is responsible at its sole cost for the roof, foundation, and structural elements of the Building."
+    check:
+      kind: forbids_any
+      patterns:
+        - structural repairs.{0,40}tenant
+        - tenant.{0,40}structural repairs
+        - roof.{0,40}tenant.{0,20}responsib
+
+  - id: security-deposit
+    title: Excessive security deposit
+    severity: low
+    description: The security deposit exceeds two months' rent.
+    why: An oversized deposit is an interest-free loan to the landlord that you may wait months to recover.
+    suggestion: Cap the deposit at two months' rent, returnable within 30 days of surrender.
+    fallback: "The security deposit shall not exceed two (2) months' Base Rent and shall be returned within thirty (30) days after Tenant surrenders the Premises."
+    check:
+      kind: forbids_any
+      patterns:
+        - deposit.{0,30}(three|four|five|six|seven|eight|nine|ten|\d{2,}) months.{0,3}rent

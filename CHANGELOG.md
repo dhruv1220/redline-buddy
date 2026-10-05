@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `commercial-tenant` playbook: tenant-side review of commercial (retail /
+  office) leases for small businesses. 8 rules (personal guarantee [high],
+  uncapped CAM / operating-expense pass-throughs [high], landlord
+  relocation or redevelopment termination [high], no assignment/sublease
+  right [medium], no renewal option [medium], no competitor exclusivity
+  [medium], tenant pays for structural repairs [medium], excessive security
+  deposit [low]), each with quotable fallback language; sample fixture
+  fires 8/8, clean fixture fires 0.
 - `software-licensor` playbook: licensor-side review of perpetual software
   license agreements — the mirror of `software-license` for teams licensing
   their software out. 8 rules (no liability cap [high], no warranty
