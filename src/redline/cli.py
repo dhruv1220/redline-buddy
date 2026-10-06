@@ -12,6 +12,12 @@ from pathlib import Path
 
 from .compare import compare_contracts
 from .html import render_batch_html_memo, render_compare_html, render_html_memo
+from .hygiene import (
+    SEVERITY_RANK as HYGIENE_SEVERITY_RANK,
+    render_hygiene_json,
+    render_hygiene_text,
+    run_hygiene,
+)
 from .ingest import SUPPORTED_SUFFIXES, IngestionError, extract_text
 from .memo import (
     render_batch_json,
@@ -309,6 +315,31 @@ def _cmd_review_batch(contract_dir: Path, args: argparse.Namespace) -> int:
             not error
             and grade_worse_than(risk_grade(risk_score(findings)), args.fail_below)
             for _, findings, error in results
+        ):
+            return 1
+    return 0
+
+
+def cmd_hygiene(args: argparse.Namespace) -> int:
+    """Check a contract's drafting hygiene (defined terms, cross-references)."""
+    contract_path = Path(args.contract)
+    if contract_path.is_dir():
+        print("error: hygiene is single-file only", file=sys.stderr)
+        return 2
+    try:
+        text = extract_text(contract_path, ocr=args.ocr)
+    except IngestionError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    findings = run_hygiene(text)
+    if args.format == "json":
+        print(render_hygiene_json(contract_path.name, findings))
+    else:
+        print(render_hygiene_text(contract_path.name, findings))
+    if args.fail_on:
+        threshold = HYGIENE_SEVERITY_RANK[args.fail_on]
+        if any(
+            HYGIENE_SEVERITY_RANK.get(f.severity, 9) <= threshold for f in findings
         ):
             return 1
     return 0
@@ -654,6 +685,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="project root to scaffold into (default: current directory)",
     )
     new_playbook.set_defaults(func=cmd_new_playbook)
+
+    hygiene = sub.add_parser(
+        "hygiene",
+        help="check drafting hygiene: defined terms, cross-references, consistency",
+    )
+    hygiene.add_argument(
+        "contract",
+        help="path to a contract file (markdown, text, .docx, or .pdf)",
+    )
+    hygiene.add_argument(
+        "--ocr",
+        action="store_true",
+        help="run scanned/image-only PDF pages through Tesseract OCR "
+        "(requires the tesseract and pdftoppm system binaries)",
+    )
+    hygiene.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="output format: human-readable report (default) or machine-readable JSON",
+    )
+    hygiene.add_argument(
+        "--fail-on",
+        choices=("high", "medium", "low"),
+        default=None,
+        help="exit 1 (fail) when any finding is at or above this severity — "
+        "for CI gates (default: never fail)",
+    )
+    hygiene.set_defaults(func=cmd_hygiene)
     return parser
 
 

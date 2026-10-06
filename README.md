@@ -44,6 +44,10 @@ redline compare round1.pdf round2.pdf --playbook saas-vendor
 redline compare round1.pdf round2.pdf --fail-on-gain high
 # Word redline with tracked changes — a counter-draft you can send back:
 redline review contract.pdf --format docx   # writes contract.redline.docx
+# drafting-hygiene check — defined terms, cross-references, consistency:
+redline hygiene contract.pdf
+# fail CI when hygiene drops below medium:
+redline hygiene contract.pdf --fail-on medium
 ```
 
 ## Comparing negotiation rounds
@@ -71,6 +75,31 @@ their round. Try it on the bundled example:
 ```bash
 redline compare examples/compare-round1.md examples/compare-round2.md
 ```
+
+## Drafting hygiene
+
+Playbooks judge a contract's substance; `redline hygiene` judges its
+plumbing — whether the draft is internally consistent, regardless of which
+side you're on:
+
+- **dead definitions** — a term is defined but never used again,
+- **undefined terms** — a capitalized phrase is used 3+ times but never defined,
+- **inconsistent case** — a defined `Agreement` also appears as lowercase
+  `agreement`,
+- **defined twice** — the same term gets two definitions,
+- **dangling references** — `Section 7.3` or `Exhibit B` points at a target
+  that doesn't exist in the document,
+- **used before defined** — the reader meets the term before its definition.
+
+```bash
+redline hygiene contract.pdf                 # human-readable report
+redline hygiene contract.pdf --format json   # machine-readable, for CI gates
+redline hygiene contract.pdf --fail-on medium
+```
+
+Try it on the bundled example: `redline hygiene examples/hygiene-sample.md`.
+The checks are deterministic heuristics, not legal analysis — every finding
+links back to the exact line that triggered it, so review each one in context.
 
 ## How it works
 
