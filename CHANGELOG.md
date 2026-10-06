@@ -5,6 +5,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `home-improvement` playbook: homeowner-side review of renovation contracts.
+  8 rules (large upfront deposit [high], no lien waivers [high], no written
+  change-order process [medium], unstated permit responsibility [medium], no
+  completion date [medium], no workmanship warranty [medium], no homeowner
+  termination right [medium], no contractor insurance [low]), each with
+  quotable fallback language; sample fixture fires 8/8, clean fixture
+  fires 0.
 - `healthcare-services` playbook: provider-side (clinic/practice) review of
   healthcare services agreements with vendors handling PHI. 8 rules (missing
   HIPAA business associate agreement [high], no vendor breach-notification
