@@ -40,6 +40,7 @@ PAIRS = [
     ("dpa-processor", "clean-dpa-processor.md"),
     ("healthcare-services", "clean-healthcare-services.md"),
     ("home-improvement", "clean-home-improvement.md"),
+    ("nonprofit-grant", "clean-nonprofit-grant.md"),
     ("reseller-agreement", "clean-reseller-agreement.md"),
     ("software-escrow", "clean-software-escrow.md"),
     ("data-license-agreement", "clean-data-license-agreement.md"),

@@ -5,6 +5,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `nonprofit-grant` playbook: grantee-side (nonprofit) review of grant
+  agreements. 8 rules (vague clawback of disbursed funds [high], disallowed
+  indirect costs [medium], excessive reporting [medium], matching-funds
+  requirement [medium], funder-owned project IP [medium], funder termination
+  for convenience [medium], no carryover of unspent funds [low], key-person
+  contingency [low]), each with quotable fallback language; sample fixture
+  fires 8/8, clean fixture fires 0.
 - `redline serve` web UI: new drafting-hygiene mode — paste or upload a
   contract and get the `redline hygiene` report (defined terms,
   cross-references, consistency) in the browser, with severity filters.

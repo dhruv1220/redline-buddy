@@ -1,0 +1,128 @@
+name: nonprofit-grant
+version: 1
+description: Grantee-side (nonprofit) review of grant agreements with foundations and other funders.
+rules:
+  - id: clawback
+    title: Vague clawback of disbursed funds
+    severity: high
+    description: The funder can demand repayment of grant funds already disbursed, on vague grounds.
+    why: A demand-triggered clawback turns spent program dollars into a surprise liability — money you've already paid out as salaries and rent.
+    suggestion: Limit repayment to unspent funds, or tie it to specific breaches with cure rights.
+    fallback: "Grantee's repayment obligation, if any, shall be limited to unspent grant funds and shall apply only after written notice and a thirty (30) day cure period."
+    check:
+      kind: forbids_any
+      patterns:
+        - repay.{0,40}grant funds
+        - refund.{0,40}disbursed
+        - claw.?back
+
+  - id: no-indirect-costs
+    title: Indirect costs disallowed
+    severity: medium
+    description: The grant disallows indirect (overhead) costs entirely.
+    why: Rent, accounting, and insurance don't stop during a grant — zero overhead means the nonprofit subsidizes the funder's program from other donations.
+    suggestion: Allow the federally negotiated indirect cost rate, or at minimum the 10% de minimis rate.
+    fallback: "Grantee may recover indirect costs at its federally negotiated indirect cost rate, or at the ten percent (10%) de minimis rate if it has no negotiated rate."
+    check:
+      kind: forbids_unless
+      patterns:
+        - no indirect costs
+        - indirect costs.{0,20}(unallowable|not allowed)
+        - overhead.{0,20}unallowable
+      unless_any:
+        - negotiated indirect cost rate
+        - nicra
+        - de minimis
+
+  - id: reporting-burden
+    title: Excessive reporting requirements
+    severity: medium
+    description: The grant demands monthly (or more frequent) narrative and financial reports.
+    why: Monthly reporting on a small grant can cost more staff time than the grant is worth — reporting should be proportionate to grant size.
+    suggestion: Push reporting to quarterly or annual, with templates provided by the funder.
+    fallback: "Grantee shall submit narrative and financial reports annually, using Funder's templates, within sixty (60) days after each grant year."
+    check:
+      kind: forbids_unless
+      patterns:
+        - monthly.{0,20}reports?
+        - reports?.{0,20}monthly
+      unless_any:
+        - annual
+        - semi-annual
+        - reasonable reporting
+
+  - id: matching-funds
+    title: Matching-funds requirement
+    severity: medium
+    description: The grantee must raise matching funds to unlock the grant.
+    why: A 1:1 match doubles your fundraising burden — and if the match falls short, you can lose the grant you already budgeted.
+    suggestion: Remove the match, or cap it and allow in-kind contributions to count.
+    fallback: "Any matching requirement shall not exceed twenty-five percent (25%) of the grant amount, and documented in-kind contributions shall count toward the match."
+    check:
+      kind: forbids_any
+      patterns:
+        - matching funds
+        - match.{0,30}grant.{0,20}(dollar|1:1|one-to-one)
+        - cost.?shar
+
+  - id: ip-ownership
+    title: Funder owns project IP
+    severity: medium
+    description: Work product and intellectual property created under the grant vest in the funder.
+    why: Your curriculum, software, or research becomes the foundation's asset — you can't reuse your own program materials without permission.
+    suggestion: Retain ownership and grant the funder a non-exclusive license.
+    fallback: "Grantee retains all ownership of work product and intellectual property created under this grant, and grants Funder a perpetual non-exclusive license to use it for charitable purposes."
+    check:
+      kind: forbids_unless
+      patterns:
+        - work product.{0,30}(funder|foundation)
+        - intellectual property.{0,30}(assign|vest).{0,20}funder
+        - deliverables.{0,30}owned by.{0,20}funder
+      unless_any:
+        - grantee retains
+        - license to funder
+        - non-exclusive license
+
+  - id: funder-termination
+    title: Funder termination for convenience
+    severity: medium
+    description: The funder can terminate the grant for convenience on short or no notice.
+    why: Staff hired against a three-year grant become your unfunded liability if the funder can walk away in week six.
+    suggestion: Require long notice (90 days) so you can wind down responsibly.
+    fallback: "Funder may terminate for convenience only on ninety (90) days' prior written notice, and Grantee may retain funds for non-cancelable commitments made before notice."
+    check:
+      kind: forbids_unless
+      patterns:
+        - funder.{0,40}terminat.{0,20}convenience
+        - terminat.{0,30}for convenience
+      unless_any:
+        - ninety days
+        - 90 days
+        - non-cancelable
+
+  - id: no-carryover
+    title: No carryover of unspent funds
+    severity: low
+    description: Unspent funds must be returned at year end instead of carrying into the next budget period.
+    why: Use-it-or-lose-it budgeting rewards December spending sprees over good stewardship — carryover lets timing follow the program, not the calendar.
+    suggestion: Allow carryover of unspent funds with funder approval.
+    fallback: "Grantee may carry over unspent funds to the next budget period with Funder's prior written approval, not to be unreasonably withheld."
+    check:
+      kind: forbids_any
+      patterns:
+        - unspent funds.{0,30}(return|lapse|forfeit)
+        - no carryover
+        - funds.{0,20}may not be carried
+
+  - id: key-person
+    title: Grant contingent on key personnel
+    severity: low
+    description: The grant is contingent on specific individuals staying employed.
+    why: People leave — tying funding to one executive director's continued employment puts the whole program at the mercy of one resignation.
+    suggestion: Replace with a notice-and-transition obligation instead of a funding contingency.
+    fallback: "If key personnel depart, Grantee shall notify Funder within thirty (30) days and propose a qualified replacement; funding continues during the transition."
+    check:
+      kind: forbids_any
+      patterns:
+        - contingent on.{0,40}(remaining|employment|retention)
+        - key personnel
