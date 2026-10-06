@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline hygiene`: a drafting-hygiene checker that judges a contract's
+  internal consistency, independent of any playbook — dead definitions,
+  undefined terms (capitalized phrase used 3+ times, never defined),
+  inconsistent case (`Agreement` defined but `agreement` used in lowercase),
+  terms defined twice, dangling `Section`/`Exhibit`/`Schedule`/`Appendix`
+  references, and terms used before they are defined. Text and JSON output,
+  `--fail-on` for CI gates; `examples/hygiene-sample.md` demonstrates all
+  six checks. 24 new tests.
 - `employment-employer` playbook: employer-side review of employment
   agreements and offer letters — the mirror of `employment-agreement` for
   founders doing the hiring. 8 rules (no invention assignment [high], no
