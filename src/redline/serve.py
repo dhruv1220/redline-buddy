@@ -13,6 +13,7 @@ import re
 import urllib.parse
 from pathlib import Path
 
+from .hygiene import run_hygiene
 from .ingest import IngestionError, extract_text
 from .memo import render_diff
 from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
@@ -34,6 +35,7 @@ textarea{{width:100%;height:14rem;font:0.85rem/1.4 monospace}}
 pre.diff{{background:#f6f8fa;padding:1rem;overflow-x:auto;font-size:0.8rem}}
 pre.diff .del{{color:#b42318}} pre.diff .add{{color:#067647}}
 .finding{{border:1px solid #ddd;border-radius:8px;padding:1rem;margin:1rem 0}}
+.checkid{{color:#666;font-size:0.85rem}}
 .sevfilter{{margin:1rem 0}}.sevfilter label{{margin-right:1rem}}
 .risk{{border-radius:8px;padding:0.75rem 1rem;margin:1rem 0;border:1px solid #ddd;border-left:6px solid #999;font-size:1.05rem}}
 .risk .gA{{color:#067647;font-weight:bold}} .risk .gB{{color:#3d7a2e;font-weight:bold}}
@@ -52,6 +54,10 @@ footer{{color:#666;font-size:0.8rem;margin-top:2rem}}
 <form method="post" action="/review" enctype="multipart/form-data">
 <label>Contract text (paste):<br><textarea name="text"></textarea></label><br><br>
 <label>…or upload a file: <input type="file" name="contract_file"></label><br><br>
+<label>Mode: <select name="mode">
+<option value="review">red-flag review</option>
+<option value="hygiene">drafting hygiene</option>
+</select></label>
 <label>Playbook: <select name="playbook">{options}</select></label>
 <label>View: <select name="format">
 <option value="memo">memo</option><option value="diff">redline diff</option>
@@ -180,6 +186,51 @@ def review_to_html(
                              len(playbook.rules))
 
 
+def hygiene_to_html(
+    text: str, contract_name: str = "pasted contract"
+) -> str:
+    """Run the drafting-hygiene checker and render the result fragment.
+
+    Raises ValueError on bad input.
+    """
+    if not text.strip():
+        raise ValueError("paste some contract text or upload a file first")
+    findings = run_hygiene(text)
+    counts: dict[str, int] = {}
+    for f in findings:
+        counts[f.severity] = counts.get(f.severity, 0) + 1
+    breakdown = ", ".join(
+        f"{n} {sev}" for sev, n in counts.items() if n
+    ) or "no findings"
+    blocks = [
+        f"<h2>Drafting-hygiene report: {html.escape(contract_name)} "
+        f"&mdash; {len(findings)} finding(s) ({html.escape(breakdown)})</h2>"
+    ]
+    if not findings:
+        blocks.append('<div class="finding">✅ <b>No hygiene issues.</b></div>')
+    else:
+        sevs = list(dict.fromkeys(f.severity for f in findings))
+        toggles = " ".join(
+            f'<label><input type="checkbox" data-sev-toggle="{html.escape(s)}" checked> '
+            f"{html.escape(s)}</label>"
+            for s in sevs
+        )
+        blocks.append(f'<div class="sevfilter">Show: {toggles}</div>')
+    for f in findings:
+        badge = _SEV.get(f.severity, f.severity.upper())
+        where = f" (line {f.line})" if f.line else ""
+        blocks.append(
+            f'<div class="finding" data-sev="{html.escape(f.severity)}">'
+            f'<span class="badge">{badge}</span> '
+            f"<b>{html.escape(f.title)}</b> "
+            f'<span class="checkid">{html.escape(f.check_id)}{html.escape(where)}</span>'
+            f"<p>{html.escape(f.detail)}</p>"
+            "</div>"
+        )
+    blocks.append(_RESULT_JS)
+    return "\n".join(blocks)
+
+
 def review_to_docx(
     text: str, playbook_name: str, contract_name: str = "pasted contract"
 ) -> bytes:
@@ -299,6 +350,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         playbook = fields.get("playbook", "saas-vendor") or "saas-vendor"
         fmt = fields.get("format", "memo") or "memo"
         ocr = fields.get("ocr") == "1"
+        mode = fields.get("mode", "review") or "review"
         contract_name = "pasted contract"
         uploaded = files.get("contract_file")
         try:
@@ -318,15 +370,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 finally:
                     Path(tmp.name).unlink(missing_ok=True)
                 contract_name = Path(filename).name
-            result = review_to_html(text, playbook, fmt, contract_name)
-            _last_review.clear()
-            _last_review.update(
-                {"text": text, "playbook": playbook, "name": contract_name}
-            )
-            result += (
-                '<p><a href="/download.docx">⬇ Download Word redline '
-                "(.docx, tracked changes)</a></p>"
-            )
+            if mode == "hygiene":
+                result = hygiene_to_html(text, contract_name)
+            else:
+                result = review_to_html(text, playbook, fmt, contract_name)
+                _last_review.clear()
+                _last_review.update(
+                    {"text": text, "playbook": playbook, "name": contract_name}
+                )
+                result += (
+                    '<p><a href="/download.docx">⬇ Download Word redline '
+                    "(.docx, tracked changes)</a></p>"
+                )
         except (ValueError, IngestionError) as exc:
             result = f'<div class="warn">⚠️ {html.escape(str(exc))}</div>'
         self._send(page_html(result, playbook))
