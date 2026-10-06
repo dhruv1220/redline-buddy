@@ -29,7 +29,8 @@ redline review contract.pdf --format json | jq '.finding_count'
 redline review contract.pdf --fail-on high || echo "contract gate failed"
 # fail CI when the risk grade drops below B:
 redline review contract.pdf --fail-below B || echo "risk gate failed"
-# minimal local web UI (paste text, pick a playbook, get the memo):
+# minimal local web UI (paste text, pick a playbook, get the memo —
+# or switch to drafting-hygiene mode):
 redline serve
 # the web UI now shows playbook descriptions in the picker, one-click
 # "Copy fallback" buttons per finding, severity filters on memos, and a

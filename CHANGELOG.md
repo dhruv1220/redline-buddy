@@ -5,6 +5,9 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline serve` web UI: new drafting-hygiene mode — paste or upload a
+  contract and get the `redline hygiene` report (defined terms,
+  cross-references, consistency) in the browser, with severity filters.
 - `home-improvement` playbook: homeowner-side review of renovation contracts.
   8 rules (large upfront deposit [high], no lien waivers [high], no written
   change-order process [medium], unstated permit responsibility [medium], no

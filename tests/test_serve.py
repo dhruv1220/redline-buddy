@@ -7,10 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from redline.serve import Handler, page_html, review_to_html
+from redline.serve import Handler, hygiene_to_html, page_html, review_to_html
 
 ROOT = Path(__file__).resolve().parent.parent
 OFFER = (ROOT / "examples" / "sample-offer.md").read_text(encoding="utf-8")
+HYGIENE_SAMPLE = (ROOT / "examples" / "hygiene-sample.md").read_text(encoding="utf-8")
 
 
 def test_review_to_html_memo_lists_findings():
@@ -248,3 +249,64 @@ def test_download_docx_after_review():
     )
     xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
     assert "<w:del " in xml or "<w:ins " in xml
+
+
+# --- Drafting-hygiene mode ---------------------------------------------------
+
+
+def test_hygiene_to_html_lists_findings():
+    out = hygiene_to_html(HYGIENE_SAMPLE, "hygiene-sample.md")
+    assert "Drafting-hygiene report" in out
+    assert "10 finding(s)" in out
+    assert "undefined-term" in out
+    assert "dangling-reference" in out
+    assert "MEDIUM" in out
+    assert 'data-sev="medium"' in out
+
+
+def test_hygiene_to_html_clean():
+    out = hygiene_to_html('"Services" means the work.\nThe Services are done.\n')
+    assert "No hygiene issues" in out
+
+
+def test_hygiene_to_html_escapes_input():
+    # payload sits inside a defined term, so it lands in finding titles/details
+    evil = HYGIENE_SAMPLE.replace(
+        '"Dead Term"',
+        '"Dead <script>alert(1)</script> Term"',
+    )
+    out = hygiene_to_html(evil)
+    assert "<script>alert(1)" not in out
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in out
+
+
+def test_hygiene_to_html_rejects_empty_text():
+    with pytest.raises(ValueError, match="paste some contract text"):
+        hygiene_to_html("   ")
+
+
+def test_page_has_hygiene_mode_select():
+    html_text = page_html()
+    assert 'name="mode"' in html_text
+    assert 'value="hygiene"' in html_text
+    assert "drafting hygiene" in html_text
+
+
+def test_live_server_hygiene_post():
+    body, ctype = _multipart(
+        {"text": HYGIENE_SAMPLE, "mode": "hygiene", "playbook": "saas-vendor"},
+        {},
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "Drafting-hygiene report" in page
+    assert "undefined-term" in page
+    # hygiene mode has no Word redline download
+    assert "/download.docx" not in page
+
+
+def test_live_server_hygiene_empty_warns():
+    body, ctype = _multipart({"mode": "hygiene"}, {})
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "paste some contract text or upload a file" in page
