@@ -1,0 +1,119 @@
+name: home-improvement
+version: 1
+description: Homeowner-side review of home improvement / renovation contracts (you're hiring the contractor).
+rules:
+  - id: large-upfront-deposit
+    title: Large upfront deposit
+    severity: high
+    description: The contract demands a large deposit before any work begins.
+    why: A 50%-upfront contractor who disappears leaves you financing an unfinished kitchen and a lawsuit — deposits should be small and tied to milestones.
+    suggestion: Cap the deposit at 10% (or your state's legal maximum) and tie later payments to completed milestones.
+    fallback: "Homeowner shall pay a deposit of no more than ten percent (10%) upon signing, with remaining payments due only upon completion of the milestones in Exhibit A."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (\$|\d+\s*%|percent).{0,30}deposit
+        - deposit.{0,30}(\$|\d+\s*%|percent)
+        - down payment
+        - up.?front payment
+      unless_any:
+        - not more than
+        - no more than
+        - 10%
+        - ten percent
+        - refundable
+
+  - id: no-lien-waiver
+    title: No lien waivers
+    severity: high
+    description: The contractor doesn't have to give you lien waivers when paid.
+    why: Without waivers, a subcontractor the GC never paid can put a mechanics lien on your house — even though you paid the GC in full.
+    suggestion: Require unconditional lien waivers from the contractor and all subcontractors with each payment.
+    fallback: "With each payment application, Contractor shall furnish unconditional lien waivers from Contractor and every subcontractor and supplier."
+    check:
+      kind: requires_any
+      patterns:
+        - lien waiver
+        - waiver of lien
+        - lien release
+
+  - id: no-change-order-process
+    title: No written change-order process
+    severity: medium
+    description: Nothing requires extras and changes to be agreed in writing before the work is done.
+    why: Verbal "while we're at it" changes become surprise line items at final invoice — the number-one source of renovation disputes.
+    suggestion: Require signed written change orders with price and schedule impact before extra work starts.
+    fallback: "No extra work shall be performed until Homeowner signs a written change order stating the price and any schedule impact."
+    check:
+      kind: requires_any
+      patterns:
+        - change order
+        - written authorization.{0,30}(extra|additional|change)
+        - extras.{0,30}writing
+
+  - id: no-permit-responsibility
+    title: No permit responsibility stated
+    severity: medium
+    description: The contract doesn't say who pulls permits.
+    why: Unpermitted work fails inspections, voids insurance, and becomes your problem at resale — the contractor should own permitting.
+    suggestion: Make the contractor responsible for obtaining all required permits and scheduling inspections.
+    fallback: "Contractor shall obtain all required building permits and schedule all inspections at Contractor's expense."
+    check:
+      kind: requires_any
+      patterns:
+        - permit
+        - licensed.{0,20}contractor
+
+  - id: vague-timeline
+    title: No completion date
+    severity: medium
+    description: The contract has no completion or substantial-completion date.
+    why: Without a date there is no "late" — a three-week bathroom becomes a six-month saga with no contractual consequence.
+    suggestion: Add a substantial-completion date and a per-day remedy for delay.
+    fallback: "Contractor shall achieve substantial completion by June 1, 2027, and shall credit Homeowner $150 per day for each day of delay thereafter."
+    check:
+      kind: requires_any
+      patterns:
+        - completion date
+        - substantial completion
+        - complete.{0,30}by
+
+  - id: no-workmanship-warranty
+    title: No workmanship warranty
+    severity: medium
+    description: The contractor warrants nothing about the quality of the work.
+    why: Tile that cracks in month four is your expense unless the contract says otherwise — a one-year workmanship warranty is standard.
+    suggestion: Require at least a one-year warranty on workmanship.
+    fallback: "Contractor warrants all workmanship against defects for one (1) year after substantial completion and shall repair defects at no charge."
+    check:
+      kind: requires_any
+      patterns:
+        - warranty
+        - warrant.{0,20}workmanship
+        - guarantee.{0,20}work
+
+  - id: no-termination-right
+    title: No homeowner termination right
+    severity: medium
+    description: You can't fire the contractor if the job goes sideways.
+    why: A contractor who stops showing up shouldn't be able to hold your deposit and your project hostage.
+    suggestion: Add termination for convenience on short written notice, paying only for work completed.
+    fallback: "Homeowner may terminate this Agreement on seven (7) days' written notice and shall pay only for work completed through the termination date."
+    check:
+      kind: requires_any
+      patterns:
+        - terminat
+
+  - id: no-insurance
+    title: No contractor insurance requirement
+    severity: low
+    description: The contract doesn't require the contractor to carry liability insurance.
+    why: A worker injured on your property or a flooded neighbor's unit becomes your homeowner's claim without the contractor's coverage in front of it.
+    suggestion: Require general liability (and workers' comp where applicable) with you named as additional insured.
+    fallback: "Contractor shall maintain commercial general liability insurance of at least $1,000,000 per occurrence and name Homeowner as additional insured."
+    check:
+      kind: requires_any
+      patterns:
+        - insurance
+        - insured
+        - general liability
