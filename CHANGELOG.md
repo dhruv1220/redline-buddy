@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `healthcare-services` playbook: provider-side (clinic/practice) review of
+  healthcare services agreements with vendors handling PHI. 8 rules (missing
+  HIPAA business associate agreement [high], no vendor breach-notification
+  duty [high], no PHI purpose limitation [high], no PHI return/destruction
+  on exit [medium], uncapped fee increases [medium], auto-renewal without
+  opt-out [medium], no uptime SLA/service credits [medium], one-sided staff
+  non-solicitation [low]), each with quotable fallback language; sample
+  fixture fires 8/8, clean fixture fires 0.
 - `redline hygiene`: a drafting-hygiene checker that judges a contract's
   internal consistency, independent of any playbook — dead definitions,
   undefined terms (capitalized phrase used 3+ times, never defined),

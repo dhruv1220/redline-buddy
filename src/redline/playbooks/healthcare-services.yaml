@@ -1,0 +1,133 @@
+name: healthcare-services
+version: 1
+description: Provider-side (clinic/practice) review of healthcare services agreements with vendors that will handle PHI.
+rules:
+  - id: no-baa
+    title: No HIPAA business associate agreement
+    severity: high
+    description: The vendor will access protected health information but the agreement has no Business Associate Agreement.
+    why: Under HIPAA, letting a vendor touch PHI without a BAA is your violation, not just theirs — OCR fines land on the covered entity.
+    suggestion: Attach a BAA (or incorporate one by reference) before the vendor gets any PHI access.
+    fallback: "The parties shall execute the HIPAA Business Associate Agreement attached as Exhibit B, which is incorporated by reference, before Vendor accesses any Protected Health Information."
+    check:
+      kind: requires_any
+      patterns:
+        - business associate agreement
+        - \bbaa\b
+        - hipaa.{0,20}business associate
+
+  - id: breach-notification
+    title: No vendor breach-notification duty
+    severity: high
+    description: The vendor has no contractual duty to tell you promptly about a suspected breach.
+    why: Your HIPAA breach-notification clock starts when you discover the breach — a vendor that sits on one for weeks burns your 60-day window.
+    suggestion: Require breach notice without unreasonable delay, no later than a fixed number of days after discovery.
+    fallback: "Vendor shall notify Provider of any suspected breach of unsecured Protected Health Information without unreasonable delay and in no event later than ten (10) days after discovery."
+    check:
+      kind: requires_any
+      patterns:
+        - breach.{0,40}notif
+        - notif.{0,40}breach
+        - without unreasonable delay
+        - breach.{0,30}report
+
+  - id: phi-purpose-limitation
+    title: No purpose limitation on PHI use
+    severity: high
+    description: Nothing stops the vendor from using your patients' PHI for its own purposes.
+    why: Improve-our-products clauses turn your patient data into their training set and their marketing asset.
+    suggestion: Limit PHI use to performing the services, minimum necessary.
+    fallback: "Vendor shall use Protected Health Information solely to perform the Services and shall access only the minimum necessary to do so."
+    check:
+      kind: forbids_unless
+      patterns:
+        - protected health information
+        - \bphi\b
+      unless_any:
+        - solely.{0,40}(perform|provid|services)
+        - only.{0,30}minimum necessary
+        - minimum necessary
+        - shall not use.{0,40}own purposes
+
+  - id: data-return
+    title: No PHI return or destruction on exit
+    severity: medium
+    description: The agreement says nothing about getting your PHI back (or destroyed) when the relationship ends.
+    why: Without it, a terminated vendor keeps a copy of your patient data indefinitely — a breach waiting for a headline.
+    suggestion: Require return or certified destruction of all PHI within 30 days of termination.
+    fallback: "Within thirty (30) days after termination, Vendor shall return or securely destroy all Protected Health Information and certify destruction in writing."
+    check:
+      kind: requires_any
+      patterns:
+        - return.{0,40}(phi|protected health information|patient data)
+        - (destroy|destruction|delete|deletion).{0,40}(phi|protected health information|patient data)
+        - return or (securely )?destroy
+
+  - id: price-increase-cap
+    title: Uncapped fee increases
+    severity: medium
+    description: The vendor can raise fees without any cap.
+    why: A 40% "market adjustment" in year two turns a good deal into a budget hole you can't exit cheaply.
+    suggestion: Cap annual increases (e.g., 3–5%) and require written consent above the cap.
+    fallback: "Vendor may not increase fees by more than three percent (3%) in any twelve (12) month period without Provider's prior written consent."
+    check:
+      kind: forbids_unless
+      patterns:
+        - increase.{0,30}(fee|rate|price|charge)
+      unless_any:
+        - cap
+        - not exceed
+        - no more than
+        - not more than
+        - maximum
+        - prior written consent
+
+  - id: auto-renewal
+    title: Auto-renewal without an opt-out notice
+    severity: medium
+    description: The agreement renews automatically with no advance notice or opt-out right.
+    why: Evergreen renewals lock you into another year of a vendor you meant to replace — calendar the termination window or negotiate it away.
+    suggestion: Require advance written notice of renewal and a clear non-renewal right.
+    fallback: "This Agreement renews automatically for successive one-year terms unless either party gives the other at least sixty (60) days' written notice of non-renewal."
+    check:
+      kind: forbids_unless
+      patterns:
+        - auto.{0,20}renew
+        - renew.{0,20}automatically
+      unless_any:
+        - written notice
+        - opt.?out
+        - non.?renewal
+        - elect not to renew
+
+  - id: sla
+    title: No uptime SLA or service credits
+    severity: medium
+    description: The vendor commits to no availability target and owes you nothing for downtime.
+    why: For scheduling, EHR, or phones, downtime is canceled appointments — an SLA with credits is the only contractual consequence.
+    suggestion: Add a 99.9% monthly uptime commitment with service credits.
+    fallback: "Vendor shall maintain 99.9% monthly uptime, excluding scheduled maintenance, and shall issue service credits of 10% of the monthly fee for each full percentage point below target."
+    check:
+      kind: requires_any
+      patterns:
+        - service level
+        - uptime
+        - service credit
+        - availability.{0,20}99
+        - \bsla\b
+
+  - id: staff-nonsolicit
+    title: One-sided non-solicitation of staff
+    severity: low
+    description: You may not hire the vendor's people, but the vendor faces no reciprocal restriction.
+    why: One-sided non-solicits protect the vendor's bench while leaving your nurses and billers fair game.
+    suggestion: Make the non-solicitation mutual or delete it.
+    fallback: "Neither party shall solicit the other party's employees during the term and for twelve (12) months thereafter."
+    check:
+      kind: forbids_unless
+      patterns:
+        - solicit.{0,40}(employee|personnel|staff)
+      unless_any:
+        - mutual
+        - both parties
+        - neither party
