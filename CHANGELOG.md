@@ -5,6 +5,16 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `construction-contractor` playbook: contractor / subcontractor-side
+  review of owner- or GC-drafted construction contracts — the mirror of
+  `construction-contract` for the companies performing the work. 8 rules
+  (pay-if-paid [high], no-damages-for-delay [high], indemnity covering
+  the owner's own negligence [high], retainage above 10% [high],
+  termination for convenience without demobilization costs [medium],
+  uncapped liquidated damages [medium], unconditional lien waiver
+  before payment [medium], prime-contract flow-down by reference
+  without attachment [low]), each with quotable fallback language;
+  sample fixture fires 8/8, clean fixture fires 0.
 - `nonprofit-grant` playbook: grantee-side (nonprofit) review of grant
   agreements. 8 rules (vague clawback of disbursed funds [high], disallowed
   indirect costs [medium], excessive reporting [medium], matching-funds

@@ -1,0 +1,132 @@
+name: construction-contractor
+version: 1
+description: Contractor / subcontractor-side review of owner- or GC-drafted construction contracts (you're performing the work).
+rules:
+  - id: pay-if-paid
+    title: Pay-if-paid clause
+    severity: high
+    description: Your payment is conditioned on the owner paying the general contractor — if the owner doesn't pay upstream, you don't get paid.
+    why: Pay-if-paid shifts the owner's credit risk onto you. Where it is enforceable, one insolvent owner upstream can wipe out your entire receivable with no recourse against the GC.
+    suggestion: Convert it to pay-when-paid (timing only — payment within N days of the GC's receipt) and keep your lien rights intact.
+    fallback: "Contractor shall pay Subcontractor within seven (7) days after Contractor receives payment from the Owner for Subcontractor's Work; Contractor's receipt of payment is a matter of timing only and not a condition precedent to Subcontractor's right to payment."
+    check:
+      kind: forbids_any
+      patterns:
+        - pay if paid
+        - pay-?if-?paid
+        - payment.{0,60}conditioned (upon|on).{0,60}(owner|contractor).{0,30}pay
+        - contingent upon.{0,60}receipt of payment from the (owner|contractor)
+
+  - id: no-damages-for-delay
+    title: No-damages-for-delay clause
+    severity: high
+    description: Your sole remedy for owner-caused delay is a time extension — no compensation for extended overhead, idle crews, or cost escalation.
+    why: Owner-caused delays (late drawings, denied site access, slow change orders) cost you real money every day; a time extension doesn't pay your extended general conditions.
+    suggestion: Strike the clause, or carve out delays caused by the owner's or GC's active interference with a daily extended-overhead rate.
+    fallback: "Subcontractor's exclusive remedy for delay shall be an extension of time, except for delays caused by the active interference of Owner or Contractor, for which Subcontractor is entitled to its reasonable extended field and home-office overhead."
+    check:
+      kind: forbids_any
+      patterns:
+        - no damages for delay
+        - no-?damages-?for-?delay
+        - sole.{0,30}remedy.{0,200}extension of time
+        - waiv.{0,40}damages for delay
+        - damages for delay.{0,40}(are )?waived
+
+  - id: broad-indemnity
+    title: Indemnity covers the owner's own negligence
+    severity: high
+    description: You indemnify the owner and GC against claims without limiting it to your own negligence — you can end up insuring their mistakes.
+    why: Several states void indemnity for another party's sole negligence, but litigating that costs far more than fixing the clause before you sign.
+    suggestion: Limit the indemnity to claims "to the extent caused by" your negligent acts or omissions.
+    fallback: "Subcontractor shall indemnify Owner and Contractor against third-party claims to the extent caused by the negligent acts or omissions of Subcontractor or its lower-tier subcontractors, and for no other claims under this Section."
+    check:
+      kind: forbids_unless
+      patterns:
+        - indemnif
+      unless_any:
+        - to the extent caused by
+        - except.{0,40}sole negligence
+
+  - id: excessive-retainage
+    title: Retainage above 10% with no release schedule
+    severity: high
+    description: The owner or GC withholds more than 10% of each progress payment as retainage.
+    why: Retainage is your profit margin held hostage — above 10% you are financing the job, and many states cap retainage at 5-10% by statute.
+    suggestion: Cap retainage at 5-10% and require release within 30 days of substantial completion.
+    fallback: "Retainage shall not exceed five percent (5%) of each progress payment and shall be released within thirty (30) days after substantial completion of Subcontractor's Work."
+    check:
+      kind: max_value
+      group: value
+      max: 10
+      patterns:
+        - retainage.{0,40}(?P<value>\d+(?:\.\d+)?)\s*%
+        - (?P<value>\d+(?:\.\d+)?)\s*%\s*retainage
+        - retain.{0,20}(?P<value>\d+(?:\.\d+)?)\s*percent
+
+  - id: termination-convenience-no-compensation
+    title: Termination for convenience without demobilization costs
+    severity: medium
+    description: The owner or GC can terminate for convenience, but the clause doesn't cover your demobilization, restocking, or profit on work performed.
+    why: A convenience termination mid-mobilization leaves you eating crane rentals, ordered materials, and crew costs you committed on the strength of the contract.
+    suggestion: Add payment for work performed through termination plus reasonable demobilization and material restocking costs.
+    fallback: "Upon termination for convenience, Subcontractor shall be paid for all Work performed through the termination date, plus reasonable demobilization and material restocking costs."
+    check:
+      kind: forbids_unless
+      patterns:
+        - terminat.{0,40}for convenience
+        - terminat.{0,40}without cause
+      unless_any:
+        - demobilization
+        - restocking
+        - profit on work performed
+        - work performed through
+
+  - id: uncapped-liquidated-damages
+    title: Liquidated damages with no cap
+    severity: medium
+    description: The contract imposes per-day liquidated damages for late completion with no aggregate cap.
+    why: Uncapped LDs turn a two-week slip into an existential threat — courts enforce them as written far more often than contractors expect.
+    suggestion: Cap aggregate liquidated damages at a fixed percentage of the subcontract price.
+    fallback: "Liquidated damages for late completion shall not exceed five percent (5%) of the total subcontract price in the aggregate."
+    check:
+      kind: forbids_unless
+      patterns:
+        - liquidated damages
+      unless_any:
+        - shall not exceed
+        - in the aggregate
+        - mutual
+
+  - id: lien-waiver-upfront
+    title: Lien waiver signed before payment
+    severity: medium
+    description: You must sign an unconditional lien waiver on execution or before receiving payment — surrendering your security before the check clears.
+    why: Your lien is your only real leverage on a job; an unconditional waiver signed up front is a blank receipt the owner can wave at the first dispute.
+    suggestion: Exchange conditional waivers for each progress payment, effective only upon your actual receipt of payment.
+    fallback: "Subcontractor shall provide conditional lien waivers for each progress payment, effective only upon Subcontractor's actual receipt of such payment."
+    check:
+      kind: forbids_any
+      patterns:
+        - unconditional.{0,40}lien waiver
+        - lien waiver.{0,40}unconditional
+        - waiv.{0,30}lien.{0,40}upon (execution|signing)
+        - lien waiver.{0,40}in advance
+
+  - id: flow-down-unseen
+    title: Bound by prime-contract terms you haven't seen
+    severity: low
+    description: The subcontract incorporates the prime contract by reference without attaching it — you're bound by terms you've never read.
+    why: Flow-down clauses import insurance, indemnity, and dispute terms from a prime contract the owner may never show you until there is a claim.
+    suggestion: Require the relevant portions of the prime contract attached as an exhibit before you sign.
+    fallback: "The prime contract between Owner and Contractor, as it relates to Subcontractor's Work, is attached as Exhibit A; Subcontractor assumes only those prime-contract obligations expressly listed in Exhibit B."
+    check:
+      kind: forbids_unless
+      patterns:
+        - incorporated by reference
+        - flow-?down
+        - subject to the (terms|provisions) of the prime contract
+      unless_any:
+        - attached as (an? )?exhibit
+        - copy.{0,20}provided
+        - exhibit a
