@@ -191,6 +191,7 @@ negotiation rounds (`Risk: C (63) → B (78) — improved`).
 | `convertible-note` | founder side | cash repayment at maturity, change-of-control payout multiple, shadow-series liquidation preference, compounding interest, no pro-rata rights for noteholders, discount+cap with no "greater of" language, qualified-financing threshold too high, noteholder consent veto over operations |
 | `construction-contract` | homeowner side | large upfront deposit, final payment before inspection, no written change orders, no start/completion dates, no lien-waiver protection, vague scope, binding arbitration, assignment/subcontracting without consent, no workmanship warranty, no three-day cancellation right, uncapped time-and-materials pricing, owner made responsible for permits |
 | `term-sheet-investor` | investor side | no pro-rata rights, no information rights, no founder vesting, no liquidation preference, no protective provisions, no anti-dilution, no drag-along, no board seat or observer rights |
+| `construction-contractor` | contractor / subcontractor side | pay-if-paid, no-damages-for-delay, overbroad indemnity, excessive retainage, termination for convenience without demobilization costs, uncapped liquidated damages, upfront unconditional lien waiver, unseen prime-contract flow-down |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 
