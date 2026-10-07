@@ -192,6 +192,7 @@ negotiation rounds (`Risk: C (63) → B (78) — improved`).
 | `construction-contract` | homeowner side | large upfront deposit, final payment before inspection, no written change orders, no start/completion dates, no lien-waiver protection, vague scope, binding arbitration, assignment/subcontracting without consent, no workmanship warranty, no three-day cancellation right, uncapped time-and-materials pricing, owner made responsible for permits |
 | `term-sheet-investor` | investor side | no pro-rata rights, no information rights, no founder vesting, no liquidation preference, no protective provisions, no anti-dilution, no drag-along, no board seat or observer rights |
 | `construction-contractor` | contractor / subcontractor side | pay-if-paid, no-damages-for-delay, overbroad indemnity, excessive retainage, termination for convenience without demobilization costs, uncapped liquidated damages, upfront unconditional lien waiver, unseen prime-contract flow-down |
+| `distribution-manufacturer` | manufacturer / supplier side | exclusivity without minimums, uncontrolled trademark use, distributor-owned adaptations, post-term non-compete on manufacturer, short-notice walkaway, most-favored-distributor pricing, no sales-audit right, no diligence standard |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 

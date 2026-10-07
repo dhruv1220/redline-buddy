@@ -1,0 +1,127 @@
+name: distribution-manufacturer
+version: 1
+description: Manufacturer / supplier-side review of distributor-drafted distribution agreements (you make the product).
+rules:
+  - id: exclusivity-no-minimums
+    title: Exclusivity with no minimum purchase commitments
+    severity: high
+    description: The distributor gets exclusivity over a territory or channel without committing to minimum purchase volumes.
+    why: Exclusivity without minimums lets a distributor sit on your territory — blocking better partners while ordering just enough to keep the rights.
+    suggestion: Tie every exclusivity grant to annual minimum purchase commitments, with exclusivity converting to non-exclusive if minimums are missed.
+    fallback: "Distributor's exclusivity is conditioned on meeting the minimum annual purchase commitments in Exhibit B; if Distributor fails to meet them in any year, the appointment becomes non-exclusive."
+    check:
+      kind: forbids_unless
+      patterns:
+        - exclusiv
+      unless_any:
+        - minimum.{0,40}(purchase|order|quantity|revenue)
+        - minimum annual
+
+  - id: trademark-misuse
+    title: Trademark use without brand controls
+    severity: high
+    description: The distributor may use your trademarks and trade names without brand guidelines or your prior approval of marketing materials.
+    why: Uncontrolled trademark use by a distributor — off-brand ads, shoddy co-branding, gray-market packaging — erodes the brand equity you spent years building, and you can't un-ring that bell.
+    suggestion: Make all trademark use subject to your brand guidelines and prior written approval.
+    fallback: "Distributor's use of Manufacturer's trademarks is subject to Manufacturer's brand guidelines, and Distributor shall obtain Manufacturer's prior written approval for all marketing materials bearing the marks."
+    check:
+      kind: forbids_unless
+      patterns:
+        - trademark
+        - trade name
+        - brand.{0,20}use
+      unless_any:
+        - brand guidelines
+        - prior written approval
+        - style guide
+
+  - id: distributor-owns-adaptations
+    title: Distributor owns local adaptations of your product
+    severity: high
+    description: Localizations, adaptations, or derivative works created for the territory vest in the distributor rather than in you.
+    why: If the relationship ends, the distributor walks away owning the localized version of your product — and can keep selling it or hand it to your replacement.
+    suggestion: Retain ownership of all adaptations and derivative works; grant the distributor a license limited to the agreement term.
+    fallback: "All localizations, adaptations, and derivative works of the Products are owned exclusively by Manufacturer; Distributor receives a non-exclusive license to use them during the term only."
+    check:
+      kind: forbids_any
+      patterns:
+        - adaptations.{0,100}owned by.{0,20}distributor
+        - locali[sz]ations.{0,100}(owned by|vest.{0,30}).{0,20}distributor
+        - derivative works.{0,100}owned by.{0,20}distributor
+        - improvements.{0,40}belong to.{0,20}distributor
+
+  - id: post-term-non-compete-manufacturer
+    title: Post-term non-compete on the manufacturer
+    severity: medium
+    description: After termination, you may not sell directly or appoint other distributors in the territory for an extended period.
+    why: A post-term lock on your own product hands the departing distributor a veto over your go-to-market — you can't replace an underperforming partner you just fired.
+    suggestion: Limit any post-term restriction to a short, defined tail (or drop it — your IP protections already cover misuse).
+    fallback: "No non-competition covenant applies to Manufacturer after expiration or termination; Sections on confidentiality and IP survive."
+    check:
+      kind: forbids_any
+      patterns:
+        - not (sell|appoint|distribute|market).{0,80}(direct|directly|other distributor)
+        - non.?compete.{0,60}manufacturer
+        - manufacturer.{0,40}shall not.{0,40}(sell|compete).{0,40}territory
+
+  - id: distributor-termination-convenience
+    title: Distributor can walk away for convenience on short notice
+    severity: medium
+    description: The distributor may terminate for convenience on short notice, stranding the channel investment you made for the territory.
+    why: You staffed up production, localized packaging, and turned away other partners for this distributor — a 30-day walkaway leaves you holding the capacity.
+    suggestion: Require long notice (12 months) for convenience termination, or a termination fee covering your committed capacity.
+    fallback: "Distributor may terminate for convenience on twelve months' written notice, and shall pay a termination fee equal to Manufacturer's committed but unrecovered capacity costs."
+    check:
+      kind: forbids_unless
+      patterns:
+        - terminat.{0,40}for convenience
+        - terminat.{0,40}without cause
+      unless_any:
+        - twelve months
+        - 12 months
+        - 180 days
+        - one year.{0,20}notice
+
+  - id: most-favored-distributor
+    title: Most-favored-distributor pricing clause
+    severity: medium
+    description: You must always give this distributor your best price — if you ever offer better terms to anyone, theirs ratchet down automatically.
+    why: An MFN clause turns every future negotiation into a retroactive discount for this distributor, and policing it requires you to disclose other partners' pricing.
+    suggestion: Delete it, or narrow it to defined volume tiers so only comparable deals trigger it.
+    fallback: "Price-matching applies only to purchases of comparable annual volume tiers as set out in Exhibit C, and never below Manufacturer's published distributor floor price."
+    check:
+      kind: forbids_any
+      patterns:
+        - most.?favou?red
+        - no less favou?rable.{0,40}price
+        - best price.{0,40}distributor
+        - lowest price.{0,40}distributor
+
+  - id: no-sales-audit-right
+    title: No right to audit the distributor's sales reports
+    severity: medium
+    description: The agreement has no right for you to audit the distributor's sales records — rebates, tier calculations, and minimums run on trust.
+    why: Without audit rights you cannot verify the sales reports that determine your rebates, tier pricing, or whether minimums were actually met.
+    suggestion: Add an annual audit right with cost-shifting if underreporting exceeds a threshold (e.g. 5%).
+    fallback: "Manufacturer may audit Distributor's sales records once per year on thirty (30) days' notice; if underreporting exceeds five percent (5%), Distributor bears the audit cost."
+    check:
+      kind: requires_any
+      patterns:
+        - audit.{0,40}(sales|records|reports|books)
+        - inspect.{0,40}(sales|financial).{0,20}records
+
+  - id: no-diligence-standard
+    title: No diligence or performance standard for the distributor
+    severity: low
+    description: The distributor has no obligation to actively promote or sell your products — no efforts standard, no business plan, no performance reviews.
+    why: A distributor with no performance obligation can warehouse your rights defensively — keeping competitors out of the territory without selling your product.
+    suggestion: Add a "commercially reasonable efforts" standard with annual business plans and performance reviews.
+    fallback: "Distributor shall use commercially reasonable efforts to promote and sell the Products, submit an annual business plan, and meet quarterly for performance review."
+    check:
+      kind: requires_any
+      patterns:
+        - commercially reasonable efforts
+        - best efforts.{0,30}(promote|market|sell)
+        - diligent.{0,20}efforts
+        - performance.{0,20}standards
+        - business plan

@@ -54,6 +54,7 @@ PAIRS = [
     ("commercial-tenant", "clean-commercial-tenant.md"),
     ("employment-employer", "clean-employment-employer.md"),
     ("construction-contractor", "clean-construction-contractor.md"),
+    ("distribution-manufacturer", "clean-distribution-manufacturer.md"),
 ]
 
 

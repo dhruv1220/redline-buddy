@@ -15,6 +15,16 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
   before payment [medium], prime-contract flow-down by reference
   without attachment [low]), each with quotable fallback language;
   sample fixture fires 8/8, clean fixture fires 0.
+- `distribution-manufacturer` playbook: manufacturer / supplier-side
+  review of distributor-drafted distribution agreements — the mirror of
+  `distribution-agreement` for the companies making the product. 8 rules
+  (exclusivity without minimums [high], uncontrolled trademark use
+  [high], distributor-owned adaptations [high], post-term non-compete
+  on the manufacturer [medium], short-notice termination for
+  convenience [medium], most-favored-distributor pricing [medium], no
+  sales-audit right [medium], no diligence standard [low]), each with
+  quotable fallback language; sample fixture fires 8/8, clean fixture
+  fires 0.
 - `nonprofit-grant` playbook: grantee-side (nonprofit) review of grant
   agreements. 8 rules (vague clawback of disbursed funds [high], disallowed
   indirect costs [medium], excessive reporting [medium], matching-funds
