@@ -55,6 +55,8 @@ PAIRS = [
     ("employment-employer", "clean-employment-employer.md"),
     ("construction-contractor", "clean-construction-contractor.md"),
     ("distribution-manufacturer", "clean-distribution-manufacturer.md"),
+    ("solar-installation", "clean-solar-installation.md"),
+    ("moving-company", "clean-moving-company.md"),
 ]
 
 

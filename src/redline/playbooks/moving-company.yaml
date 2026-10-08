@@ -1,0 +1,121 @@
+name: moving-company
+version: 1
+description: Consumer-side review of household moving contracts — estimates, valuation, deposits, and delivery terms (the paperwork behind the hostage-load scam).
+rules:
+  - id: non-binding-estimate
+    title: Non-binding estimate with no price cap
+    severity: high
+    description: Your quote is a non-binding estimate — the final bill is set after loading, based on actual weight and services.
+    why: "The classic hostage-load setup starts here: a low non-binding estimate wins the job, then the price jumps once your belongings are on the truck. Legitimate movers offer binding or not-to-exceed pricing; California even requires not-to-exceed pricing for intrastate moves."
+    suggestion: Insist on a binding or not-to-exceed estimate in writing, with any extras documented as change orders you sign.
+    fallback: "Mover provides a binding not-to-exceed estimate; final charges shall not exceed the estimate unless Customer signs a written change order for additional services."
+    check:
+      kind: forbids_unless
+      patterns:
+        - non.?binding estimate
+      unless_any:
+        - not.?to.?exceed
+        - guaranteed.{0,20}price
+        - binding.{0,20}cap
+
+  - id: released-value-default
+    title: Liability capped at released value ($0.60/lb)
+    severity: high
+    description: The mover's liability defaults to "released value" — $0.60 per pound per article — with no full-value protection offered.
+    why: At $0.60/lb, your $2,000 100-lb TV is "worth" $60 if the movers destroy it. Movers must offer full-value protection as an option; a contract that only mentions released value quietly strips your real remedy for damage.
+    suggestion: Take full-value (replacement) protection, or confirm your homeowner's/renter's policy covers the move.
+    fallback: "Mover offers full (replacement) value protection as required by law; Customer's selection of released value, if any, is documented by separate signed waiver."
+    check:
+      kind: forbids_unless
+      patterns:
+        - released value
+        - 60 cents per pound
+        - \$0\.60.{0,20}(pound|lb)
+      unless_any:
+        - full.{0,20}(value|replacement).{0,20}protection
+
+  - id: large-upfront-deposit
+    title: Large upfront deposit demanded
+    severity: high
+    description: The mover demands a large deposit (over 20% of the estimate) before moving day.
+    why: The FMCSA flags large upfront payments — especially cash — as a hallmark of fake movers who disappear after collecting deposits. A modest deposit to hold the date is normal; half the job up front is not, and cash leaves you no way to dispute the charge.
+    suggestion: Keep deposits small and refundable, and pay by credit card so you can dispute.
+    fallback: "Booking deposit may not exceed 20% of the estimate, is fully refundable until seven (7) days before the move, and is payable by credit card."
+    check:
+      kind: max_value
+      group: value
+      max: 20
+      patterns:
+        - (?P<value>\d+)\s*%.*deposit
+        - deposit\D{0,30}(?P<value>\d+)\s*%
+
+  - id: withhold-goods-for-payment
+    title: Mover can withhold your goods for payment
+    severity: high
+    description: The contract lets the mover withhold delivery or refuse to unload until every charge is paid in full.
+    why: "This is the legal scaffolding of the hostage load: once your goods are on the truck, 'pay everything first, then we unload' gives you zero leverage to dispute inflated charges. For interstate moves, federal rules limit what a mover can demand at delivery on a non-binding estimate."
+    suggestion: Tie final payment to delivery and unloading, with a written dispute process for contested charges.
+    fallback: "Mover shall deliver and unload all goods on the scheduled date; disputed charges are documented in writing and resolved after delivery, not used to withhold goods."
+    check:
+      kind: forbids_any
+      patterns:
+        - withhold.{0,30}(delivery|goods|belongings|shipment)
+        - refuse.{0,20}to.{0,20}(unload|deliver).{0,40}payment
+        - payment.{0,30}in full.{0,30}before.{0,20}(unload|delivery)
+
+  - id: no-delivery-deadline
+    title: No committed delivery date
+    severity: medium
+    description: The contract gives no firm delivery date — only a wide "delivery spread" or no timeline at all.
+    why: A 5-to-21 business-day spread means your belongings can sit in a warehouse for a month while you're sleeping on an air mattress. Without a date, late delivery has no remedy.
+    suggestion: Get a guaranteed delivery date (or a narrow window) with per-day delay compensation.
+    fallback: "Mover guarantees delivery by [date]; delays beyond the guaranteed date are credited at $150 per day."
+    check:
+      kind: requires_any
+      patterns:
+        - delivery.{0,30}(date|deadline)
+        - deliver.{0,30}by
+        - no later than.{0,40}deliver
+
+  - id: broker-not-carrier
+    title: You're contracting with a broker, not the mover
+    severity: medium
+    description: The company is a broker that will hand your job to an unknown third-party carrier.
+    why: "The rogue-broker scheme: a slick website takes your deposit, then sells the job to a random carrier with no accountability to your agreement — the crew that shows up may never have heard of your quote. MoveRescue advises contracting directly with the carrier."
+    suggestion: Contract directly with the licensed carrier (verify its USDOT number), or get the assigned carrier's identity and credentials in writing before paying.
+    fallback: "Company is a broker only; the assigned motor carrier's legal name, USDOT number, and contact information are disclosed in writing before any deposit is paid."
+    check:
+      kind: forbids_any
+      patterns:
+        - \bbroker\b
+        - arrange.{0,20}transportation.{0,20}carrier
+        - we are not a (motor )?carrier
+
+  - id: short-claims-window
+    title: Unreasonably short claim-filing window
+    severity: medium
+    description: Loss and damage claims must be filed within a short window (e.g., 30 days) — far less than the 9 months federal law allows for interstate moves.
+    why: Damage often surfaces weeks after unpacking. A 30-day window quietly extinguishes claims you'd be legally entitled to file for nine months.
+    suggestion: Keep at least the statutory window; document everything with photos at delivery regardless.
+    fallback: "Customer may file written claims for loss or damage within nine (9) months of delivery, consistent with federal requirements."
+    check:
+      kind: forbids_unless
+      patterns:
+        - claim.{0,60}days
+        - file.{0,20}(a )?claim
+      unless_any:
+        - 9 months
+        - 270 days
+
+  - id: open-ended-extra-fees
+    title: Open-ended extra fees reserved
+    severity: low
+    description: The contract reserves the right to add fees for stairs, long carries, fuel, shuttle service, or packing materials — the standard surprise-fee menu.
+    why: These are the line items that turn a "budget move" into a financial ambush on moving day, when you're in no position to negotiate. Legitimate movers price them up front or include them.
+    suggestion: Get an all-inclusive price, or a written schedule of exactly what triggers each fee and how much it is.
+    fallback: "The quoted price is all-inclusive; no additional fees for stairs, long carries, fuel, shuttle service, or standard packing materials may be charged."
+    check:
+      kind: forbids_any
+      patterns:
+        - additional.{0,30}(fees|charges).{0,40}(may|will|shall).{0,20}apply
+        - (stairs|stair|long carry|fuel|shuttle|materials).{0,40}extra
