@@ -193,6 +193,8 @@ negotiation rounds (`Risk: C (63) → B (78) — improved`).
 | `term-sheet-investor` | investor side | no pro-rata rights, no information rights, no founder vesting, no liquidation preference, no protective provisions, no anti-dilution, no drag-along, no board seat or observer rights |
 | `construction-contractor` | contractor / subcontractor side | pay-if-paid, no-damages-for-delay, overbroad indemnity, excessive retainage, termination for convenience without demobilization costs, uncapped liquidated damages, upfront unconditional lien waiver, unseen prime-contract flow-down |
 | `distribution-manufacturer` | manufacturer / supplier side | exclusivity without minimums, uncontrolled trademark use, distributor-owned adaptations, post-term non-compete on manufacturer, short-notice walkaway, most-favored-distributor pricing, no sales-audit right, no diligence standard |
+| `solar-installation` | homeowner side | annual payment escalator, UCC-1 filed against the home, roof-damage disclaimer, payments continue during downtime, removal/reinstall at homeowner cost, sale-transfer hurdles, no production guarantee, salesperson promises disclaimed |
+| `moving-company` | consumer side | non-binding estimate with no cap, released-value ($0.60/lb) liability default, large upfront deposit, withholding goods for payment, no delivery date, broker-not-carrier, short claim-filing window, open-ended extra fees |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 

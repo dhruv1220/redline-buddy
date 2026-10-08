@@ -5,6 +5,25 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `solar-installation` playbook: homeowner-side review of residential
+  solar contracts — leases, PPAs, and financed purchases. 8 rules
+  (annual payment escalator [high], UCC-1 financing statement filed
+  against the home [high], roof-damage disclaimer [high], payments
+  continue while the system is offline [medium], panel removal and
+  reinstallation at homeowner cost [medium], home-sale transfer and
+  credit-approval hurdles [medium], no guaranteed energy production
+  [medium], salesperson's oral promises disclaimed [low]), each with
+  quotable fallback language; sample fixture fires 8/8, clean fixture
+  fires 0.
+- `moving-company` playbook: consumer-side review of household moving
+  contracts — the paperwork behind the hostage-load scam. 8 rules
+  (non-binding estimate with no price cap [high], released-value
+  $0.60/lb liability default [high], upfront deposit over 20% [high],
+  withholding goods for payment [high], no committed delivery date
+  [medium], contracting with a broker instead of the carrier [medium],
+  unreasonably short claim-filing window [medium], open-ended extra
+  fees [low]), each with quotable fallback language; sample fixture
+  fires 8/8, clean fixture fires 0.
 - `construction-contractor` playbook: contractor / subcontractor-side
   review of owner- or GC-drafted construction contracts — the mirror of
   `construction-contract` for the companies performing the work. 8 rules

@@ -1,0 +1,121 @@
+name: solar-installation
+version: 1
+description: Homeowner-side review of residential solar contracts — leases, PPAs, and financed purchases (you're signing away your roof for 25 years).
+rules:
+  - id: annual-escalator
+    title: Annual payment escalator
+    severity: high
+    description: Your lease or PPA payment rises every year by a fixed escalator (commonly 1–3.9%), regardless of what utility rates do.
+    why: A 2.9% escalator roughly doubles your payment over a 25-year term. If utility rates don't rise as fast, the "savings" you were sold evaporate — yet the escalator is buried as an "inflation adjustment."
+    suggestion: Demand a fixed rate for the full term, or a hard cap on the escalator tied to actual utility-rate inflation.
+    fallback: "The monthly payment (or PPA rate) is fixed for the entire initial term, with no annual escalator or automatic increase of any kind."
+    check:
+      kind: forbids_unless
+      patterns:
+        - escalat
+        - annual.{0,20}(increase|adjustment)
+        - rate.{0,30}increase.{0,20}(each|every) year
+      unless_any:
+        - no.{0,20}escalat
+        - fixed rate
+        - escalation.{0,20}capped
+
+  - id: ucc1-lien-on-title
+    title: UCC-1 financing statement filed against your home
+    severity: high
+    description: The installer files a UCC-1 financing statement against your property to protect its ownership of the panels.
+    why: A UCC-1 on your title shows up in every title search, can complicate refinancing, and forces you through the solar company's transfer process when you sell — removal typically costs $1,000–$3,000 and leaves roof penetrations to patch.
+    suggestion: Refuse any filing against the real property; the company's security interest should attach to the equipment only, or buy the system outright.
+    fallback: "Installer shall not file any UCC-1 financing statement, lien, or other encumbrance against the Property or Homeowner's title; any security interest attaches to the System equipment only."
+    check:
+      kind: forbids_any
+      patterns:
+        - UCC.?1
+        - financing statement.{0,40}(filed|recorded)
+        - lien.{0,30}against the (property|home)
+
+  - id: roof-damage-disclaimed
+    title: No responsibility for roof damage or leaks
+    severity: high
+    description: The installer disclaims responsibility for roof damage, leaks, or water intrusion caused by the installation.
+    why: Every panel mount is a roof penetration. If the installer won't stand behind the roof it drilled into, you absorb the cost of leaks — the most common post-installation dispute in residential solar.
+    suggestion: Require a roof-penetration warranty (minimum 10 years) with the installer liable for leaks traceable to the installation.
+    fallback: "Installer warrants all roof penetrations against leaks and water intrusion for ten (10) years from installation, and shall repair any such damage at Installer's sole cost."
+    check:
+      kind: forbids_any
+      patterns:
+        - not.{0,30}(responsible|liable).{0,40}roof
+        - roof.{0,20}(damage|leaks).{0,30}not.{0,20}covered
+        - no.{0,20}warranty.{0,20}roof.{0,20}(penetration|damage)
+
+  - id: payments-during-downtime
+    title: Payments continue while the system is offline
+    severity: medium
+    description: You keep paying the full monthly amount even when the system produces nothing — during roof repairs, equipment failure, or removal for re-roofing.
+    why: Panels come down for roof work (removal/reinstall runs $5,000–$10,000) and systems sit offline for months in documented complaint cases — while lease bills keep arriving. Paying for power you're not getting is the core of the "estimated bills for dead panels" complaint pattern.
+    suggestion: Require payment abatement or a production-based credit for any month the system is offline through no fault of yours.
+    fallback: "If the System is offline for more than fifteen (15) consecutive days for reasons other than Homeowner's fault, payments abate pro rata for each day offline, and any prepaid amounts are credited."
+    check:
+      kind: forbids_any
+      patterns:
+        - payments?.{0,40}continue.{0,60}(offline|downtime|not producing|removed)
+        - no.{0,20}(abatement|reduction).{0,30}payment.{0,30}(downtime|offline)
+
+  - id: removal-reinstall-at-homeowner-cost
+    title: You pay for panel removal and reinstallation
+    severity: medium
+    description: If your roof needs work during the 25-year term, you pay to remove and reinstall the panels — commonly $5,000–$10,000.
+    why: Roofs last 15–25 years; solar contracts last 20–25. A mid-term re-roof is likely, not hypothetical, and the removal bill lands exactly when you're already paying for a new roof.
+    suggestion: Make the installer (or system owner, for leases/PPAs) bear removal and reinstallation costs, or cap your share in writing.
+    fallback: "All costs of System removal and reinstallation required for roof maintenance, repair, or replacement are borne by Installer (or System Owner), at no cost to Homeowner."
+    check:
+      kind: forbids_unless
+      patterns:
+        - remov.{0,80}(reinstall|re-install)
+        - detach.{0,40}(system|panels).{0,40}(cost|fee|charge)
+      unless_any:
+        - at no (additional )?cost
+        - installer.{0,30}(pays|covers|bears)
+        - system owner.{0,30}(pays|covers|bears)
+
+  - id: transfer-assumption-hurdles
+    title: Home sale blocked by lease-transfer hurdles
+    severity: medium
+    description: Selling your home requires the buyer to pass the solar company's credit check, pay transfer fees, and wait through a formal assumption process.
+    why: Lease assumptions add 2–4 weeks to closing, buyers need ~650–700 FICO to qualify, and if they don't, you're negotiating a $10,000–$30,000 buyout to close the sale. Agents report leases and PPAs scaring off buyers.
+    suggestion: Require transfer approval "not to be unreasonably withheld," cap transfer fees, and get a written buyout schedule up front.
+    fallback: "Transfer of this Agreement to a home buyer shall not be unreasonably withheld or delayed beyond fifteen (15) business days; transfer fees may not exceed $250; Installer shall provide a written buyout schedule on request."
+    check:
+      kind: forbids_any
+      patterns:
+        - transfer.{0,40}(subject to|conditioned).{0,40}(credit|approval)
+        - assumption.{0,20}fee
+        - buyer.{0,30}credit.{0,20}(check|approval|qualif)
+
+  - id: no-production-guarantee
+    title: No guaranteed energy production
+    severity: medium
+    description: The contract promises savings but guarantees no minimum energy production — if the system underperforms, you still owe full payments.
+    why: Shading, equipment faults, and optimistic production models are the documented reasons systems underproduce. Without a production guarantee, all performance risk sits with you while the salesperson's savings math assumed best case.
+    suggestion: Require a minimum annual kWh production guarantee with bill credits or payment reductions for shortfalls.
+    fallback: "Installer guarantees minimum annual System production of 90% of the estimated first-year output in Exhibit A; shortfalls are credited against payments at the PPA rate."
+    check:
+      kind: requires_any
+      patterns:
+        - production guarantee
+        - guaranteed.{0,20}(production|output|kwh)
+        - minimum.{0,20}(annual|yearly).{0,20}production
+        - performance guarantee
+
+  - id: sales-promises-disclaimed
+    title: Salesperson's promises disclaimed in writing
+    severity: low
+    description: The contract states that oral representations by salespeople are not binding — only the written agreement controls.
+    why: Door-to-door solar sales run on verbal savings promises. When the contract disclaims them, the 40% savings figure from the kitchen-table pitch is legally worth zero.
+    suggestion: Get every material promise (savings, production, timeline) written into the contract as an exhibit before signing.
+    fallback: "All material representations made during the sales process, including estimated savings and production figures, are attached as Exhibit D and incorporated into this Agreement."
+    check:
+      kind: forbids_any
+      patterns:
+        - (verbal|oral).{0,40}not.{0,20}(binding|enforceable)
+        - salesperson.{0,40}(not authorized|no authority)
