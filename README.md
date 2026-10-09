@@ -49,6 +49,8 @@ redline review contract.pdf --format docx   # writes contract.redline.docx
 redline hygiene contract.pdf
 # fail CI when hygiene drops below medium:
 redline hygiene contract.pdf --fail-on medium
+# draft negotiation letter — turn the findings into change requests you can send:
+redline letter contract.pdf --to "Acme Corp" --from "Alex" --format txt -o letter.txt
 ```
 
 ## Comparing negotiation rounds
@@ -75,6 +77,20 @@ their round. Try it on the bundled example:
 
 ```bash
 redline compare examples/compare-round1.md examples/compare-round2.md
+```
+
+## Negotiation letter
+
+`redline review` tells you what's wrong; `redline letter` drafts what to send
+back. It turns each finding into a numbered change request — the contract's
+current language, the concern in plain words, and the playbook's quotable
+fallback text as proposed replacement language — addressed to the
+counterparty. `--format txt` gives you plain text for pasting into an email,
+and `--min-severity` keeps the letter focused (default: medium and up). The
+output is a starting draft for attorney review, not legal advice.
+
+```bash
+redline letter contract.pdf --to "Acme Corp" --from "Alex" --format txt -o letter.txt
 ```
 
 ## Drafting hygiene

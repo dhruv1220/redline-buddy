@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from redline.serve import Handler, hygiene_to_html, page_html, review_to_html
+from redline.serve import Handler, hygiene_to_html, letter_to_html, page_html, review_to_html
 
 ROOT = Path(__file__).resolve().parent.parent
 OFFER = (ROOT / "examples" / "sample-offer.md").read_text(encoding="utf-8")
@@ -307,6 +307,86 @@ def test_live_server_hygiene_post():
 
 def test_live_server_hygiene_empty_warns():
     body, ctype = _multipart({"mode": "hygiene"}, {})
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "paste some contract text or upload a file" in page
+
+
+SOLAR = (ROOT / "examples" / "sample-solar-installation.md").read_text(encoding="utf-8")
+CLEAN_SOLAR = (ROOT / "examples" / "clean-solar-installation.md").read_text(encoding="utf-8")
+
+
+def test_letter_to_html_renders_letter():
+    out = letter_to_html(SOLAR, "solar-installation", "sample-solar-installation.md")
+    assert "Draft negotiation letter" in out
+    assert "<h3>1. " in out and "HIGH" in out
+    assert "<blockquote>" in out  # quoted contract language
+    assert "Proposed language:" in out
+    assert "Not legal advice." in out
+
+
+def test_letter_to_html_personalization():
+    out = letter_to_html(
+        SOLAR, "solar-installation", "c.md", recipient="BrightSun", sender="Alex"
+    )
+    assert "Dear BrightSun," in out
+    assert "Alex</p>" in out or ">Alex<" in out or "Alex" in out
+    assert "[Counterparty name]" not in out
+
+
+def test_letter_to_html_clean_contract():
+    out = letter_to_html(CLEAN_SOLAR, "solar-installation", "clean.md")
+    assert "no material issues" in out
+    assert "<h3>" not in out
+
+
+def test_letter_to_html_escapes_input():
+    evil = SOLAR.replace("$0.16/kWh", "$0.16/kWh <script>alert(1)</script>", 1)
+    out = letter_to_html(evil, "solar-installation", "c.md")
+    assert "<script>alert(1)" not in out
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in out
+
+
+def test_letter_to_html_rejects_empty_text():
+    with pytest.raises(ValueError, match="paste some contract text"):
+        letter_to_html("   ", "solar-installation")
+
+
+def test_letter_to_html_rejects_bad_playbook():
+    with pytest.raises(ValueError, match="bad playbook"):
+        letter_to_html(SOLAR, "no-such-playbook")
+
+
+def test_page_has_letter_mode_select():
+    html_text = page_html()
+    assert 'value="letter"' in html_text
+    assert "negotiation letter" in html_text
+    assert 'name="recipient"' in html_text
+    assert 'name="sender"' in html_text
+
+
+def test_live_server_letter_post():
+    body, ctype = _multipart(
+        {
+            "text": SOLAR,
+            "mode": "letter",
+            "playbook": "solar-installation",
+            "recipient": "BrightSun",
+            "sender": "Alex",
+        },
+        {},
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "Draft negotiation letter" in page
+    assert "Dear BrightSun," in page
+    assert "Proposed language:" in page
+    # letter mode has no Word redline download
+    assert "/download.docx" not in page
+
+
+def test_live_server_letter_empty_warns():
+    body, ctype = _multipart({"mode": "letter"}, {})
     status, page = _post("/review", body, ctype)
     assert status == 200
     assert "paste some contract text or upload a file" in page
