@@ -5,6 +5,17 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline letter` command: drafts a negotiation letter to the counterparty
+  from review findings. Each finding becomes a numbered change request —
+  quoted contract language, plain-language concern, requested change, and the
+  playbook's quotable fallback text as proposed replacement language —
+  ordered worst-severity first. Options: `--to`/`--from` for the salutation
+  and signature, `--min-severity` to scope the asks (default: medium),
+  `--format txt` for plain-text email paste, `-o` to write to a file. Clean
+  reviews produce a short "no material issues" letter. Deterministic and
+  local-only; output is a draft for attorney review, not legal advice. Also
+  available in the `redline serve` web UI as a "negotiation letter" mode with
+  To/From fields.
 - `solar-installation` playbook: homeowner-side review of residential
   solar contracts — leases, PPAs, and financed purchases. 8 rules
   (annual payment escalator [high], UCC-1 financing statement filed

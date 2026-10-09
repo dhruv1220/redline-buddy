@@ -15,6 +15,7 @@ from pathlib import Path
 
 from .hygiene import run_hygiene
 from .ingest import IngestionError, extract_text
+from .letter import render_letter
 from .memo import render_diff
 from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
 from .redline_docx import render_redline_docx
@@ -57,8 +58,11 @@ footer{{color:#666;font-size:0.8rem;margin-top:2rem}}
 <label>Mode: <select name="mode">
 <option value="review">red-flag review</option>
 <option value="hygiene">drafting hygiene</option>
+<option value="letter">negotiation letter</option>
 </select></label>
 <label>Playbook: <select name="playbook">{options}</select></label>
+<label>To (letter): <input type="text" name="recipient" size="18" placeholder="Counterparty"></label>
+<label>From (letter): <input type="text" name="sender" size="18" placeholder="Your name"></label>
 <label>View: <select name="format">
 <option value="memo">memo</option><option value="diff">redline diff</option>
 </select></label>
@@ -184,6 +188,58 @@ def review_to_html(
     findings = review_contract(text, playbook)
     return _render_result_html(contract_name, playbook.name, findings, fmt,
                              len(playbook.rules))
+
+
+_BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
+
+
+def _letter_md_to_html(md: str) -> str:
+    """Convert the letter's markdown (headings, quotes, bold) to an HTML fragment."""
+    out = []
+    for line in md.splitlines():
+        esc = _BOLD_RE.sub(r"<b>\1</b>", html.escape(line))
+        if line.startswith("# "):
+            out.append(f"<h2>{esc[2:]}</h2>")
+        elif line.startswith("## "):
+            out.append(f"<h3>{esc[3:]}</h3>")
+        elif line.startswith("> "):
+            out.append(f"<blockquote>{esc[2:]}</blockquote>")
+        elif line == ">":
+            continue
+        elif line.strip() == "---":
+            out.append("<hr>")
+        elif esc.strip():
+            out.append(f"<p>{esc}</p>")
+    return "\n".join(out)
+
+
+def letter_to_html(
+    text: str,
+    playbook_name: str,
+    contract_name: str = "pasted contract",
+    recipient: str | None = None,
+    sender: str | None = None,
+) -> str:
+    """Run a review and render the draft negotiation letter as an HTML fragment.
+
+    Raises ValueError on bad input.
+    """
+    pb_path = PLAYBOOKS_DIR / f"{playbook_name}.yaml"
+    try:
+        playbook = load_playbook(pb_path)
+    except PlaybookError as exc:
+        raise ValueError(f"bad playbook: {exc}") from exc
+    if not text.strip():
+        raise ValueError("paste some contract text or upload a file first")
+    findings = review_contract(text, playbook)
+    md = render_letter(
+        contract_name,
+        playbook.name,
+        findings,
+        recipient=recipient or None,
+        sender=sender or None,
+    )
+    return _letter_md_to_html(md)
 
 
 def hygiene_to_html(
@@ -351,6 +407,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         fmt = fields.get("format", "memo") or "memo"
         ocr = fields.get("ocr") == "1"
         mode = fields.get("mode", "review") or "review"
+        recipient = fields.get("recipient", "").strip() or None
+        sender = fields.get("sender", "").strip() or None
         contract_name = "pasted contract"
         uploaded = files.get("contract_file")
         try:
@@ -372,6 +430,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 contract_name = Path(filename).name
             if mode == "hygiene":
                 result = hygiene_to_html(text, contract_name)
+            elif mode == "letter":
+                result = letter_to_html(
+                    text, playbook, contract_name, recipient, sender
+                )
             else:
                 result = review_to_html(text, playbook, fmt, contract_name)
                 _last_review.clear()

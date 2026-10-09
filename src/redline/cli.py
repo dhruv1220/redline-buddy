@@ -19,6 +19,7 @@ from .hygiene import (
     run_hygiene,
 )
 from .ingest import SUPPORTED_SUFFIXES, IngestionError, extract_text
+from .letter import render_letter
 from .memo import (
     render_batch_json,
     render_batch_memo,
@@ -435,6 +436,37 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_letter(args: argparse.Namespace) -> int:
+    contract_path = Path(args.contract)
+    if contract_path.is_dir():
+        print("error: letter takes a single contract file, not a directory", file=sys.stderr)
+        return 2
+    try:
+        text = extract_text(contract_path, ocr=args.ocr)
+    except IngestionError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    playbook, err = _load_or_suggest_playbook(args, text)
+    if err is not None:
+        return err
+    findings = review_contract(text, playbook)
+    letter = render_letter(
+        contract_path.name,
+        playbook.name,
+        findings,
+        recipient=args.recipient,
+        sender=args.sender,
+        min_severity=args.min_severity,
+        fmt=args.format,
+    )
+    if args.out:
+        Path(args.out).write_text(letter, encoding="utf-8")
+        print(f"wrote {args.out}")
+    else:
+        print(letter, end="")
+    return 0
+
+
 def cmd_playbooks(args: argparse.Namespace) -> int:
     """List bundled playbooks with rule counts and descriptions."""
     rows = []
@@ -714,6 +746,61 @@ def build_parser() -> argparse.ArgumentParser:
         "for CI gates (default: never fail)",
     )
     hygiene.set_defaults(func=cmd_hygiene)
+
+    letter = sub.add_parser(
+        "letter",
+        help="draft a negotiation letter to the counterparty from review findings",
+    )
+    letter.add_argument(
+        "contract",
+        help="path to a contract file (markdown, text, .docx, or .pdf)",
+    )
+    letter.add_argument(
+        "--playbook",
+        default=None,
+        help="playbook YAML file or bundled playbook name "
+        "(e.g. offer-letter; omit to auto-detect from the contract text)",
+    )
+    letter.add_argument(
+        "--ocr",
+        action="store_true",
+        help="run scanned/image-only PDF pages through Tesseract OCR "
+        "(requires the tesseract and pdftoppm system binaries)",
+    )
+    letter.add_argument(
+        "--to",
+        dest="recipient",
+        default=None,
+        metavar="NAME",
+        help="counterparty name for the salutation and signature line",
+    )
+    letter.add_argument(
+        "--from",
+        dest="sender",
+        default=None,
+        metavar="NAME",
+        help="your name for the signature line",
+    )
+    letter.add_argument(
+        "--min-severity",
+        choices=("critical", "high", "medium", "low"),
+        default="medium",
+        help="include findings at or above this severity (default: medium)",
+    )
+    letter.add_argument(
+        "--format",
+        choices=("md", "txt"),
+        default="md",
+        help="markdown (default) or plain text for pasting into an email",
+    )
+    letter.add_argument(
+        "-o",
+        "--out",
+        default=None,
+        metavar="FILE",
+        help="write the letter to FILE instead of printing it",
+    )
+    letter.set_defaults(func=cmd_letter)
     return parser
 
 
