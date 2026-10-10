@@ -1,0 +1,128 @@
+name: auto-dealership
+version: 1
+description: Buyer-side review of auto dealership purchase paperwork — spot delivery, packed add-ons, arbitration, doc fees, and financing traps (the paperwork behind yo-yo financing and payment packing).
+rules:
+  - id: spot-delivery
+    title: Spot delivery — the dealer can unwind your financing
+    severity: high
+    description: You drive the car home "subject to financing approval" — if the dealer can't place your loan on its terms, it can demand the car back or rewrite the deal at a higher rate.
+    why: "This is the yo-yo scam: you think the deal is done, then days later the dealer calls saying financing 'fell through' and you must return the car or sign a worse loan — after you've already sold your old car or paid insurance. Never take delivery until financing is final."
+    suggestion: Refuse spot delivery. Don't take the car until the financing is fully approved and funded, or bring your own pre-approved loan from a bank or credit union.
+    fallback: "Buyer's obligation to complete the purchase is not conditioned on Dealer arranging financing after delivery; Dealer shall not deliver the Vehicle until financing is finally approved, and any conditional-delivery agreement is void."
+    check:
+      kind: forbids_unless
+      patterns:
+        - spot.?deliver
+        - conditional.{0,20}deliver
+        - subject to.{0,40}financ(e|ing) approval
+        - unwind.{0,20}(the )?deal
+        - return the vehicle.{0,60}financ.{0,20}not.{0,20}approv
+
+  - id: packed-addons
+    title: Add-ons packed into the price without real consent
+    severity: high
+    description: High-margin extras — VIN etching, paint/fabric protection, nitrogen-filled tires, theft-deterrent systems — are pre-printed on the buyer's order, inflating the price by hundreds or thousands.
+    why: "Payment packing is one of the FTC's top auto-fraud targets: add-ons appear on the contract as if you agreed to them, and the monthly payment barely moves, so buyers sign without noticing. Anything you didn't ask for is negotiable — or removable."
+    suggestion: Strike every add-on you didn't explicitly request. Make the dealer reprint the buyer's order with a line-item price for each remaining product.
+    fallback: "No optional product (VIN etching, paint or fabric protection, theft-deterrent, nitrogen, key replacement, or similar) is included in the purchase price unless Buyer initials each product line; all such products are optional and separately cancellable."
+    check:
+      kind: forbids_unless
+      patterns:
+        - VIN.?etch
+        - paint protection
+        - fabric protection
+        - nitrogen
+        - theft deterrent
+        - key replacement
+      unless_any:
+        - declined in writing
+        - buyer declined
+
+  - id: binding-arbitration
+    title: Mandatory binding arbitration and class-action waiver
+    severity: high
+    description: Any dispute — including fraud claims — must go to the dealer's chosen arbitrator, and you waive the right to join a class action or get a jury.
+    why: "Arbitration clauses are written by and for the industry: the dealer picks the forum, there's no jury, appeals are nearly impossible, and the class-action waiver kills the one tool that makes small-dollar fraud worth challenging. Fraud victims need a courtroom."
+    suggestion: Refuse to sign an arbitration clause, or at minimum carve out fraud and statutory claims. Some dealers will remove it if you push before signing.
+    fallback: "Buyer does not agree to binding arbitration; disputes may be brought in any court of competent jurisdiction, and nothing here waives Buyer's right to participate in a class or collective action."
+    check:
+      kind: forbids_unless
+      patterns:
+        - binding arbitration
+        - waive.{0,30}(jury trial|class action)
+        - class.?action waiver
+      unless_any:
+        - does not waive
+        - no arbitration agreement
+        - without arbitration
+
+  - id: doc-fee
+    title: Steep documentation fee
+    severity: medium
+    description: A "documentation" or "dealer" fee of $500 or more is added on top of the negotiated price — pure dealer profit with no service behind it.
+    why: "Doc fees are the most complained-about line item in car buying: the price you negotiated isn't the price you pay, and the fee is presented as mandatory government paperwork. In most states it's uncapped dealer profit — and negotiable even when they say it isn't."
+    suggestion: Ask the dealer to remove the fee or reduce the vehicle price by the same amount. If they claim it's mandatory, ask to see the state law that requires it.
+    fallback: "The documentation fee shall not exceed $200, and Dealer shall reduce the vehicle sale price dollar-for-dollar for any documentation fee above that amount."
+    check:
+      kind: forbids_unless
+      patterns:
+        - doc(umentation)? ?fee.{0,40}\$?\s?[5-9]\d\d
+      unless_any:
+        - capped by state law
+
+  - id: service-contract-no-cancel
+    title: Extended service contract you can't cancel for a refund
+    severity: medium
+    description: The extended warranty or vehicle service contract is non-cancelable or non-refundable — if you sell the car early or the contract overlaps the factory warranty, you can't get your money back.
+    why: "Service contracts are marked up 100–200% at the finance desk, and the fine print often makes them non-refundable after 30 days — even though the factory warranty already covers the car for years. A contract you can't exit is a contract you shouldn't buy."
+    suggestion: Buy service contracts separately, later, at competitive prices — never at the finance desk. If you do buy one, require a pro-rata cancellation refund in writing.
+    fallback: "Buyer may cancel the service contract at any time for a pro-rata refund of the purchase price, less a processing fee not to exceed $50."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (non.?cancelable|non.?refundable).{0,40}(service contract|extended warranty)
+        - extended (warranty|service contract).{0,60}no refund
+
+  - id: negative-equity-roll
+    title: Negative equity rolled into the new loan
+    severity: medium
+    description: You owe more on your trade-in than it's worth, and the dealer rolls the difference ("negative equity") into the new loan — so you're financing two cars' worth of debt on one car.
+    why: "Rolled-over negative equity is how buyers end up $8,000 underwater on day one: the new loan exceeds the car's value, gap insurance won't cover the old debt, and the next trade-in starts even deeper in the hole. The paperwork should state the payoff amount and where it went."
+    suggestion: Get the exact trade-in payoff in writing and keep negative equity out of the new loan if possible — pay it separately or wait until you're right-side up.
+    fallback: "The amount financed reflects the trade-in payoff of $____ applied to the trade-in vehicle only; no negative equity from any prior obligation is included in the new amount financed without Buyer's separate written authorization."
+    check:
+      kind: forbids_unless
+      patterns:
+        - negative equity
+        - upside.?down
+        - payoff.{0,30}(rolled|added).{0,20}into.{0,20}(the )?(new )?loan
+
+  - id: kill-switch
+    title: Starter-interrupt / GPS tracking device on the car
+    severity: medium
+    description: The dealer installs a GPS tracker and remote starter-interrupt ("kill switch") that can disable the car if a payment is late — common in subprime and buy-here-pay-here deals.
+    why: "Kill switches have stranded drivers — including people current on payments — when dealers or lenders trigger them by mistake or as pressure. They also track your location 24/7. You should know the device exists, who controls it, and how to dispute a shutoff."
+    suggestion: Ask whether a tracking or disable device is installed, who can activate it, and what notice you get before a shutoff. Get the answers in writing.
+    fallback: "Dealer discloses any location-tracking or remote-disable device installed on the Vehicle, the party authorized to activate it, and the written notice (minimum 5 business days) Buyer receives before any remote disablement; erroneous disablement entitles Buyer to a full refund of related fees."
+    check:
+      kind: forbids_unless
+      patterns:
+        - starter.?interrupt
+        - kill.?switch
+        - GPS.{0,20}track
+        - remote.{0,20}disabl
+
+  - id: as-is-sale
+    title: Sold as-is, implied warranties disclaimed
+    severity: low
+    description: The car is sold "as is" with implied warranties disclaimed — if the transmission fails a week later, the repair bill is yours.
+    why: "As-is is normal for private-party sales, but from a dealer it shifts all mechanical risk to you on a car you couldn't fully inspect. An independent pre-purchase inspection and a short written warranty are cheap insurance."
+    suggestion: Get an independent mechanic's inspection before signing, and ask the dealer to put a 30-day powertrain warranty in writing.
+    fallback: "Notwithstanding any as-is language, Dealer warrants the engine, transmission, and drivetrain against defects for 90 days or 3,000 miles, whichever comes first."
+    check:
+      kind: forbids_unless
+      patterns:
+        - sold? as.?is
+        - disclaim.{0,30}implied warrant
+      unless_any:
+        - certified pre.?owned
