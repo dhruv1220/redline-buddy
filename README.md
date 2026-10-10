@@ -45,6 +45,10 @@ redline compare round1.pdf round2.pdf --playbook saas-vendor
 redline compare round1.pdf round2.pdf --fail-on-gain high
 # Word redline with tracked changes — a counter-draft you can send back:
 redline review contract.pdf --format docx   # writes contract.redline.docx
+# compare two negotiation rounds — text changes plus flags gained/resolved/reworded:
+redline compare round1.pdf round2.pdf
+# round-2 follow-up letter — thank them for the concessions won, re-press what's still open:
+redline followup round1.pdf round2.pdf --to "Acme Corp" --from "Alex" --format docx
 # drafting-hygiene check — defined terms, cross-references, consistency:
 redline hygiene contract.pdf
 # fail CI when hygiene drops below medium:
@@ -97,6 +101,19 @@ not legal advice.
 ```bash
 redline letter contract.pdf --to "Acme Corp" --from "Alex" --format txt -o letter.txt
 redline letter contract.pdf --to "Acme Corp" --from "Alex" --format docx   # writes contract.letter.docx
+```
+
+When the counterparty sends back a revised draft, `redline followup`
+compares the two rounds and drafts the next letter for you: it thanks them
+for the concessions won (resolved findings), then re-presses everything
+still open — each change request tagged **NEW IN THIS DRAFT**,
+**STILL FLAGGED AFTER REDRAFTING**, or **NOT ADDRESSED**, worst-severity
+first. When nothing remains, it drafts the short ready-to-move-forward
+letter instead. Same `--to`/`--from`/`--min-severity`/`--format` options as
+`letter` (`--format docx` writes `<new-draft>.followup.docx`).
+
+```bash
+redline followup round1.pdf round2.pdf --to "Acme Corp" --from "Alex" --format docx
 ```
 
 ## Drafting hygiene
