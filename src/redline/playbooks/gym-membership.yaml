@@ -1,0 +1,118 @@
+name: gym-membership
+version: 1
+description: Consumer-side review of gym and fitness-center membership contracts — cancellation traps, auto-renewal, hidden fees, and freeze policies.
+rules:
+  - id: cancellation-gauntlet
+    title: Cancellation requires an in-person visit or certified mail
+    severity: high
+    description: You can only cancel by showing up in person or sending certified mail — no online, phone, or email cancellation — often with 30+ days of continued billing after notice.
+    why: "The cancellation gauntlet is the #1 gym complaint to state attorneys general: the signup takes two minutes online, but quitting requires a pilgrimage. The FTC's click-to-cancel rule targets exactly this asymmetry — a contract that only lets you cancel the hard way is designed to keep billing you."
+    suggestion: Before signing, get the cancellation procedure in writing and test whether you can cancel the same way you signed up. Prefer month-to-month over annual terms.
+    fallback: "Member may cancel by any method Member used to enroll (including online, email, or phone), effective no later than 15 days after notice; no further dues accrue after the effective date."
+    check:
+      kind: forbids_unless
+      patterns:
+        - cancel.{0,40}(in person|certified mail)
+        - cancellation.{0,40}(in person|certified mail)
+        - must (appear|cancel).{0,20}in person
+
+  - id: auto-renewal
+    title: Membership auto-renews without clear advance notice
+    severity: high
+    description: The contract rolls over into a new term automatically unless you cancel in a narrow window, with no reminder before renewal.
+    why: "Evergreen renewals turn a 12-month commitment into an indefinite one: members discover the renewal only when the next year's dues hit. Many states require advance written notice of auto-renewal for health clubs — silence before the rollover is a red flag."
+    suggestion: Require written renewal notice at least 30 days before each term ends, and the right to decline the renewal without penalty.
+    fallback: "This agreement does not auto-renew. Any renewal requires Member's affirmative written consent after advance notice of the renewal terms at least 30 days before the current term ends."
+    check:
+      kind: forbids_unless
+      patterns:
+        - auto.{0,20}renew
+        - automatically renew
+        - evergreen.{0,20}(term|renewal)
+      unless_any:
+        - 30 days.{0,40}(written )?notice.{0,40}renew
+        - notice.{0,40}renew.{0,40}30 days
+
+  - id: annual-fee
+    title: Annual or "maintenance" fee buried in the fine print
+    severity: medium
+    description: A yearly fee ($30–$80) is charged on top of monthly dues, often disclosed once at signup and then forgotten until it appears.
+    why: "The annual fee is how a '$29/month' membership quietly becomes $35/month: it's disclosed at signing, never mentioned again, and charged like clockwork. Ask for the all-in annual cost before you compare gyms."
+    suggestion: Ask for the total first-year cost in writing — dues × 12, plus initiation, annual, and any other fees — and compare gyms on that number.
+    fallback: "No annual, maintenance, or facility-improvement fee shall be charged beyond the monthly dues stated above; the total annual cost is fixed at signing."
+    check:
+      kind: forbids_unless
+      patterns:
+        - annual (fee|dues).{0,15}\$
+        - maintenance fee.{0,15}\$
+
+  - id: freeze-restrictions
+    title: Membership freeze heavily restricted or fee-laden
+    severity: medium
+    description: You can't pause your membership for injury, travel, or pregnancy — or freezing costs nearly as much as dues and is limited to a few weeks.
+    why: "Life happens: injuries, moves, new babies. A gym that won't let you freeze — or charges $25/month to 'pause' — is betting you'll pay for months you can't use. Freeze terms reveal how a gym treats members it can't see."
+    suggestion: "Get freeze rights in writing: at least 3 months per year for medical reasons at no charge, with dues resuming (not back-billed) when you return."
+    fallback: "Member may freeze the membership up to 3 months per year for medical reasons at no charge; dues pause during the freeze and no back-billing applies on return."
+    check:
+      kind: forbids_unless
+      patterns:
+        - freeze.{0,40}(not permitted|medical.{0,20}only|prohibited)
+        - suspend.{0,40}membership.{0,30}fee.{0,20}\$
+        - freeze fee.{0,20}\$[12]\d
+
+  - id: training-contract
+    title: Personal-training sessions expire or auto-renew
+    severity: medium
+    description: Prepaid training sessions expire after 30–90 days whether you use them or not, or the training package auto-renews into another block.
+    why: "Expiring sessions are free money for the gym: trainers' schedules fill up, sessions go unused, and the clock runs out. Training is sold separately from membership precisely so its terms can be worse — read them separately too."
+    suggestion: Buy the smallest session block first, confirm the expiry window covers your realistic schedule, and get unused-session refunds in writing.
+    fallback: "Prepaid training sessions do not expire for 12 months from purchase; unused sessions are refundable pro-rata on request."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (training|session).{0,40}expir.{0,20}(30|60|90) days
+        - sessions?.{0,30}non.?refundable
+        - training.{0,40}auto.?renew
+
+  - id: initiation-fee
+    title: Large non-refundable initiation fee
+    severity: medium
+    description: A $100+ "initiation" or "enrollment" fee is due at signing and is non-refundable even if you cancel within days.
+    why: "Initiation fees are almost pure margin — and almost always waivable. Gyms run 'no enrollment fee' promotions constantly; paying full initiation means you negotiated nothing. Never pay it without asking for it to be waived."
+    suggestion: Ask for the initiation fee to be waived or credited — and get any waiver in writing before you sign, not as a verbal promise.
+    fallback: "No initiation or enrollment fee is charged; if any such fee is listed, it is waived in full at signing."
+    check:
+      kind: forbids_unless
+      patterns:
+        - initiation fee.{0,30}(\$[1-9]\d\d|non.?refundable)
+        - enrollment fee.{0,30}non.?refundable
+
+  - id: liability-waiver
+    title: Broad waiver of liability for the gym's own negligence
+    severity: medium
+    description: You waive all claims for injury, including injuries caused by the gym's own negligence — broken equipment, unmaintained floors, untrained staff.
+    why: "A waiver that covers the gym's own negligence asks you to pre-forgive exactly the failures a gym is responsible for preventing. Many states limit or void such waivers for commercial recreation — but you'd rather not litigate that after an injury."
+    suggestion: "You can't always strike the waiver, but narrow it: it should cover inherent exercise risks, not the facility's negligence in maintaining equipment."
+    fallback: "This waiver covers inherent risks of exercise only and does not waive claims arising from the Facility's negligence, faulty equipment, or failure to maintain the premises."
+    check:
+      kind: forbids_unless
+      patterns:
+        - waiv.{0,40}(liability|negligence)
+        - not (liable|responsible).{0,40}(injur|negligence)
+        - assumption of risk
+      unless_any:
+        - does not waive.{0,40}negligence
+        - inherent risks?.{0,20}only
+
+  - id: dues-during-closure
+    title: Dues continue during facility closures
+    severity: low
+    description: Monthly dues keep billing during renovations, closures, or reduced-hours periods, with no credit or pause offered.
+    why: "Paying full dues for a closed gym is the mildest version of the freeze problem — but during long renovations members have paid thousands for a construction site. A fair contract pauses or credits dues when the facility isn't usable."
+    suggestion: Ask what happens to dues during closures longer than two weeks, and get the credit policy in writing.
+    fallback: "If the Facility closes for more than 14 consecutive days, dues are credited pro-rata for the closure period."
+    check:
+      kind: forbids_unless
+      patterns:
+        - dues.{0,40}continue.{0,40}(clos|renovat)
+        - no (refund|credit).{0,30}(clos|shutdown|renovat)

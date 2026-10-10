@@ -238,6 +238,7 @@ negotiation rounds (`Risk: C (63) → B (78) — improved`).
 | `solar-installation` | homeowner side | annual payment escalator, UCC-1 filed against the home, roof-damage disclaimer, payments continue during downtime, removal/reinstall at homeowner cost, sale-transfer hurdles, no production guarantee, salesperson promises disclaimed |
 | `moving-company` | consumer side | non-binding estimate with no cap, released-value ($0.60/lb) liability default, large upfront deposit, withholding goods for payment, no delivery date, broker-not-carrier, short claim-filing window, open-ended extra fees |
 | `auto-dealership` | buyer side | spot delivery / yo-yo financing, packed add-ons (VIN etch, paint protection, nitrogen), mandatory binding arbitration + class-action waiver, steep doc fee, non-cancelable extended service contract, negative equity rolled into the new loan, starter-interrupt / GPS kill switch, as-is sale |
+| `gym-membership` | consumer side | in-person/certified-mail cancellation gauntlet, auto-renewal without notice, buried annual fee, restricted/fee-laden freeze, expiring or auto-renewing training sessions, non-refundable initiation fee, broad negligence liability waiver, dues during closures |
 
 Write your own playbook in YAML — see `src/redline/playbooks/saas-vendor.yaml` for the schema, or scaffold one:
 
