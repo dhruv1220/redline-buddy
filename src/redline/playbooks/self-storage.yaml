@@ -1,0 +1,120 @@
+name: self-storage
+version: 1
+description: Renter-side review of self-storage unit rental agreements — lien sales, rent hikes, late fees, and access terms.
+rules:
+  - id: lien-sale
+    title: Your belongings can be lien-sold after brief nonpayment
+    severity: high
+    description: If rent goes unpaid for as little as 30–60 days, the facility can sell your stored property at a lien sale or auction to cover the debt.
+    why: "Lien sales are the nuclear clause of storage contracts: a few missed payments and a lifetime of belongings goes to auction, often for a fraction of its value. State laws set minimum notice periods, but contracts routinely shorten every protection the law allows."
+    suggestion: "Know the exact timeline in writing — days late before lien notice, notice method, and auction date — and set up autopay plus a backup contact."
+    fallback: "No lien sale or auction occurs until rent is at least 90 days past due, after written notice by certified mail and email at 60 days, with a 30-day right to cure."
+    check:
+      kind: forbids_unless
+      patterns:
+        - lien.{0,30}(sale|auction)
+        - sell.{0,30}(your|the).{0,20}(contents|property|belongings)
+        - auction.{0,20}(your|the).{0,20}property
+      unless_any:
+        - no lien sale
+        - until rent is at least 90 days
+
+  - id: rent-hike
+    title: Rent can be raised at any time without a cap
+    severity: high
+    description: The facility can raise your monthly rent whenever it wants, with minimal notice and no cap — the classic "teaser rate then squeeze."
+    why: "Storage facilities routinely advertise low move-in rates, then raise rent 20–40% within months, betting you won't move your stuff over the increase. Moving a unit costs a truck and a day — they know it."
+    suggestion: "Ask for the current street rate for your unit size, how often rates change, and a rate-lock or cap in writing before you sign."
+    fallback: "Rent increases are capped at 10% per 12-month period and require 30 days' written notice; increases above the cap entitle Renter to terminate without penalty."
+    check:
+      kind: forbids_unless
+      patterns:
+        - may (raise|increase).{0,20}rent.{0,20}any time
+        - rent.{0,30}increase.{0,20}without.{0,20}notice
+        - adjust.{0,20}rent.{0,20}at (our|its) (sole )?discretion
+
+  - id: no-liability
+    title: Facility disclaims liability for theft and damage
+    severity: medium
+    description: The operator disclaims responsibility for theft, water damage, mold, and pest damage — even from facility failures like broken gates or leaking roofs.
+    why: "Storage units get burglarized through cut locks and damaged by roof leaks the operator knew about. A blanket disclaimer means the facility has no financial reason to maintain security or fix the roof."
+    suggestion: "Tour the facility: check gate security, lighting, cameras, and roof condition. Get your own renter's insurance or a storage-specific policy."
+    fallback: "Operator remains liable for loss or damage caused by its negligence, including failure to maintain gates, locks, lighting, and roofing."
+    check:
+      kind: forbids_unless
+      patterns:
+        - not (liable|responsible).{0,40}(theft|damage|loss|mold)
+        - waiv.{0,30}liability.{0,30}(theft|damage|loss)
+        - no responsibility.{0,30}(theft|damage|loss)
+
+  - id: late-fees
+    title: Compounding late fees and lien fees
+    severity: medium
+    description: Late fees stack fast — a flat fee plus daily charges plus a "lien administration fee" — turning one missed payment into hundreds owed.
+    why: "A $20 late fee plus $5/day plus a $75 lien fee means a single forgotten payment costs $200+ within weeks — and every dollar of fees counts toward the lien-sale threshold. Fees should be proportionate, not a profit center."
+    suggestion: "Get the full fee schedule in writing: flat fee, daily rate, lien fee, and the total after 30 days late. Set up autopay."
+    fallback: "Late fees are limited to 5% of monthly rent per occurrence; no daily compounding and no separate lien administration fee."
+    check:
+      kind: forbids_unless
+      patterns:
+        - late fee.{0,20}\$ ?[2-9]\d
+        - lien (administration|processing) fee
+        - \$ ?[5-9].{0,20}per day.{0,20}late
+
+  - id: forced-insurance
+    title: Forced insurance purchased through the facility
+    severity: medium
+    description: You must buy insurance, and it must be the facility's own marked-up policy — you can't bring your own renter's insurance.
+    why: "Mandatory facility insurance is a common $10–$20/month add-on with thin coverage and the operator as the beneficiary of the sale. Your existing renter's or homeowner's policy usually covers stored property for less."
+    suggestion: "Check whether your renter's or homeowner's insurance already covers stored belongings, and ask the facility to accept third-party coverage."
+    fallback: "Renter may satisfy the insurance requirement with any policy providing at least $2,000 of coverage for stored property; facility-sold insurance is optional."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (must|required to) purchase insurance.{0,40}(facility|operator|through us)
+        - insurance.{0,20}must be.{0,20}(our|facility)
+        - only.{0,20}insurance.{0,20}we (offer|provide)
+
+  - id: access-restrictions
+    title: Severely restricted access hours
+    severity: medium
+    description: Access is limited to narrow office hours with no 24-hour gate access — your belongings are available only when it's convenient for the operator.
+    why: "Restricted hours turn every retrieval into a scheduled errand. If you store business inventory, tools, or anything you might need urgently, office-hours-only access defeats the purpose of having the unit."
+    suggestion: "Confirm gate access hours before signing — 24-hour coded access is the industry standard for a reason."
+    fallback: "Renter has coded gate access 24 hours per day, 7 days per week, except for posted emergency closures."
+    check:
+      kind: forbids_unless
+      patterns:
+        - access.{0,30}(limited to|restricted to).{0,30}office hours
+        - gate access.{0,30}office hours only
+        - no (24-hour|24 hour) access
+
+  - id: lockout
+    title: Immediate lockout for late payment
+    severity: low
+    description: The facility can overlock your unit or deny gate access the day rent is late — before any lien process begins.
+    why: "Lockout is the pressure tactic that precedes lien sale: you can't get to your belongings to sell something and catch up, or even retrieve essentials. Reasonable contracts give a grace period first."
+    suggestion: "Ask for a written grace period (at least 10 days) before any lockout, and keep the office's phone number handy."
+    fallback: "No lockout or access denial occurs until rent is at least 10 days past due and written notice has been sent."
+    check:
+      kind: forbids_unless
+      patterns:
+        - overlock
+        - deny.{0,20}(gate )?access.{0,20}late
+        - lock.?out.{0,30}(late|past due|unpaid)
+      unless_any:
+        - no lockout
+        - until rent is at least \d+ days past due
+
+  - id: abandonment
+    title: Property deemed "abandoned" on the operator's timeline
+    severity: low
+    description: Your property can be declared abandoned after a short period of nonpayment or non-contact, letting the operator dispose of it outside the lien-sale process.
+    why: "Abandonment clauses shortcut the lien-sale protections: if the operator can simply declare your things abandoned, the notice and auction rules don't apply. The timeline should be long and the notice real."
+    suggestion: "Keep your contact info current with the facility and designate an emergency contact who can act if you're unreachable."
+    fallback: "Property is deemed abandoned only after 120 days of nonpayment and two written notices; disposal follows the lien-sale notice procedure."
+    check:
+      kind: forbids_unless
+      patterns:
+        - deemed abandoned
+        - abandon.{0,30}property.{0,30}(30|60) days

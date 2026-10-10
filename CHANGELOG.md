@@ -5,6 +5,13 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `self-storage` playbook: renter-side review of self-storage unit rental
+  agreements. 8 rules (lien sale after brief nonpayment [high], uncapped
+  anytime rent hikes [high], theft/damage liability disclaimer [medium],
+  compounding late + lien fees [medium], forced facility-sold insurance
+  [medium], office-hours-only access [medium], immediate lockout [low],
+  short abandonment timeline [low]), each with quotable fallback language;
+  sample fixture fires 8/8, clean fixture fires 0.
 - `childcare-enrollment` playbook: parent-side review of daycare and
   childcare enrollment agreements. 8 rules (non-refundable deposit [high],
   full tuition for absences/vacation/illness [high], 60-day withdrawal
