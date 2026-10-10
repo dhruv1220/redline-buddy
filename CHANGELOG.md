@@ -5,6 +5,15 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `auto-dealership` playbook: buyer-side review of auto dealership purchase
+  paperwork — the paperwork behind yo-yo financing and payment packing.
+  8 rules (spot delivery / conditional financing [high], packed add-ons
+  [high], mandatory binding arbitration + class-action waiver [high], steep
+  documentation fee [medium], non-cancelable extended service contract
+  [medium], negative equity rolled into the new loan [medium],
+  starter-interrupt / GPS kill switch [medium], as-is sale [low]), each with
+  quotable fallback language; sample fixture fires 8/8, clean fixture
+  fires 0.
 - `redline followup` command: drafts the round-2 follow-up letter from two
   drafts (`redline followup round1.pdf round2.pdf`). Compares the rounds,
   thanks the counterparty for the concessions won (resolved findings), then
