@@ -19,7 +19,7 @@ from .hygiene import (
     run_hygiene,
 )
 from .ingest import SUPPORTED_SUFFIXES, IngestionError, extract_text
-from .letter import render_letter
+from .letter import render_letter, render_letter_docx
 from .memo import (
     render_batch_json,
     render_batch_memo,
@@ -450,6 +450,19 @@ def cmd_letter(args: argparse.Namespace) -> int:
     if err is not None:
         return err
     findings = review_contract(text, playbook)
+    if args.format == "docx":
+        letter: str | bytes = render_letter_docx(
+            contract_path.name,
+            playbook.name,
+            findings,
+            recipient=args.recipient,
+            sender=args.sender,
+            min_severity=args.min_severity,
+        )
+        out = Path(args.out or f"{contract_path.stem}.letter.docx").resolve()
+        Path(out).write_bytes(letter)
+        print(f"wrote {out}")
+        return 0
     letter = render_letter(
         contract_path.name,
         playbook.name,
@@ -789,16 +802,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     letter.add_argument(
         "--format",
-        choices=("md", "txt"),
+        choices=("md", "txt", "docx"),
         default="md",
-        help="markdown (default) or plain text for pasting into an email",
+        help="markdown (default), plain text for pasting into an email, or a "
+        "Word .docx you can send",
     )
     letter.add_argument(
         "-o",
         "--out",
         default=None,
         metavar="FILE",
-        help="write the letter to FILE instead of printing it",
+        help="write the letter to FILE instead of printing it "
+        "(default for --format docx: <contract-name>.letter.docx)",
     )
     letter.set_defaults(func=cmd_letter)
     return parser

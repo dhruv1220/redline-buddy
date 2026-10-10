@@ -15,7 +15,7 @@ from pathlib import Path
 
 from .hygiene import run_hygiene
 from .ingest import IngestionError, extract_text
-from .letter import render_letter
+from .letter import render_letter, render_letter_docx
 from .memo import render_diff
 from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
 from .redline_docx import render_redline_docx
@@ -25,8 +25,10 @@ from .score import risk_grade, risk_label, risk_score, severity_counts
 PLAYBOOKS_DIR = bundled_playbooks_dir()
 
 # The most recent successful review, so GET /download.docx can serve it.
+# The most recent successful letter draft, so GET /letter.docx can serve it.
 # Single-user local server: one slot is enough.
 _last_review: dict = {}
+_last_letter: dict = {}
 
 PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><title>redline-buddy</title>
@@ -242,6 +244,34 @@ def letter_to_html(
     return _letter_md_to_html(md)
 
 
+def letter_to_docx(
+    text: str,
+    playbook_name: str,
+    contract_name: str = "pasted contract",
+    recipient: str | None = None,
+    sender: str | None = None,
+) -> bytes:
+    """Run a review and render the draft negotiation letter as a .docx.
+
+    Raises ValueError on bad input.
+    """
+    pb_path = PLAYBOOKS_DIR / f"{playbook_name}.yaml"
+    try:
+        playbook = load_playbook(pb_path)
+    except PlaybookError as exc:
+        raise ValueError(f"bad playbook: {exc}") from exc
+    if not text.strip():
+        raise ValueError("paste some contract text or upload a file first")
+    findings = review_contract(text, playbook)
+    return render_letter_docx(
+        contract_name,
+        playbook.name,
+        findings,
+        recipient=recipient or None,
+        sender=sender or None,
+    )
+
+
 def hygiene_to_html(
     text: str, contract_name: str = "pasted contract"
 ) -> str:
@@ -308,6 +338,12 @@ def _download_filename(contract_name: str) -> str:
     stem = Path(contract_name).stem or "contract"
     safe = re.sub(r"[^\w\-. ]+", "_", stem).strip() or "contract"
     return f"{safe}.redline.docx"
+
+
+def _letter_filename(contract_name: str) -> str:
+    stem = Path(contract_name).stem or "contract"
+    safe = re.sub(r"[^\w\-. ]+", "_", stem).strip() or "contract"
+    return f"{safe}.letter.docx"
 
 
 def _parse_multipart(body: bytes, content_type: str):
@@ -381,6 +417,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
             except ValueError as exc:
                 return self._send(f"<h1>error: {html.escape(str(exc))}</h1>", 400)
             return self._send_docx(data, _download_filename(_last_review["name"]))
+        if self.path == "/letter.docx":
+            if not _last_letter:
+                return self._send(
+                    "<h1>no letter yet — draft a negotiation letter first</h1>", 404
+                )
+            try:
+                data = letter_to_docx(
+                    _last_letter["text"],
+                    _last_letter["playbook"],
+                    _last_letter["name"],
+                    _last_letter["recipient"],
+                    _last_letter["sender"],
+                )
+            except ValueError as exc:
+                return self._send(f"<h1>error: {html.escape(str(exc))}</h1>", 400)
+            return self._send_docx(data, _letter_filename(_last_letter["name"]))
         if self.path != "/":
             return self._send("<h1>not found</h1>", 404)
         self._send(page_html())
@@ -433,6 +485,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
             elif mode == "letter":
                 result = letter_to_html(
                     text, playbook, contract_name, recipient, sender
+                )
+                _last_letter.clear()
+                _last_letter.update(
+                    {
+                        "text": text,
+                        "playbook": playbook,
+                        "name": contract_name,
+                        "recipient": recipient,
+                        "sender": sender,
+                    }
+                )
+                result += (
+                    '<p><a href="/letter.docx">⬇ Download Word letter '
+                    "(.docx)</a></p>"
                 )
             else:
                 result = review_to_html(text, playbook, fmt, contract_name)
