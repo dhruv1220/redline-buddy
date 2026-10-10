@@ -381,7 +381,8 @@ def test_live_server_letter_post():
     assert "Draft negotiation letter" in page
     assert "Dear BrightSun," in page
     assert "Proposed language:" in page
-    # letter mode has no Word redline download
+    # letter mode has its own Word download, not the redline one
+    assert "/letter.docx" in page
     assert "/download.docx" not in page
 
 
@@ -390,3 +391,79 @@ def test_live_server_letter_empty_warns():
     status, page = _post("/review", body, ctype)
     assert status == 200
     assert "paste some contract text or upload a file" in page
+
+
+# --- Word letter download --------------------------------------------------
+
+
+def test_letter_to_docx_returns_valid_docx():
+    import io
+    import zipfile
+
+    from redline.serve import letter_to_docx
+
+    data = letter_to_docx(
+        SOLAR, "solar-installation", "sample-solar-installation.md",
+        recipient="BrightSun", sender="Alex",
+    )
+    xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
+    assert "Draft negotiation letter" in xml
+    assert "Dear BrightSun," in xml
+
+
+def test_letter_to_docx_rejects_bad_input():
+    from redline.serve import letter_to_docx
+
+    with pytest.raises(ValueError, match="paste some contract text"):
+        letter_to_docx("   ", "solar-installation")
+    with pytest.raises(ValueError, match="bad playbook"):
+        letter_to_docx(SOLAR, "no-such-playbook")
+
+
+def test_letter_filename_sanitized():
+    from redline.serve import _letter_filename
+
+    assert _letter_filename("contract.md") == "contract.letter.docx"
+    assert _letter_filename("pasted contract") == "pasted contract.letter.docx"
+    assert _letter_filename("../../evil.md") == "evil.letter.docx"
+
+
+def test_letter_docx_without_letter_404s():
+    from redline.serve import _last_letter
+
+    _last_letter.clear()
+    status, _, _ = _get("/letter.docx")
+    assert status == 404
+
+
+def test_letter_docx_after_letter_post():
+    import io
+    import zipfile
+
+    from redline.serve import _last_letter
+
+    body, ctype = _multipart(
+        {
+            "text": SOLAR,
+            "mode": "letter",
+            "playbook": "solar-installation",
+            "recipient": "BrightSun",
+            "sender": "Alex",
+        },
+        {},
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "/letter.docx" in page
+    assert _last_letter["recipient"] == "BrightSun"
+    status, headers, data = _get("/letter.docx")
+    assert status == 200
+    assert headers.get("Content-Type", "").startswith(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    assert 'attachment; filename="pasted contract.letter.docx"' in headers.get(
+        "Content-Disposition", ""
+    )
+    xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
+    assert "Dear BrightSun," in xml
+    assert "Alex" in xml

@@ -8,6 +8,12 @@ lawyer's judgment — meant for attorney review before anything is sent.
 
 from __future__ import annotations
 
+import io
+from datetime import date
+
+from docx import Document
+from docx.shared import Inches
+
 from .review import SEVERITY_RANK, Finding
 
 DISCLAIMER = (
@@ -155,3 +161,110 @@ def render_letter(
         _disclaimer(plain),
     ]
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _letter_date() -> str:
+    today = date.today()
+    return f"{today:%B} {today.day}, {today:%Y}"
+
+
+def _labeled_para(doc: Document, label: str, text: str) -> None:
+    """A paragraph whose label is bold, e.g. ``The contract says:`` + text."""
+    p = doc.add_paragraph()
+    p.add_run(label).bold = True
+    if text:
+        p.add_run(" " + text.strip())
+
+
+def _quote_para(doc: Document, text: str) -> None:
+    """An indented, italic block quote paragraph for excerpts / proposed language."""
+    for line in text.strip().splitlines() or [""]:
+        p = doc.add_paragraph()
+        p.paragraph_format.left_indent = Inches(0.5)
+        p.add_run(line or " ").italic = True
+
+
+def _letter_head(
+    doc: Document,
+    contract_name: str,
+    recipient: str | None,
+    sender: str | None,
+) -> tuple[str, str]:
+    """Render the title, date, and addressee block. Returns (who_to, who_from)."""
+    who_to = recipient or _RECIPIENT_PLACEHOLDER
+    who_from = sender or _SENDER_PLACEHOLDER
+    doc.add_heading(f"Draft negotiation letter — {contract_name}", level=1)
+    doc.add_paragraph(_letter_date())
+    doc.add_paragraph(f"To: {who_to}")
+    doc.add_paragraph(f"From: {who_from}")
+    doc.add_paragraph(f"Dear {who_to},")
+    return who_to, who_from
+
+
+def _letter_disclaimer(doc: Document) -> None:
+    doc.add_paragraph().add_run(DISCLAIMER).italic = True
+
+
+def render_letter_docx(
+    contract_name: str,
+    playbook_name: str,
+    findings: list[Finding],
+    *,
+    recipient: str | None = None,
+    sender: str | None = None,
+    min_severity: str = "medium",
+) -> bytes:
+    """Render the draft negotiation letter as a Word ``.docx``.
+
+    Same content as :func:`render_letter`, formatted as a sendable business
+    letter: title, date, addressee block, salutation, numbered change
+    requests (severity-labeled, worst first, contract excerpts and proposed
+    replacement language as indented quotes), signature, and the
+    not-legal-advice disclaimer. Returns the file bytes; a clean review
+    produces the short "no material issues" letter.
+    """
+    doc = Document()
+    doc.core_properties.title = f"Draft negotiation letter — {contract_name}"
+    doc.core_properties.author = "redline-buddy"
+
+    who_to, who_from = _letter_head(doc, contract_name, recipient, sender)
+    selected = select_findings(findings, min_severity)
+
+    if not selected:
+        doc.add_paragraph(
+            f"Our review of the draft {contract_name} against the "
+            f"`{playbook_name}` playbook found no material issues. Subject "
+            "to attorney review, we're prepared to move forward with the "
+            "current draft."
+        )
+        _letter_disclaimer(doc)
+    else:
+        n = len(selected)
+        doc.add_paragraph(
+            f"We've reviewed the draft {contract_name} (checked against the "
+            f"`{playbook_name}` playbook) and would like to request the "
+            f"following {n} change{'s' if n != 1 else ''} before signing. "
+            "Each one quotes the current language, explains our concern, "
+            "and proposes specific replacement language where we have it."
+        )
+        for i, f in enumerate(selected, 1):
+            label = _SEVERITY_LABEL.get(f.severity, f.severity.upper())
+            doc.add_heading(f"{i}. {f.title} — {label}", level=2)
+            _labeled_para(doc, "The contract says:", "")
+            _quote_para(doc, f.excerpt)
+            _labeled_para(doc, "Our concern:", f.why)
+            _labeled_para(doc, "Our requested change:", f.suggestion)
+            if f.fallback.strip():
+                _labeled_para(doc, "Proposed language:", "")
+                _quote_para(doc, f.fallback)
+        doc.add_paragraph(
+            "We'd appreciate a revised draft reflecting these changes, and "
+            "we're happy to discuss any of them."
+        )
+        doc.add_paragraph("Best regards,")
+        doc.add_paragraph(who_from)
+        _letter_disclaimer(doc)
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()

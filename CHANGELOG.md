@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline letter --format docx`: the draft negotiation letter as a sendable
+  Word document — date line, To/From addressee block, salutation, numbered
+  change requests ordered worst-severity first (contract excerpts and
+  proposed replacement language as indented quotes), signature, and the
+  not-legal-advice disclaimer. Without `-o`, writes
+  `<contract-name>.letter.docx` in the current directory. Also available in
+  the `redline serve` web UI: the letter result page now has a
+  "Download Word letter (.docx)" link served at `/letter.docx`.
 - `redline letter` command: drafts a negotiation letter to the counterparty
   from review findings. Each finding becomes a numbered change request —
   quoted contract language, plain-language concern, requested change, and the
