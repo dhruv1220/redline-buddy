@@ -467,3 +467,128 @@ def test_letter_docx_after_letter_post():
     xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
     assert "Dear BrightSun," in xml
     assert "Alex" in xml
+
+
+# --- Round-2 follow-up mode --------------------------------------------------
+
+ROUND1 = (ROOT / "examples" / "sample-solar-installation.md").read_text(encoding="utf-8")
+ROUND2 = (ROOT / "examples" / "sample-solar-installation-round2.md").read_text(encoding="utf-8")
+
+
+def test_followup_to_html_renders_sections():
+    from redline.serve import followup_to_html
+
+    out = followup_to_html(ROUND1, ROUND2, "solar-installation", "round1.md", "round2.md")
+    assert "Follow-up letter" in out
+    assert "What&#x27;s fixed" in out or "What's fixed" in out
+    assert "Still open" in out
+    assert "NOT ADDRESSED" in out
+    assert "STILL FLAGGED AFTER REDRAFTING" in out
+    assert "Not legal advice." in out
+
+
+def test_followup_to_html_rejects_bad_input():
+    from redline.serve import followup_to_html
+
+    with pytest.raises(ValueError, match="earlier draft"):
+        followup_to_html("   ", ROUND2, "solar-installation")
+    with pytest.raises(ValueError, match="paste some contract text"):
+        followup_to_html(ROUND1, "   ", "solar-installation")
+    with pytest.raises(ValueError, match="bad playbook"):
+        followup_to_html(ROUND1, ROUND2, "no-such-playbook")
+
+
+def test_followup_to_docx_returns_valid_docx():
+    import io
+    import zipfile
+
+    from redline.serve import followup_to_docx
+
+    data = followup_to_docx(ROUND1, ROUND2, "solar-installation", "round1.md", "round2.md")
+    xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
+    assert "Follow-up letter" in xml
+    assert "NOT ADDRESSED" in xml
+
+
+def test_followup_filename_sanitized():
+    from redline.serve import _followup_filename
+
+    assert _followup_filename("round2.md") == "round2.followup.docx"
+    assert _followup_filename("pasted contract") == "pasted contract.followup.docx"
+    assert _followup_filename("../../evil.md") == "evil.followup.docx"
+
+
+def test_page_has_followup_mode_select():
+    html_text = page_html()
+    assert 'value="followup"' in html_text
+    assert "round-2 follow-up letter" in html_text
+    assert 'name="text_old"' in html_text
+    assert 'name="contract_file_old"' in html_text
+
+
+def test_followup_docx_without_followup_404s():
+    from redline.serve import _last_followup
+
+    _last_followup.clear()
+    status, _, _ = _get("/followup.docx")
+    assert status == 404
+
+
+def test_followup_post_missing_old_warns():
+    body, ctype = _multipart(
+        {"text": ROUND2, "mode": "followup", "playbook": "solar-installation"}, {}
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "earlier draft" in page
+    assert "/followup.docx" not in page
+
+
+def test_followup_post_then_download():
+    import io
+    import zipfile
+
+    from redline.serve import _last_followup
+
+    body, ctype = _multipart(
+        {
+            "text_old": ROUND1,
+            "text": ROUND2,
+            "mode": "followup",
+            "playbook": "solar-installation",
+            "recipient": "BrightSun",
+            "sender": "Alex",
+        },
+        {},
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "Follow-up letter" in page
+    assert "/followup.docx" in page
+    assert _last_followup["old_name"] == "earlier draft"
+    status, headers, data = _get("/followup.docx")
+    assert status == 200
+    assert headers.get("Content-Type", "").startswith(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    assert 'attachment; filename="pasted contract.followup.docx"' in headers.get(
+        "Content-Disposition", ""
+    )
+    xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
+    assert "Follow-up letter" in xml
+    assert "Dear BrightSun," in xml
+
+
+def test_followup_post_with_old_file_upload():
+    body, ctype = _multipart(
+        {"mode": "followup", "playbook": "solar-installation"},
+        {
+            "contract_file_old": ("round1.md", ROUND1.encode("utf-8")),
+            "contract_file": ("round2.md", ROUND2.encode("utf-8")),
+        },
+    )
+    status, page = _post("/review", body, ctype)
+    assert status == 200
+    assert "Follow-up letter" in page
+    assert "round2.md" in page
+    assert "/followup.docx" in page

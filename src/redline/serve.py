@@ -13,9 +13,15 @@ import re
 import urllib.parse
 from pathlib import Path
 
+from .compare import compare_contracts
 from .hygiene import run_hygiene
 from .ingest import IngestionError, extract_text
-from .letter import render_letter, render_letter_docx
+from .letter import (
+    render_followup,
+    render_followup_docx,
+    render_letter,
+    render_letter_docx,
+)
 from .memo import render_diff
 from .playbook import PlaybookError, bundled_playbooks_dir, load_playbook
 from .redline_docx import render_redline_docx
@@ -26,9 +32,11 @@ PLAYBOOKS_DIR = bundled_playbooks_dir()
 
 # The most recent successful review, so GET /download.docx can serve it.
 # The most recent successful letter draft, so GET /letter.docx can serve it.
+# The most recent successful follow-up draft, so GET /followup.docx can serve it.
 # Single-user local server: one slot is enough.
 _last_review: dict = {}
 _last_letter: dict = {}
+_last_followup: dict = {}
 
 PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><title>redline-buddy</title>
@@ -61,7 +69,10 @@ footer{{color:#666;font-size:0.8rem;margin-top:2rem}}
 <option value="review">red-flag review</option>
 <option value="hygiene">drafting hygiene</option>
 <option value="letter">negotiation letter</option>
+<option value="followup">round-2 follow-up letter</option>
 </select></label>
+<label>Earlier draft (follow-up mode — paste):<br><textarea name="text_old" style="height:6rem"></textarea></label><br><br>
+<label>…or upload the earlier draft: <input type="file" name="contract_file_old"></label><br><br>
 <label>Playbook: <select name="playbook">{options}</select></label>
 <label>To (letter): <input type="text" name="recipient" size="18" placeholder="Counterparty"></label>
 <label>From (letter): <input type="text" name="sender" size="18" placeholder="Your name"></label>
@@ -272,6 +283,76 @@ def letter_to_docx(
     )
 
 
+def followup_to_html(
+    old_text: str,
+    new_text: str,
+    playbook_name: str,
+    old_name: str = "earlier draft",
+    new_name: str = "pasted contract",
+    recipient: str | None = None,
+    sender: str | None = None,
+) -> str:
+    """Compare two drafts and render the round-2 follow-up letter as HTML.
+
+    Raises ValueError on bad input.
+    """
+    cmp = _compare_or_raise(
+        old_text, new_text, playbook_name, old_name, new_name, "follow-up"
+    )
+    md = render_followup(
+        cmp,
+        recipient=recipient or None,
+        sender=sender or None,
+    )
+    return _letter_md_to_html(md)
+
+
+def followup_to_docx(
+    old_text: str,
+    new_text: str,
+    playbook_name: str,
+    old_name: str = "earlier draft",
+    new_name: str = "pasted contract",
+    recipient: str | None = None,
+    sender: str | None = None,
+) -> bytes:
+    """Compare two drafts and render the round-2 follow-up letter as a .docx.
+
+    Raises ValueError on bad input.
+    """
+    cmp = _compare_or_raise(
+        old_text, new_text, playbook_name, old_name, new_name, "follow-up"
+    )
+    return render_followup_docx(
+        cmp,
+        recipient=recipient or None,
+        sender=sender or None,
+    )
+
+
+def _compare_or_raise(
+    old_text: str,
+    new_text: str,
+    playbook_name: str,
+    old_name: str,
+    new_name: str,
+    what: str,
+):
+    """Load the playbook and compare two drafts; ValueError on bad input."""
+    pb_path = PLAYBOOKS_DIR / f"{playbook_name}.yaml"
+    try:
+        playbook = load_playbook(pb_path)
+    except PlaybookError as exc:
+        raise ValueError(f"bad playbook: {exc}") from exc
+    if not old_text.strip():
+        raise ValueError(
+            f"paste the earlier draft too — the {what} needs both rounds"
+        )
+    if not new_text.strip():
+        raise ValueError("paste some contract text or upload a file first")
+    return compare_contracts(old_name, new_name, old_text, new_text, playbook)
+
+
 def hygiene_to_html(
     text: str, contract_name: str = "pasted contract"
 ) -> str:
@@ -344,6 +425,33 @@ def _letter_filename(contract_name: str) -> str:
     stem = Path(contract_name).stem or "contract"
     safe = re.sub(r"[^\w\-. ]+", "_", stem).strip() or "contract"
     return f"{safe}.letter.docx"
+
+
+def _followup_filename(contract_name: str) -> str:
+    stem = Path(contract_name).stem or "contract"
+    safe = re.sub(r"[^\w\-. ]+", "_", stem).strip() or "contract"
+    return f"{safe}.followup.docx"
+
+
+def _text_from_upload(uploaded: tuple[str, bytes] | None, ocr: bool) -> tuple[str | None, str | None]:
+    """Extract text from an uploaded file; (None, None) when no file was sent."""
+    if not uploaded or not uploaded[1]:
+        return None, None
+    filename, data = uploaded
+    suffix = Path(filename).suffix.lower()
+    if suffix not in (".md", ".txt", ".docx", ".pdf"):
+        raise ValueError(f"unsupported upload type {suffix!r}")
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(
+        suffix=suffix, prefix="redline-upload-", delete=False
+    ) as tmp:
+        tmp.write(data)
+    try:
+        text = extract_text(tmp.name, ocr=ocr)
+    finally:
+        Path(tmp.name).unlink(missing_ok=True)
+    return text, Path(filename).name
 
 
 def _parse_multipart(body: bytes, content_type: str):
@@ -433,6 +541,24 @@ class Handler(http.server.BaseHTTPRequestHandler):
             except ValueError as exc:
                 return self._send(f"<h1>error: {html.escape(str(exc))}</h1>", 400)
             return self._send_docx(data, _letter_filename(_last_letter["name"]))
+        if self.path == "/followup.docx":
+            if not _last_followup:
+                return self._send(
+                    "<h1>no follow-up yet — draft a follow-up letter first</h1>", 404
+                )
+            try:
+                data = followup_to_docx(
+                    _last_followup["old_text"],
+                    _last_followup["new_text"],
+                    _last_followup["playbook"],
+                    _last_followup["old_name"],
+                    _last_followup["new_name"],
+                    _last_followup["recipient"],
+                    _last_followup["sender"],
+                )
+            except ValueError as exc:
+                return self._send(f"<h1>error: {html.escape(str(exc))}</h1>", 400)
+            return self._send_docx(data, _followup_filename(_last_followup["new_name"]))
         if self.path != "/":
             return self._send("<h1>not found</h1>", 404)
         self._send(page_html())
@@ -462,24 +588,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
         recipient = fields.get("recipient", "").strip() or None
         sender = fields.get("sender", "").strip() or None
         contract_name = "pasted contract"
-        uploaded = files.get("contract_file")
+        old_text = fields.get("text_old", "")
+        old_name = "earlier draft"
         try:
-            if uploaded and uploaded[1]:
-                filename, data = uploaded
-                suffix = Path(filename).suffix.lower()
-                if suffix not in (".md", ".txt", ".docx", ".pdf"):
-                    raise ValueError(f"unsupported upload type {suffix!r}")
-                import tempfile
-
-                with tempfile.NamedTemporaryFile(
-                    suffix=suffix, prefix="redline-upload-", delete=False
-                ) as tmp:
-                    tmp.write(data)
-                try:
-                    text = extract_text(tmp.name, ocr=ocr)
-                finally:
-                    Path(tmp.name).unlink(missing_ok=True)
-                contract_name = Path(filename).name
+            uploaded_text, uploaded_name = _text_from_upload(
+                files.get("contract_file"), ocr
+            )
+            if uploaded_text is not None:
+                text, contract_name = uploaded_text, uploaded_name
+            old_uploaded_text, old_uploaded_name = _text_from_upload(
+                files.get("contract_file_old"), ocr
+            )
+            if old_uploaded_text is not None:
+                old_text, old_name = old_uploaded_text, old_uploaded_name
             if mode == "hygiene":
                 result = hygiene_to_html(text, contract_name)
             elif mode == "letter":
@@ -499,6 +620,32 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 result += (
                     '<p><a href="/letter.docx">⬇ Download Word letter '
                     "(.docx)</a></p>"
+                )
+            elif mode == "followup":
+                result = followup_to_html(
+                    old_text,
+                    text,
+                    playbook,
+                    old_name,
+                    contract_name,
+                    recipient,
+                    sender,
+                )
+                _last_followup.clear()
+                _last_followup.update(
+                    {
+                        "old_text": old_text,
+                        "new_text": text,
+                        "playbook": playbook,
+                        "old_name": old_name,
+                        "new_name": contract_name,
+                        "recipient": recipient,
+                        "sender": sender,
+                    }
+                )
+                result += (
+                    '<p><a href="/followup.docx">⬇ Download Word follow-up '
+                    "letter (.docx)</a></p>"
                 )
             else:
                 result = review_to_html(text, playbook, fmt, contract_name)
