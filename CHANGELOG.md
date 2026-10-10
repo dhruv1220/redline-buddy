@@ -5,6 +5,16 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline followup` command: drafts the round-2 follow-up letter from two
+  drafts (`redline followup round1.pdf round2.pdf`). Compares the rounds,
+  thanks the counterparty for the concessions won (resolved findings), then
+  re-presses every still-open change request — tagged NEW IN THIS DRAFT,
+  STILL FLAGGED AFTER REDRAFTING, or NOT ADDRESSED, worst-severity first.
+  A clean round 2 produces the short ready-to-move-forward letter. Same
+  `--to`/`--from`/`--min-severity` options as `letter`; `--format md|txt|docx`
+  (`--format docx` writes `<new-draft>.followup.docx`). New
+  `examples/sample-solar-installation-round2.md` fixture (2 fixed, 1
+  redrafted-but-still-flagged, 5 untouched).
 - `redline letter --format docx`: the draft negotiation letter as a sendable
   Word document — date line, To/From addressee block, salutation, numbered
   change requests ordered worst-severity first (contract excerpts and

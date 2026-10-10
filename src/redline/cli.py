@@ -19,7 +19,12 @@ from .hygiene import (
     run_hygiene,
 )
 from .ingest import SUPPORTED_SUFFIXES, IngestionError, extract_text
-from .letter import render_letter, render_letter_docx
+from .letter import (
+    render_followup,
+    render_followup_docx,
+    render_letter,
+    render_letter_docx,
+)
 from .memo import (
     render_batch_json,
     render_batch_memo,
@@ -480,6 +485,48 @@ def cmd_letter(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_followup(args: argparse.Namespace) -> int:
+    old_path = Path(args.old)
+    new_path = Path(args.new)
+    if old_path.is_dir() or new_path.is_dir():
+        print("error: followup takes two files, not directories", file=sys.stderr)
+        return 2
+    try:
+        old_text = extract_text(old_path, ocr=args.ocr)
+        new_text = extract_text(new_path, ocr=args.ocr)
+    except IngestionError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    playbook, err = _load_or_suggest_playbook(args, old_text)
+    if err is not None:
+        return err
+    cmp = compare_contracts(old_path.name, new_path.name, old_text, new_text, playbook)
+    if args.format == "docx":
+        letter: str | bytes = render_followup_docx(
+            cmp,
+            recipient=args.recipient,
+            sender=args.sender,
+            min_severity=args.min_severity,
+        )
+        out = Path(args.out or f"{new_path.stem}.followup.docx").resolve()
+        out.write_bytes(letter)
+        print(f"wrote {out}")
+        return 0
+    letter = render_followup(
+        cmp,
+        recipient=args.recipient,
+        sender=args.sender,
+        min_severity=args.min_severity,
+        fmt=args.format,
+    )
+    if args.out:
+        Path(args.out).write_text(letter, encoding="utf-8")
+        print(f"wrote {args.out}")
+    else:
+        print(letter, end="")
+    return 0
+
+
 def cmd_playbooks(args: argparse.Namespace) -> int:
     """List bundled playbooks with rule counts and descriptions."""
     rows = []
@@ -816,6 +863,64 @@ def build_parser() -> argparse.ArgumentParser:
         "(default for --format docx: <contract-name>.letter.docx)",
     )
     letter.set_defaults(func=cmd_letter)
+
+    followup = sub.add_parser(
+        "followup",
+        help="draft a round-2 follow-up letter from two drafts: thank them "
+        "for the concessions won, re-press what is still open",
+    )
+    followup.add_argument(
+        "old", help="path to the earlier draft (markdown, text, .docx, or .pdf)"
+    )
+    followup.add_argument("new", help="path to the revised draft")
+    followup.add_argument(
+        "--playbook",
+        default=None,
+        help="playbook YAML file or bundled playbook name "
+        "(e.g. offer-letter; omit to auto-detect from the earlier draft)",
+    )
+    followup.add_argument(
+        "--ocr",
+        action="store_true",
+        help="run scanned/image-only PDF pages through Tesseract OCR "
+        "(requires the tesseract and pdftoppm system binaries)",
+    )
+    followup.add_argument(
+        "--to",
+        dest="recipient",
+        default=None,
+        metavar="NAME",
+        help="counterparty name for the salutation and signature line",
+    )
+    followup.add_argument(
+        "--from",
+        dest="sender",
+        default=None,
+        metavar="NAME",
+        help="your name for the signature line",
+    )
+    followup.add_argument(
+        "--min-severity",
+        choices=("critical", "high", "medium", "low"),
+        default="medium",
+        help="include findings at or above this severity (default: medium)",
+    )
+    followup.add_argument(
+        "--format",
+        choices=("md", "txt", "docx"),
+        default="md",
+        help="markdown (default), plain text for pasting into an email, or a "
+        "Word .docx you can send",
+    )
+    followup.add_argument(
+        "-o",
+        "--out",
+        default=None,
+        metavar="FILE",
+        help="write the letter to FILE instead of printing it "
+        "(default for --format docx: <new-draft-name>.followup.docx)",
+    )
+    followup.set_defaults(func=cmd_followup)
     return parser
 
 
