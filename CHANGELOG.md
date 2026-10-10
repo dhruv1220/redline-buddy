@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `childcare-enrollment` playbook: parent-side review of daycare and
+  childcare enrollment agreements. 8 rules (non-refundable deposit [high],
+  full tuition for absences/vacation/illness [high], 60-day withdrawal
+  notice with full billing [medium], uncapped unannounced rate increases
+  [medium], no credits for closures/holidays [medium], broad injury
+  liability waiver [medium], steep per-minute late pick-up fees [medium],
+  blanket photo/social-media release [low]), each with quotable fallback
+  language; sample fixture fires 8/8, clean fixture fires 0.
 - `gym-membership` playbook: consumer-side review of gym and fitness-center
   membership contracts. 8 rules (in-person/certified-mail cancellation
   gauntlet [high], auto-renewal without notice [high], buried annual fee
