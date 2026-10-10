@@ -5,6 +5,11 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `redline serve`: new "round-2 follow-up letter" mode — paste (or upload)
+  both drafts and get the follow-up letter in the browser, with a
+  "Download Word follow-up letter (.docx)" link served at `/followup.docx`.
+  New `followup_to_html()` / `followup_to_docx()` helpers; upload handling
+  factored into `_text_from_upload()`.
 - `auto-dealership` playbook: buyer-side review of auto dealership purchase
   paperwork — the paperwork behind yo-yo financing and payment packing.
   8 rules (spot delivery / conditional financing [high], packed add-ons

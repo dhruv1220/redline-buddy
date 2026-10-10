@@ -33,8 +33,10 @@ redline review contract.pdf --fail-below B || echo "risk gate failed"
 # or switch to drafting-hygiene mode):
 redline serve
 # the web UI now shows playbook descriptions in the picker, one-click
-# "Copy fallback" buttons per finding, severity filters on memos, and a
-# "Download Word redline" link after every review
+# "Copy fallback" buttons per finding, severity filters on memos, a
+# "Download Word redline" link after every review, a "Download Word letter"
+# link after every negotiation letter, and a round-2 follow-up mode (paste
+# both drafts, get the follow-up letter plus a Word download)
 # validate a playbook you wrote, optionally against a sample contract:
 redline validate my-playbook.yaml --sample examples/sample-msa.md
 # redline diff view: their language vs. your fallback, per finding:
@@ -95,8 +97,9 @@ counterparty. `--format txt` gives you plain text for pasting into an email,
 salutation, numbered change requests with quoted excerpts and proposed
 language, signature), and `--min-severity` keeps the letter focused
 (default: medium and up). The `redline serve` web UI offers the letter as a
-`.docx` download too. The output is a starting draft for attorney review,
-not legal advice.
+`.docx` download too, plus a round-2 follow-up mode that takes both drafts
+and returns the follow-up letter with its own Word download. The output is
+a starting draft for attorney review, not legal advice.
 
 ```bash
 redline letter contract.pdf --to "Acme Corp" --from "Alex" --format txt -o letter.txt
