@@ -5,6 +5,14 @@ All notable changes to redline-buddy. Format follows [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- `gym-membership` playbook: consumer-side review of gym and fitness-center
+  membership contracts. 8 rules (in-person/certified-mail cancellation
+  gauntlet [high], auto-renewal without notice [high], buried annual fee
+  [medium], restricted or fee-laden freeze [medium], expiring/auto-renewing
+  training sessions [medium], non-refundable initiation fee [medium], broad
+  negligence liability waiver [medium], dues during closures [low]), each
+  with quotable fallback language; sample fixture fires 8/8, clean fixture
+  fires 0.
 - `redline serve`: new "round-2 follow-up letter" mode — paste (or upload)
   both drafts and get the follow-up letter in the browser, with a
   "Download Word follow-up letter (.docx)" link served at `/followup.docx`.
