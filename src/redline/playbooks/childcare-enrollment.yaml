@@ -1,0 +1,118 @@
+name: childcare-enrollment
+version: 1
+description: Parent-side review of daycare and childcare enrollment agreements — deposits, tuition during absences, withdrawal terms, and fee traps.
+rules:
+  - id: nonrefundable-deposit
+    title: Non-refundable deposit even if care never starts
+    severity: high
+    description: The registration fee or deposit (often $200–$500+) is non-refundable — even if your plans change before the first day.
+    why: "Waitlists move and plans change: families lose deposits when a spot opens elsewhere or a job falls through. A deposit that secures a spot is reasonable; one you forfeit for any reason, before any care is provided, is not."
+    suggestion: Ask for the deposit to be credited toward first month's tuition, and refundable (minus a small admin fee) if you withdraw before the start date.
+    fallback: "The enrollment deposit is credited in full toward the first month's tuition, and is refundable less a $50 administrative fee if enrollment is cancelled before the start date."
+    check:
+      kind: forbids_unless
+      patterns:
+        - (registration|enrollment) (fee|deposit).{0,30}non.?refundable
+        - deposit.{0,30}non.?refundable.{0,30}enrollment
+
+  - id: full-tuition-absences
+    title: Full tuition charged for absences, vacations, and illness
+    severity: high
+    description: You pay full tuition when your child is sick, on vacation, or kept home — the center's costs are fixed, so the bill doesn't flex.
+    why: "A week of flu plus a week of vacation can mean paying thousands for care you didn't receive. Centers have fixed staffing costs, so some absence billing is normal — but full freight with zero credit or make-up days is the term to negotiate."
+    suggestion: Ask for a set number of vacation/absence credits per year, or a reduced rate (e.g. 50%) for absences longer than a week.
+    fallback: "Families receive 10 vacation/absence days per year credited against tuition; absences exceeding 5 consecutive days are billed at 50% of the daily rate."
+    check:
+      kind: forbids_unless
+      patterns:
+        - full tuition.{0,40}(absence|absent|vacation|illness|sick)
+        - tuition.{0,30}no (credit|refund|discount).{0,20}(absence|illness)
+        - no (credit|reduction).{0,20}tuition.{0,20}(absence|sick)
+
+  - id: withdrawal-notice
+    title: Long withdrawal notice with full billing
+    severity: medium
+    description: Withdrawing requires 30–60 days' written notice, and you're billed full tuition through the notice period even if your child stops attending on day one.
+    why: "Long notice periods turn a withdrawal into an extra month or two of tuition — often discovered exactly when a family is already paying a new provider. Two weeks' notice is the reasonable standard; 60 days is a retention device."
+    suggestion: Negotiate the notice period down to two weeks, and confirm in writing that billing stops when attendance stops, not when the notice period ends.
+    fallback: "Either party may terminate with 14 days' written notice; tuition is owed only through the child's last day of attendance."
+    check:
+      kind: forbids_unless
+      patterns:
+        - withdraw.{0,40}(30|60).{0,20}days?.{0,20}notice
+        - (30|60).{0,10}days?.{0,20}written notice.{0,30}withdraw
+
+  - id: rate-increase
+    title: Tuition increases without a cap or real notice
+    severity: medium
+    description: The center can raise tuition at any time, with little notice and no cap — your budget planning is at their mercy.
+    why: "Childcare is often a family's second-biggest expense after housing. An uncapped, unannounced increase clause means the price you signed up for isn't the price you'll pay in six months. Annual increases are normal; surprise ones aren't."
+    suggestion: Get increases capped (e.g. max 5% per year) with at least 60 days' written notice, and the right to withdraw without penalty if an increase exceeds the cap.
+    fallback: "Tuition increases are capped at 5% per 12-month period, require 60 days' written notice, and entitle the family to withdraw with 14 days' notice without penalty."
+    check:
+      kind: forbids_unless
+      patterns:
+        - tuition.{0,30}(may be|will be|is subject to).{0,20}increas
+        - rate.{0,20}increase.{0,20}without.{0,20}notice
+        - reserves? the right.{0,30}(increase|adjust).{0,20}tuition
+
+  - id: no-closure-credits
+    title: No credits for center closures and holidays
+    severity: medium
+    description: You pay full tuition for weeks the center is closed — holidays, staff training days, and emergency closures — with no make-up days.
+    why: "Centers close 10–15 days a year for holidays and training; some bill straight through. That's two-plus weeks of tuition for zero care, on top of the backup care you had to arrange yourself."
+    suggestion: Ask for the annual closure calendar up front and a tuition credit (or make-up days) for closures beyond the published schedule.
+    fallback: "Tuition is credited pro-rata for closures beyond the published annual calendar, and for emergency closures exceeding 2 consecutive days."
+    check:
+      kind: forbids_unless
+      patterns:
+        - no (make.?up|credit).{0,30}(clos|holiday)
+        - full tuition.{0,30}(holiday|closure|training day)
+
+  - id: liability-waiver
+    title: Broad waiver of liability for injuries
+    severity: medium
+    description: You waive claims for injuries to your child, including injuries from the center's own negligence — understaffing, unsafe equipment, poor supervision.
+    why: "Parents sign these under time pressure, but a waiver covering the center's own negligence pre-forgives exactly the failures — ratios, supervision, maintenance — that licensing exists to prevent. Many states won't enforce such waivers for minors anyway, but you shouldn't rely on that."
+    suggestion: Narrow the waiver to inherent play risks; it should never cover the center's negligence or licensing violations.
+    fallback: "This waiver covers inherent risks of play only and does not waive claims arising from the Center's negligence, understaffing, or licensing violations."
+    check:
+      kind: forbids_unless
+      patterns:
+        - waiv.{0,40}(liability|negligence|claims?)
+        - not (liable|responsible).{0,40}(injur|harm)
+      unless_any:
+        - inherent.{0,20}risks?.{0,20}only
+
+  - id: late-pickup-fees
+    title: Steep late pick-up fees
+    severity: medium
+    description: Late pick-ups are billed per minute ($1–$5/minute is common) — a 20-minute traffic jam can cost $100.
+    why: "Late fees exist to keep pick-ups on time, but per-minute rates compound brutally and are applied inconsistently. Know the grace period, the rate, and when the clock starts before you need it."
+    suggestion: Confirm the grace period and per-minute rate in writing, and ask how emergencies and Center-caused delays are handled.
+    fallback: "Late pick-up is billed at $1 per minute after a 10-minute grace period, capped at $30 per occurrence; Center-caused delays are excluded."
+    check:
+      kind: forbids_unless
+      patterns:
+        - late (pickup|pick-up|pick up).{0,30}\$ ?[1-9]
+        - pickup.{0,20}fee.{0,20}\$ ?[1-9]\d?
+      unless_any:
+        - after a \d+-minute grace period
+        - capped at \$
+
+  - id: photo-release
+    title: Blanket photo and social-media release
+    severity: low
+    description: You consent to the center photographing your child and using the images in marketing and social media, with no opt-out.
+    why: "A blanket release means your child's face can appear in ads and Instagram posts indefinitely. Most centers will accept an opt-out or internal-use-only limitation if you ask before signing."
+    suggestion: Limit the release to internal use (classroom apps, parent communications) and require separate consent for marketing or social media.
+    fallback: "Photos of the child are used for internal communications only; marketing or social-media use requires separate written consent, revocable at any time."
+    check:
+      kind: forbids_unless
+      patterns:
+        - photo.{0,30}(release|consent)
+        - social media.{0,20}(photo|image|post)
+        - marketing.{0,20}(photo|image)
+      unless_any:
+        - internal use only
+        - opt.?out
