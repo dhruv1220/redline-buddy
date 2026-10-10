@@ -1,6 +1,6 @@
 [project]
 name = "redline-buddy"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-first contract red-flag checker: paste in a vendor MSA, get a plain-language risk memo. No API keys, no data leaves your machine."
 readme = "README.md"
 license = { text = "MIT" }

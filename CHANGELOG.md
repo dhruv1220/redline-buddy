@@ -2,7 +2,7 @@
 
 All notable changes to redline-buddy. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.2.0] - 2026-10-10
 
 ### Added
 - `self-storage` playbook: renter-side review of self-storage unit rental
