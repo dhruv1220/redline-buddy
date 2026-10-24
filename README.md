@@ -2,6 +2,17 @@
 
 **Local-first contract red-flag checker.** Paste in a vendor MSA, get a plain-language risk memo — with zero data leaving your machine.
 
+Founders sign vendor MSAs they haven't fully read — auto-renewals, uncapped
+liability, and one-sided termination clauses hiding in plain sight.
+redline-buddy checks your draft against 51 deterministic playbooks and tells
+you exactly what to push back on, with quotable fallback language you can send
+back to the vendor.
+
+```bash
+pip install redline-buddy
+redline review examples/sample-vendor-msa.md   # the bundled sample grades 34/100 · Grade F
+```
+
 Existing contract AI tools send your documents to someone else's LLM. redline-buddy is the opposite: deterministic, auditable YAML playbooks, pure-Python heuristics, no API keys, no network calls. What you lose in nuance you gain in privacy and predictability — and every finding links back to the exact rule that fired.
 
 > **Not legal advice.** Heuristic checks, not a lawyer's judgment. Treat the memo as a draft for attorney review.
